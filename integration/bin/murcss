@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+# encoding: utf-8
+'''
+Copyright (C) 2014  Sebastian Illing
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+'''
+
+
+import sys
+import getopt
+import os
+
+sys.path.append(os.path.dirname(os.path.realpath(__file__))+'/../metrics/')
+from msss import Msss
+from crpss import Crpss
+
+_short_args = "hnd"
+_args = ['help', 'config_file=']
+
+def getMurcssDict():
+    '''Standard input of Murcss'''
+    return dict(output='/tmp/murcss/output', output_plots='/tmp/murcss/plots', decadals='1960,1965,1970,1975,1980,1985', 
+            variable='tas', cache='/tmp/murcss/cache', baseDir='..', maskMissingValues=True, model1='mpi-esm-lr', 
+            model2='mpi-esm-lr', project1='baseline1', project2='baseline0', observation='HadCrut', product1='output', product2='output1', 
+            ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-9', experiment1='decs4e', experiment2='decadal',
+            result_grid=None, level=None, lonlatbox=None, fieldmean=None, significance=False, bootstrap_number=100)
+
+def main(argv=None): # IGNORE:C0111
+    '''Command line options.'''
+    if argv is None:
+       argv = sys.argv[1:]
+	
+    args, lastargs = getopt.getopt(argv, _short_args, _args)
+
+    murcss_dict = getMurcssDict()
+    for arg in lastargs:
+        if '=' not in arg:
+            raise CommandError("Invalid format for query: %s" % arg)
+            
+        items = arg.split('=')
+        key, value = items[0], ''.join(items[1:])
+        murcss_dict[key] = value
+            
+    murcss_dict['decadals'] = map(int,murcss_dict['decadals'].split(','))
+    murcss_dict['bootstrap_number'] = int(murcss_dict['bootstrap_number'])
+    print '#######################'
+    print 'Calculating the MSSS'
+    print '#######################'
+    #Calculation of MSESS
+    if(not murcss_dict['significance']):
+        msss_dict = murcss_dict.copy()
+        msss_dict.pop('bootstrap_number')
+        msss_dict.pop('significance')
+        try:
+            msss = Msss(**msss_dict)
+            msss.prepareInput()
+            msss.analyze()   
+        finally:
+            msss.deleteCache()
+    else:
+        from metrics.msssBootstrap import main
+        msss = main(murcss_dict.copy(),'..')
+
+    print '#######################'
+    print 'Calculating the CRPSS for Model1'
+    print '#######################'
+    crpss1 = Crpss(output=murcss_dict['output'], 
+                       output_plots=murcss_dict['output_plots'], 
+                       
+                       decadals=murcss_dict['decadals'],
+                       variable=murcss_dict['variable'], 
+                       
+                       project = murcss_dict['project1'],
+                       product1=murcss_dict['product1'], 
+                       institute1=murcss_dict['institute1'], 
+                       model=murcss_dict['model1'], 
+                       experiment=murcss_dict['experiment1'],
+                       ensemblemembers=murcss_dict['ensemblemembers1'], 
+                       
+                       observation = murcss_dict['observation'], 
+                       leadtimes=murcss_dict['leadtimes'],
+                       result_grid=murcss_dict['result_grid'], 
+                       
+                       maskMissingValues=murcss_dict['maskMissingValues'], 
+                       bootstrapSwitch=murcss_dict['significance'], 
+                       bootstrap_number=murcss_dict['bootstrap_number'],
+                       level=murcss_dict['level'], 
+                       lonlatbox=murcss_dict['lonlatbox'], 
+                       fieldmean=murcss_dict['fieldmean'],
+                       
+                       cache=murcss_dict['cache'], 
+                       
+                       baseDir = murcss_dict['baseDir'])
+    crpss1.outputDir = msss.outputDir
+    crpss1.outputPlots = msss.outputPlots
+    crpss1.prepareInput()
+    crpss1.analyze()
+    crpss1.deleteCache()
+    print '#######################'
+    print 'Calculating the CRPSS for Model2'
+    print '#######################'    
+    crpss2 = Crpss(output=murcss_dict['output'], 
+                       output_plots=murcss_dict['output_plots'], 
+                       
+                       decadals=murcss_dict['decadals'],
+                       variable=murcss_dict['variable'], 
+                       
+                       project = murcss_dict['project2'],
+                       product1=murcss_dict['product2'], 
+                       institute1=murcss_dict['institute2'], 
+                       model=murcss_dict['model2'], 
+                       experiment=murcss_dict['experiment2'],
+                       ensemblemembers=murcss_dict['ensemblemembers2'], 
+                       
+                       observation = murcss_dict['observation'], 
+                       leadtimes=murcss_dict['leadtimes'],
+                       result_grid=murcss_dict['result_grid'], 
+                       
+                       maskMissingValues=murcss_dict['maskMissingValues'], 
+                       bootstrapSwitch=murcss_dict['significance'], 
+                       bootstrap_number=murcss_dict['bootstrap_number'],
+                       level=murcss_dict['level'], 
+                       lonlatbox=murcss_dict['lonlatbox'], 
+                       fieldmean=murcss_dict['fieldmean'],
+                       
+                       cache=murcss_dict['cache'], 
+                       
+                       baseDir = murcss_dict['baseDir'])
+    crpss2.outputDir = msss.outputDir
+    crpss2.outputPlots = msss.outputPlots
+    crpss2.prepareInput()
+    crpss2.analyze()
+    crpss2.deleteCache()    
+
+    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBootstrap, metrics.findFilesSeason
+    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
+    print 'Calculation finished.'
+    print 'Plots produced in %s' %(msss.outputPlots,)
+
+if __name__ == "__main__":
+    sys.exit(main())
