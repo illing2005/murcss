@@ -4,7 +4,7 @@ A Tool for Standardized Evaluation of Decadal Hindcast Systems
 
 This Readme is for the MurCSS tool.
 
-The main documentation can be found here /doc/build/murcss.pdf and here https://www-miklip.dkrz.de/about/murcss
+The main documentation can be found here /doc/build/index.html and here https://www-miklip.dkrz.de/about/murcss
 
 Copyright (C) 2014 Sebastian Illing This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
