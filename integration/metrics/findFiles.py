@@ -26,7 +26,7 @@ cdo = Cdo()
 from string import lowercase, translate, maketrans
 import shutil
 
-from evaluation_system.model.file import *
+#from evaluation_system.model.file import *
 from evaluation_system.model.solr import SolrFindFiles
 
 from tool_abstract import ToolAbstract, unwrap_self_f
@@ -73,7 +73,7 @@ class FindFiles(ToolAbstract):
         decStr = exp_prefix+str(year)
         project = fileType.lower()    
         tmpList = list()
-        for fn in DRSFile.solr_search(experiment=decStr, latest_version=True, product=product, institute=institute,
+        for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
             if(str(fn).split('.')[-1] == 'nc'):
                 tmpList.append(str(fn))
@@ -82,7 +82,7 @@ class FindFiles(ToolAbstract):
         except:
             import time
             time.sleep(5) # delays for 5 seconds
-            for fn in DRSFile.solr_search(experiment=decStr, latest_version=True, product=product, institute=institute,
+            for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
                 print str(fn)
                 if(str(fn).split('.')[-1] == 'nc'):
@@ -93,7 +93,7 @@ class FindFiles(ToolAbstract):
                 if exp_prefix.find('*') != -1:
                     raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)
                 #OK we can't find files, now try one last time using only the exp_prefix, i.e. "historical"
-                for fn in DRSFile.solr_search(experiment=exp_prefix, latest_version=True, product=product, institute=institute,
+                for fn in SolrFindFiles.search(experiment=exp_prefix, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
                     if(str(fn).split('.')[-1] == 'nc'):
                         tmpList.append(str(fn))
@@ -175,10 +175,10 @@ class FindFiles(ToolAbstract):
                                          time_frequency=time_frequency)
             try:
                 if facet['data_type'][0] == 'reanalysis':
-                    searchList = DRSFile.solr_search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
+                    searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency)
                 else:
-                    searchList = DRSFile.solr_search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
+                    searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency, data_structure='grid')
             except IndexError:
                 raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
