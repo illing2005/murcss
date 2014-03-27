@@ -33,16 +33,90 @@ def getMurcssDict():
     return dict(output='/tmp/murcss/output', output_plots='/tmp/murcss/plots', decadals='1960,1965,1970,1975,1980,1985', 
             variable='tas', cache='/tmp/murcss/cache', baseDir='..', maskMissingValues=True, model1='mpi-esm-lr', 
             model2='mpi-esm-lr', project1='baseline1', project2='baseline0', observation='HadCrut', product1='output', product2='output1', 
-            ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-9', experiment1='decs4e', experiment2='decadal',
+            ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-9', experiment1='decs4e', exp
+eriment2='decadal',
             result_grid=None, level=None, lonlatbox=None, fieldmean=None, significance=False, bootstrap_number=100)
+
+def printHelp():
+    print """MurCSS (v1.0.0): The tool calculates the Mean Squared Error Skill Score (MSESS) its decomposition (Correlation + Conditional Bi
+as) and the Continuous Ranked Probability Skill Score (CRPSS)
+as proposed by Goddard et al. [2013]. 
+The MSSS of both models and the MSSS "between" the two models (model versions) are calculated for different leadtimes.
+The CRPSS is calculated for both models defined by the input parameters. 
+
+Plots are stored in "output_plots" and reusable NetCDF files are saved in "output" 
+    
+Options:
+output            (default: "/tmp/murcss/output/"
+                  The Output directory
+output_plots      (default: "/tmp/murcss/plots/)
+                  Output directory of produced plots
+decadals          (default: "1960:5:2000") 
+                  Specify the experiments you want to use. I.e.
+                  1960,1965,1970,..,1995. Or you can write 1960:5:1995
+variable          (default: "tas") [mandatory]
+                  The name of the variable you want to analyze (CMOR)
+project1          (default: "baseline1") [mandatory]
+                  BASELINE0, BASELINE1, CMIP5 or PROJECTDATA
+product1          (default: "output") [mandatory]
+                  Product 1 to analyze
+institute1        (default: "mpi-m") [mandatory]
+                  I.e. mpi-m
+model1            (default: "mpi-esm-lr") [mandatory]
+                  Model 1 to analyze
+experiment1       (default: "decs4e") [mandatory]
+                  Prefix for experiments. I.e. "decs4e" or "decadal"
+ensemblemembers1  (default: "*")
+                  Here you can specify which ensemble members you want to use.
+                  Please insert a comma separated list. I.e. "r1i1p1,r2i1p1,..".
+                  If you leave this blank all members are used!
+project2          (default: "baseline0") [mandatory]
+                  BASELINE0, BASELINE1, CMIP5 or PROJECTDATA
+product2          (default: "output1") [mandatory]
+                  Product 1 to analyze
+institute2        (default: "mpi-m") [mandatory]
+                  I.e. mpi-m
+model2            (default: "mpi-esm-lr") [mandatory]
+                  Model 2 to analyze
+experiment2       (default: "decadal") [mandatory]
+                  Prefix for experiments. I.e. "decs4e" or "decadal"
+ensemblemembers2  (default: "*")
+                  Here you can specify which ensemble members you want to use.
+                  Please insert a comma separated list. I.e. "r1i1p1,r2i1p1,..".
+                  If you leave this blank all members are used!
+leadtimes         (default: 1,2-9) [mandatory]
+                  Leadtimes to analyze
+observation       (default: HadCrut) [mandatory]
+                  Observation to compare. I.e. merra or hadcrut3v. You can also
+                  specify an observation file.
+significance      (default: False)
+                  Whether you want to calculate significance levels.
+                  WARNING: This could take up to 1 day!
+bootstrap_number  (default: 500)
+                  Number of bootstrap runs.
+level             (default: None)
+                  Level to select. If you are using 3D-Files
+lonlatbox         (default: <undefined>)
+                  Here you can specify a region. I.e. -100,40,20,80
+maskMissingValues (default: True)
+                  Whether you want to mask missing values in observation file or
+                  not
+cache             (default: "/tmp/murcss/cache/")
+                  Workdir
+result_grid       (default: <undefined>)
+                  You can specify a gridfile or a grid description like r20x25"""
 
 def main(argv=None): # IGNORE:C0111
     '''Command line options.'''
     if argv is None:
        argv = sys.argv[1:]
-	
+    
     args, lastargs = getopt.getopt(argv, _short_args, _args)
-
+    
+    for flag,arg in args:
+        if flag=='-h' or flag=='--help':
+            return printHelp()
+    
     murcss_dict = getMurcssDict()
     for arg in lastargs:
         if '=' not in arg:
@@ -143,8 +217,10 @@ def main(argv=None): # IGNORE:C0111
     crpss2.analyze()
     crpss2.deleteCache()    
 
-    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBootstrap, metrics.findFilesSeason
-    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
+    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBoot
+strap, metrics.findFilesSeason
+    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.
+cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
     print 'Calculation finished.'
     print 'Plots produced in %s' %(msss.outputPlots,)
 
