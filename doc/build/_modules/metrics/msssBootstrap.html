@@ -1,0 +1,359 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.msssBootstrap &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="metrics" href="../metrics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" accesskey="U">metrics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.msssBootstrap</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 16.08.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">msss</span> <span class="kn">import</span> <span class="n">Msss</span>
+<span class="kn">from</span> <span class="nn">significance2</span> <span class="kn">import</span> <span class="n">Significance</span>
+<span class="kn">from</span> <span class="nn">plotter</span> <span class="kn">import</span> <span class="n">Plotter</span>
+
+<span class="kn">from</span> <span class="nn">cdo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">cdo</span> <span class="o">=</span> <span class="n">Cdo</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+    
+    
+<div class="viewcode-block" id="MsssBootstrap"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap">[docs]</a><span class="k">class</span> <span class="nc">MsssBootstrap</span><span class="p">(</span><span class="n">Msss</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class with special method for bootstrapping</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="MsssBootstrap._prepareBootstrap"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap._prepareBootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">_prepareBootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Searches the files for specific year, remaps them, and calculates ensemblemean</span>
+<span class="sd">        </span>
+<span class="sd">        :param year</span>
+<span class="sd">        :return ensmeanProject1, ensmeanProject2</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;ensList&#39;</span><span class="p">)):</span>
+            <span class="n">ensListProject1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensList</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ensListProject1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">getFiles</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span> 
+                                                    <span class="n">ensemblemembers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers1</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product1</span><span class="p">,</span> 
+                                                    <span class="n">institute</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">institute1</span><span class="p">,</span> <span class="n">exp_prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment1</span><span class="p">)</span>
+        <span class="n">tmpList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">ensfile</span> <span class="ow">in</span> <span class="n">ensListProject1</span><span class="p">:</span>
+            <span class="c">#yearmean</span>
+            <span class="c">#tmpList.append(cdo.yearmean(input=ensfile, output=self.tmpDir+self.extractFilename(ensfile)+str(year)+self.project1))</span>
+            <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ensfile</span><span class="p">)</span>
+            <span class="c">#remap</span>
+            <span class="n">tmpList2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tmpList</span><span class="p">:</span>
+                <span class="n">tmpList2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remapFile</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+        <span class="n">tmpOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">project1</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">product1</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment1</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;/&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="n">tmpOut</span><span class="p">)</span>
+        
+        <span class="n">ensmeanProject1</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpList2</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">tmpOut</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">project1</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">product1</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;.nc&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;histList&#39;</span><span class="p">)):</span>
+            <span class="n">ensListProject2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">histList</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ensListProject2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">getFiles</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span>
+                                                    <span class="n">ensemblemembers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers2</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product2</span><span class="p">,</span> 
+                                                    <span class="n">institute</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">institute2</span><span class="p">,</span> <span class="n">exp_prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment2</span><span class="p">)</span>
+        <span class="n">tmpList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">ensfile</span> <span class="ow">in</span> <span class="n">ensListProject2</span><span class="p">:</span>
+            <span class="c">#yearmean</span>
+            <span class="c">#tmpList.append(cdo.yearmean(input=ensfile, output=self.tmpDir+self.extractFilename(ensfile)+str(year)+self.project2))</span>
+            <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ensfile</span><span class="p">)</span>
+            <span class="c">#remap</span>
+            <span class="n">tmpList2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tmpList</span><span class="p">:</span>
+                <span class="n">tmpList2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remapFile</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+        <span class="n">tmpOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">project2</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">product2</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">model2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment2</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;/&#39;</span>
+        <span class="c">#os.makedirs(tmpOut)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="n">tmpOut</span><span class="p">)</span>
+        <span class="n">ensmeanProject2</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpList2</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">tmpOut</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">project2</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">model2</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">product2</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;.nc&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">ensmeanProject1</span><span class="p">,</span> <span class="n">ensmeanProject2</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="MsssBootstrap.prepareBootstrap"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap.prepareBootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">prepareBootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiprocess approach</span>
+<span class="sd">        Uses _prepareBootstrap to prepare the Bootstrap files for input1 and input2</span>
+<span class="sd">        </span>
+<span class="sd">        :return: ensMeanProject1Dict, ensMeanProject2Dict</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#print self.findFiles</span>
+        <span class="n">procs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span>  <span class="nb">zip</span><span class="p">([</span><span class="bp">self</span><span class="p">]</span><span class="o">*</span><span class="n">procs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;_prepareBootstrap&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">procs</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+        <span class="n">ensMeanProject1Dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">ensMeanProject2Dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)):</span>    
+            <span class="n">ensMeanProject1Dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ensMeanProject2Dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Selecting lon-lat-box </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="n">ensMeanProject1Dict</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sellonlatbox</span><span class="p">(</span><span class="n">ensMeanProject1Dict</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="n">ensMeanProject2Dict</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sellonlatbox</span><span class="p">(</span><span class="n">ensMeanProject2Dict</span><span class="p">[</span><span class="n">year</span><span class="p">])</span> 
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject1</span> <span class="o">=</span> <span class="n">ensMeanProject1Dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject2</span> <span class="o">=</span> <span class="n">ensMeanProject2Dict</span>
+    
+        <span class="k">return</span> <span class="p">(</span><span class="n">ensMeanProject1Dict</span><span class="p">,</span> <span class="n">ensMeanProject2Dict</span><span class="p">,)</span>
+    </div>
+<div class="viewcode-block" id="MsssBootstrap.bootstrapGoddard"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap.bootstrapGoddard">[docs]</a>    <span class="k">def</span> <span class="nf">bootstrapGoddard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputFolder</span><span class="o">=</span><span class="s">&#39;./tmp/&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Actual method for selecting files of a bootstrap run.</span>
+<span class="sd">        Select input data from bootstrap pool by choice from bootstrap pool</span>
+<span class="sd">        together with corresponding obs data</span>
+<span class="sd">        --&gt; constraint is to select within a 5 Year range only (because of a trend in the data) </span>
+<span class="sd">        </span>
+<span class="sd">        :param outputFolder: temp folder </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">outputFolder</span><span class="p">)):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outputFolder</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="n">outputFolder</span>
+        
+        <span class="n">newPoolList1</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">newPoolList2</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject1</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+            <span class="n">new_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">new_f</span><span class="p">)</span>
+            <span class="n">newPoolList1</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_f</span>
+            
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject2</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+            <span class="n">new_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">new_f</span><span class="p">)</span>
+            <span class="n">newPoolList2</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject1</span> <span class="o">=</span> <span class="n">newPoolList1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject2</span> <span class="o">=</span> <span class="n">newPoolList2</span>        
+        
+        <span class="n">bootstrapResultM1</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">bootstrapResultM2</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">bootstrapObservations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">bootstrapResultM1</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">yearToSelect</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span>
+
+                
+                <span class="n">bootstrapResultM1</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject1</span><span class="p">[</span><span class="n">yearToSelect</span><span class="p">]</span>
+                <span class="n">bootstrapResultM2</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject2</span><span class="p">[</span><span class="n">yearToSelect</span><span class="p">]</span>
+                <span class="n">bootstrapObservations</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span><span class="p">[</span><span class="n">yearToSelect</span><span class="p">]</span>
+                
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">yearToSelect</span><span class="o">+</span><span class="n">i</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span> <span class="ow">and</span> <span class="n">year</span><span class="o">+</span><span class="n">i</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">):</span>
+                        
+                        <span class="k">if</span> <span class="n">yearToSelect</span><span class="o">+</span><span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span> 
+                            <span class="n">bootstrapResultM1</span><span class="p">[</span><span class="n">year</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject1</span><span class="p">[</span><span class="n">yearToSelect</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+                            <span class="n">bootstrapResultM2</span><span class="p">[</span><span class="n">year</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapPoolProject2</span><span class="p">[</span><span class="n">yearToSelect</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+                            <span class="n">bootstrapObservations</span><span class="p">[</span><span class="n">year</span><span class="o">+</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span><span class="p">[</span><span class="n">yearToSelect</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+                            
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">bootstrapResultM1</span><span class="p">,</span> <span class="n">bootstrapResultM2</span><span class="p">,</span> <span class="n">bootstrapObservations</span><span class="p">]</span>
+   </div>
+<div class="viewcode-block" id="MsssBootstrap._calcSignificance"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap._calcSignificance">[docs]</a>    <span class="k">def</span> <span class="nf">_calcSignificance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrap_folders</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">plot_folder</span><span class="p">,</span> <span class="n">file_to_check</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Caluclate the significance for the intput field (file_to_check)</span>
+<span class="sd">        The field is also plotted with significance crosses</span>
+<span class="sd">        </span>
+<span class="sd">        :param bootstrap_folder: path of bootstraped data</span>
+<span class="sd">        :param output_folder: path</span>
+<span class="sd">        :param plot_folder: path</span>
+<span class="sd">        :param file_to_check: fn</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">file_to_check</span>
+        <span class="n">file_to_check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">file_to_check</span><span class="p">)</span>
+        <span class="n">b_array_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">bootstrap_folders</span><span class="p">:</span>
+            
+            <span class="n">b_array_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">folder</span><span class="o">+</span><span class="n">file_to_check</span><span class="p">)</span>
+            
+        
+        <span class="n">significance</span> <span class="o">=</span> <span class="n">Significance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">sig_lon</span><span class="p">,</span> <span class="n">sig_lat</span><span class="p">)</span> <span class="o">=</span> <span class="n">significance</span><span class="o">.</span><span class="n">checkSignificance</span><span class="p">(</span><span class="n">b_array_list</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+        
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Plotter</span><span class="o">.</span><span class="n">plotField</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="s">&#39;RedBlu&#39;</span><span class="p">,</span> <span class="n">lonlatbox</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span><span class="p">)</span>
+        <span class="n">Plotter</span><span class="o">.</span><span class="n">addCrosses</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">sig_lon</span><span class="p">,</span> <span class="n">sig_lat</span><span class="p">)</span>
+        <span class="n">Plotter</span><span class="o">.</span><span class="n">saveFig</span><span class="p">(</span><span class="n">plot_folder</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">output_folder</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+     </div>
+<div class="viewcode-block" id="MsssBootstrap.calcSignificance"><a class="viewcode-back" href="../../msssBootstrap.html#metrics.msssBootstrap.MsssBootstrap.calcSignificance">[docs]</a>    <span class="k">def</span> <span class="nf">calcSignificance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bootstrap_folders</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">plot_folder</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiprocessing of &quot;_calcSignificance&quot;. Start 1 Process for every result file</span>
+<span class="sd">        </span>
+<span class="sd">        :param bootstrap_folder: path of bootstraped data</span>
+<span class="sd">        :param output_folder: path</span>
+<span class="sd">        :param plot_folder: path</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">files_to_check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">getAllFilesInSubfolders</span><span class="p">(</span><span class="n">output_folder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskMissingValues</span><span class="p">:</span>
+            <span class="n">files_to_check</span> <span class="o">=</span> <span class="p">[</span><span class="n">fn</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">files_to_check</span> <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;masked&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="n">procs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span>  <span class="nb">zip</span><span class="p">([</span><span class="bp">self</span><span class="p">]</span><span class="o">*</span><span class="n">procs</span><span class="p">,</span> <span class="p">[</span><span class="n">bootstrap_folders</span><span class="p">]</span><span class="o">*</span><span class="n">procs</span><span class="p">,</span> <span class="p">[</span><span class="n">output_folder</span><span class="p">]</span><span class="o">*</span><span class="n">procs</span><span class="p">,</span> 
+                        <span class="p">[</span><span class="n">plot_folder</span><span class="p">]</span><span class="o">*</span><span class="n">procs</span><span class="p">,</span> <span class="n">files_to_check</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;_calcSignificance&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">procs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+        
+         
+    </div></div>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="n">baseDir</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Main fuinction for the whole bootstrap process</span>
+<span class="sd">    </span>
+<span class="sd">    1. Normal MSSS calculation</span>
+<span class="sd">    2. Prepare bootstrap data</span>
+<span class="sd">    3. Calculate bootstraps</span>
+<span class="sd">    4. Calcualte Significance and plot files</span>
+<span class="sd">    </span>
+<span class="sd">    :param config_dict: dictionary with all params needed for Msss calcualtion</span>
+<span class="sd">    :param baseDir: dir of class</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;baseDir&#39;</span><span class="p">)</span> 
+    <span class="k">except</span><span class="p">:</span> <span class="k">pass</span>
+    <span class="n">bootstrap_number</span> <span class="o">=</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;bootstrap_number&#39;</span><span class="p">)</span>
+    <span class="n">config_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;significance&#39;</span><span class="p">)</span>
+    <span class="n">Msss</span> <span class="o">=</span> <span class="n">MsssBootstrap</span><span class="p">(</span><span class="n">baseDir</span><span class="o">=</span><span class="n">baseDir</span><span class="p">,</span><span class="o">**</span><span class="n">config_dict</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Msss</span><span class="o">.</span><span class="n">prepareInput</span><span class="p">()</span>
+        <span class="n">Msss</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>
+        <span class="n">remappedObservations</span> <span class="o">=</span> <span class="n">Msss</span><span class="o">.</span><span class="n">obsRemapped</span>
+        
+        <span class="k">print</span> <span class="s">&#39;Prepare Bootstrap data&#39;</span>
+        <span class="p">(</span><span class="n">bootstrapList1</span><span class="p">,</span> <span class="n">bootstrapList2</span><span class="p">)</span> <span class="o">=</span> <span class="n">Msss</span><span class="o">.</span><span class="n">prepareBootstrap</span><span class="p">()</span>
+        
+        <span class="n">bootstrap_folders</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">bootstrap_number</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&#39;###############################################&#39;</span>
+            <span class="k">print</span> <span class="s">&#39;Bootstrap number &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&#39;###############################################&#39;</span>
+            <span class="n">Msss</span><span class="o">.</span><span class="n">obsRemapped</span> <span class="o">=</span> <span class="n">remappedObservations</span>
+            <span class="n">bootstrap_config_dict</span> <span class="o">=</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">outputFolder</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">config_dict</span><span class="p">[</span><span class="s">&#39;cache&#39;</span><span class="p">],</span> <span class="s">&#39;bootstrap&#39;</span><span class="p">,</span> <span class="s">&#39;msss&#39;</span><span class="p">,</span> <span class="s">&#39;number&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
+            <span class="n">cacheFolder</span> <span class="o">=</span> <span class="n">outputFolder</span> <span class="o">+</span> <span class="s">&#39;cache/&#39;</span>
+            
+            <span class="n">bootstrap_config_dict</span><span class="p">[</span><span class="s">&#39;output&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">outputFolder</span>
+            <span class="n">bootstrap_config_dict</span><span class="p">[</span><span class="s">&#39;output_plots&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">outputFolder</span><span class="o">+</span><span class="s">&#39;plots/&#39;</span>
+            <span class="n">bootstrap_config_dict</span><span class="p">[</span><span class="s">&#39;cache&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">cacheFolder</span>
+            <span class="n">bootstrap_config_dict</span><span class="p">[</span><span class="s">&#39;bootstrap&#39;</span><span class="p">]</span><span class="o">=</span> <span class="bp">True</span>
+            <span class="n">bootstrap_config_dict</span><span class="p">[</span><span class="s">&#39;obsRemapped&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">remappedObservations</span>
+            <span class="n">bootstrap</span> <span class="o">=</span> <span class="n">MsssBootstrap</span><span class="p">(</span><span class="n">baseDir</span><span class="o">=</span><span class="n">baseDir</span><span class="p">,</span><span class="o">**</span><span class="n">bootstrap_config_dict</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">bootstrap</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">,</span> <span class="n">bootstrap</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">)</span> <span class="o">=</span> <span class="n">Msss</span><span class="o">.</span><span class="n">bootstrapGoddard</span><span class="p">(</span><span class="n">cacheFolder</span><span class="p">)</span>
+            
+            <span class="n">bootstrap</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>
+            <span class="n">bootstrap_folders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bootstrap</span><span class="o">.</span><span class="n">outputDir</span><span class="p">)</span>
+    
+        <span class="k">print</span> <span class="s">&#39;###############################################&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;Calculating Significance&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;###############################################&#39;</span>
+        <span class="n">bootstrap</span><span class="o">.</span><span class="n">calcSignificance</span><span class="p">(</span><span class="n">bootstrap_folders</span><span class="p">,</span> <span class="n">Msss</span><span class="o">.</span><span class="n">outputDir</span><span class="p">,</span> <span class="n">Msss</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;Plots produced in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">Msss</span><span class="o">.</span><span class="n">outputPlots</span>   
+        <span class="k">return</span> <span class="n">Msss</span> 
+    <span class="k">finally</span><span class="p">:</span> 
+        <span class="n">Msss</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="n">config_dict</span><span class="p">[</span><span class="s">&#39;cache&#39;</span><span class="p">]</span>
+        <span class="n">Msss</span><span class="o">.</span><span class="n">deleteCache</span><span class="p">()</span>
+        
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" >metrics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

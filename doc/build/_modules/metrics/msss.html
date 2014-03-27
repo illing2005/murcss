@@ -1,0 +1,547 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.msss &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="metrics" href="../metrics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" accesskey="U">metrics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.msss</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 19.02.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">cdo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">cdo</span> <span class="o">=</span> <span class="n">Cdo</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+
+<span class="kn">from</span> <span class="nn">metricAbstract</span> <span class="kn">import</span> <span class="n">MetricAbstract</span>
+<span class="kn">from</span> <span class="nn">taylorplot</span> <span class="kn">import</span> <span class="n">TaylorPlotMurCSS</span>
+
+<span class="k">class</span> <span class="nc">MsssError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+    
+
+    
+<div class="viewcode-block" id="Msss"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss">[docs]</a><span class="k">class</span> <span class="nc">Msss</span><span class="p">(</span><span class="n">MetricAbstract</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class to calculate the MSSS. Call method &quot;analyze&quot; to get results</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c">#Here the output filenames and folder structure get defined</span>
+    <span class="n">outputFolderStruct</span> <span class="o">=</span> <span class="s">&#39;TIME_variable_project1_product1_institute1_model1_experiment1_project2_product2_institute2_model2_experiment2_obsExp_LEVEL_SELLONLAT_YEARRANGE&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">insideFolderNameFlag</span> <span class="o">=</span> <span class="s">&#39;project_product_model_experiment&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">fileNameFlag</span> <span class="o">=</span> <span class="s">&#39;LEADTIMES_variable_project_product_model_experiment_YEARRANGE&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">fileNameFlagVs</span> <span class="o">=</span> <span class="s">&#39;LEADTIMES_variable_project1_product1_model1_experiment1_vs_project2_product2_model2_experiment2_YEARRANGE&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>    <span class="bp">self</span><span class="p">,</span> 
+                     <span class="n">output</span><span class="o">=</span><span class="s">&#39;/tmp/msss/output/&#39;</span><span class="p">,</span> 
+                     <span class="n">output_plots</span><span class="o">=</span><span class="s">&#39;/tmp/msss/output/&#39;</span><span class="p">,</span> 
+                     <span class="n">decadals</span><span class="o">=</span><span class="s">&#39;1960,1965,1970,1975,1980,1985,1990,1995,2000&#39;</span><span class="p">,</span>
+                     <span class="n">variable</span><span class="o">=</span><span class="s">&#39;tas&#39;</span><span class="p">,</span> 
+                     
+                     <span class="c">#CMOR parameter for input1</span>
+                     <span class="n">project1</span><span class="o">=</span><span class="s">&#39;baseline1&#39;</span><span class="p">,</span> 
+                     <span class="n">product1</span><span class="o">=</span><span class="s">&#39;output&#39;</span><span class="p">,</span>
+                     <span class="n">institute1</span><span class="o">=</span><span class="s">&#39;mpi-m&#39;</span><span class="p">,</span> 
+                     <span class="n">model1</span> <span class="o">=</span> <span class="s">&#39;mpi-esm-lr&#39;</span><span class="p">,</span> 
+                     <span class="n">experiment1</span><span class="o">=</span><span class="s">&#39;decs4e&#39;</span><span class="p">,</span> 
+                     <span class="n">ensemblemembers1</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> 
+                     
+                     <span class="c">#CMOR parameter for input2</span>
+                     <span class="n">project2</span><span class="o">=</span><span class="s">&#39;baseline0&#39;</span><span class="p">,</span> 
+                     <span class="n">product2</span><span class="o">=</span><span class="s">&#39;output1&#39;</span><span class="p">,</span> 
+                     <span class="n">institute2</span><span class="o">=</span><span class="s">&#39;mpi-m&#39;</span><span class="p">,</span> 
+                     <span class="n">model2</span><span class="o">=</span><span class="s">&#39;mpi-esm-lr&#39;</span><span class="p">,</span> 
+                     <span class="n">experiment2</span><span class="o">=</span><span class="s">&#39;decadal&#39;</span><span class="p">,</span>
+                     <span class="n">ensemblemembers2</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> 
+                     
+                     <span class="n">leadtimes</span><span class="o">=</span><span class="s">&#39;1,2-9&#39;</span><span class="p">,</span> 
+                     <span class="n">observation</span> <span class="o">=</span> <span class="s">&#39;HadCrut&#39;</span><span class="p">,</span> 
+                     <span class="n">maskMissingValues</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+                     <span class="n">result_grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                     <span class="n">cache</span><span class="o">=</span><span class="s">&#39;/tmp/msss/cache/&#39;</span><span class="p">,</span> 
+                     <span class="n">baseDir</span> <span class="o">=</span> <span class="s">&#39;..&#39;</span><span class="p">,</span> 
+                     <span class="n">timeFreq</span> <span class="o">=</span> <span class="s">&#39;mon&#39;</span><span class="p">,</span>
+
+                     <span class="c">#for bootstrapping</span>
+                     <span class="n">bootstrap</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                     <span class="n">bootstrap2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                     <span class="n">obsRemapped</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+                     
+                     <span class="n">analysis_type</span> <span class="o">=</span> <span class="s">&#39;decadal&#39;</span><span class="p">,</span>
+                     <span class="n">level</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                     <span class="n">lonlatbox</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                     <span class="n">fieldmean</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="c">#not finally implemented</span>
+                     
+                     <span class="n">colormap</span><span class="o">=</span><span class="s">&#39;RedBlu&#39;</span><span class="p">,</span> <span class="c">#not used</span>
+                     <span class="n">observation_type</span> <span class="o">=</span> <span class="s">&#39;REANALYSIS&#39;</span><span class="p">,</span> <span class="c">#not used ???</span>
+                     <span class="n">reanpath</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="c">#not used ???</span>
+                     <span class="n">months</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                 <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Constructor. Set parameters and calls parent constructor (metricAbstract)</span>
+<span class="sd">        </span>
+<span class="sd">        :param output: Path where the results are saved</span>
+<span class="sd">        :param output_plots: Path where the plots are saved</span>
+<span class="sd">        :param decadals: a list with decadal experiments, i.e. [1960,1960,...,1995]</span>
+<span class="sd">        :param variable: CMOR-Name of variable like &#39;tas&#39; (Near Surface Temperature)</span>
+<span class="sd">        :param project1: CMOR-Name of the project like CMIP5 or BASELINE1</span>
+<span class="sd">        :param product1: CMOR-Parameter</span>
+<span class="sd">        :param institute1: CMOR-Name of the institute like MPI-M</span>
+<span class="sd">        :param model1: CMOR-Name of the used model like MPI-ESM-LR</span>
+<span class="sd">        :param experiment1: Experiment name like decs4e or historical</span>
+<span class="sd">        :param project2: CMOR-Name of the project like CMIP5 or BASELINE1</span>
+<span class="sd">        :param product2: CMOR-Parameter</span>
+<span class="sd">        :param institute2:CMOR-Name of the institute like MPI-M</span>
+<span class="sd">        :param model2: CMOR-Name of the used model like MPI-ESM-LR</span>
+<span class="sd">        :param experiment2: Experiment name like decs4e or historical</span>
+<span class="sd">        :param ensemblemembers: Comma separated string of esemble members like &#39;r1i1p1,r2i1p1,...&#39;</span>
+<span class="sd">        :param leadtimes: Leadtimes to analyze, ie. 1,2-9</span>
+<span class="sd">        :param observation: Observation or Reanalysis Experiment, HadCrut or ERA-Int</span>
+<span class="sd">        :param maskMissingValues: Boolean </span>
+<span class="sd">        :param result_grid: Griddescription of resultgrid like r72x36</span>
+<span class="sd">        :param cache: Path for cachedir during analysis</span>
+<span class="sd">        :param baseDir: Path of Class to find default files</span>
+<span class="sd">        :param timeFreq: Timefrequency of the files, ie &#39;mon&#39; or &#39;day&#39;</span>
+<span class="sd">        :param bootstrap:</span>
+<span class="sd">        :param bootstrap2:</span>
+<span class="sd">        :param obsRemapped:</span>
+<span class="sd">        :param level: For 3D-Files --&gt; Select a single level</span>
+<span class="sd">        :param lonlatbox: If you want to select a specific lonlat-Box</span>
+<span class="sd">        :param fieldmean: Boolean - If you want to calculate global mean</span>
+<span class="sd">        :param colormap: Matplotlib Colormap used for ploting</span>
+<span class="sd">        :param observation_type: NOT USED ANYMORE!!!</span>
+<span class="sd">        :param reanpath: NOT USED ANYMORE!!!</span>
+<span class="sd">        &#39;&#39;&#39;</span>            
+        <span class="c">#Add kwargs to attributes</span>
+        <span class="n">listOfAttributes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;decadals&#39;</span><span class="p">,</span><span class="s">&#39;variable&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;project1&#39;</span><span class="p">,</span><span class="s">&#39;product1&#39;</span><span class="p">,</span><span class="s">&#39;institute1&#39;</span><span class="p">,</span><span class="s">&#39;model1&#39;</span><span class="p">,</span><span class="s">&#39;experiment2&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;project2&#39;</span><span class="p">,</span><span class="s">&#39;product2&#39;</span><span class="p">,</span><span class="s">&#39;institute2&#39;</span><span class="p">,</span><span class="s">&#39;model2&#39;</span><span class="p">,</span><span class="s">&#39;experiment1&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;leadtimes&#39;</span><span class="p">,</span><span class="s">&#39;maskMissingValues&#39;</span><span class="p">,</span><span class="s">&#39;level&#39;</span><span class="p">,</span><span class="s">&#39;lonlatbox&#39;</span><span class="p">,</span><span class="s">&#39;fieldmean&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;bootstrap&#39;</span><span class="p">,</span><span class="s">&#39;bootstrap2&#39;</span><span class="p">,</span><span class="s">&#39;obsRemapped&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;observation_type&#39;</span><span class="p">,</span><span class="s">&#39;colormap&#39;</span><span class="p">,</span><span class="s">&#39;timeFreq&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">listOfAttributes</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">attr</span><span class="p">])</span>
+               
+        
+        <span class="k">if</span> <span class="n">ensemblemembers1</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">ensemblemembers1</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers1</span> <span class="o">=</span> <span class="n">ensemblemembers1</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers1</span> <span class="o">=</span> <span class="s">&#39;*&#39;</span>
+        <span class="k">if</span> <span class="n">ensemblemembers2</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">ensemblemembers2</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers2</span> <span class="o">=</span> <span class="n">ensemblemembers2</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers2</span> <span class="o">=</span> <span class="s">&#39;*&#39;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Msss</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">cache</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span> <span class="n">output_plots</span><span class="o">=</span><span class="n">output_plots</span><span class="p">,</span>
+                                  <span class="n">baseDir</span><span class="o">=</span><span class="n">baseDir</span><span class="p">,</span> <span class="n">result_grid</span><span class="o">=</span><span class="n">result_grid</span><span class="p">,</span> <span class="n">observation</span><span class="o">=</span><span class="n">observation</span><span class="p">,</span>
+                                  <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span> <span class="n">decadals</span><span class="o">=</span><span class="n">decadals</span><span class="p">,</span> <span class="n">months</span><span class="o">=</span><span class="n">months</span> <span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">prepareInput</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span>  <span class="c">#WORKAROUND</span>
+             
+        <span class="bp">self</span><span class="o">.</span><span class="n">observationDict</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        
+            <span class="k">print</span> <span class="s">&#39;Searching Files&#39;</span> 
+            <span class="n">countYears</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span>
+            <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">countYears</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">project2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span>
+                                        <span class="s">&#39;mon&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">product2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">institute2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment2</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">maxLeadtime</span><span class="p">,</span> <span class="s">&#39;getFiles&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input2Dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span> 
+            <span class="c">#print self.input2Dict</span>
+            <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">countYears</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">project1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">model1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span>
+                                        <span class="s">&#39;mon&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">product1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ensemblemembers1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">institute1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment1</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">maxLeadtime</span><span class="p">,</span><span class="s">&#39;getFiles&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input1Dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observationDict</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">getReanalysis</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">,</span> <span class="n">maxLeadtime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maxLeadtime</span><span class="p">)</span>     
+            <span class="k">print</span> <span class="s">&#39;Remapping Files&#39;</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remapFiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input1Dict</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remapFiles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input2Dict</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">product2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remapFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationDict</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input1Dict</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">histList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2Dict</span>   
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap2</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">observationDict</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span><span class="o">.</span><span class="n">getReanalysis</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remapFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationDict</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Msss.analyze"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Main method to calculate the MSSS. Following steps are performed:</span>
+<span class="sd">        </span>
+<span class="sd">        1. Searching for file using solr_search</span>
+<span class="sd">        2. Remapping Files to coarser grid</span>
+<span class="sd">        3. Calculating Ensemble Mean</span>
+<span class="sd">        4. Calculating cross-validated mean</span>
+<span class="sd">        5. Calculating anomalies for both models</span>
+<span class="sd">        6. Analyzing different timeranges </span>
+<span class="sd">        &#39;&#39;&#39;</span>  
+        
+        <span class="c">#check if prepare output was called or variables are set</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MsssError</span><span class="p">,</span> <span class="s">&#39;Please run &quot;prepareInput() first or provide input data&#39;</span>
+            
+        <span class="c">#select lon/lat box</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Selecting lon-lat-box </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>         
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldmean</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Calculating field mean&#39;</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldMean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldMean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldmean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">[</span><span class="n">year</span><span class="p">])</span> 
+            
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Calculating ensemble mean&#39;</span>
+            <span class="n">input1Ensemblemean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEnsembleMean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span><span class="p">)</span>
+            <span class="n">input2Ensemblemean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEnsembleMean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">input1Ensemblemean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input1Remapped</span>
+            <span class="n">input2Ensemblemean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2Remapped</span>
+            
+        <span class="k">print</span> <span class="s">&#39;Calculating crossvalidated mean&#39;</span>
+        <span class="n">input1CrossvalMean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCrossValMean</span><span class="p">(</span><span class="n">input1Ensemblemean</span><span class="p">,</span> <span class="s">&#39;model&#39;</span><span class="p">)</span>
+        <span class="n">input2CrossvalMean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCrossValMean</span><span class="p">(</span><span class="n">input2Ensemblemean</span><span class="p">,</span> <span class="s">&#39;hist&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span> <span class="o">!=</span> <span class="s">&#39;HadCrut&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">obsCrossValMean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCrossValMean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">,</span> <span class="s">&#39;obs&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAnomalies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">,</span> <span class="n">obsCrossValMean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obsRemapped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span>
+            
+        <span class="k">print</span> <span class="s">&#39;Calculating Anomalies&#39;</span>
+        <span class="n">input1Anomalies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAnomalies</span><span class="p">(</span><span class="n">input1Ensemblemean</span><span class="p">,</span> <span class="n">input1CrossvalMean</span><span class="p">)</span>
+        <span class="n">input2Anomalies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAnomalies</span><span class="p">(</span><span class="n">input2Ensemblemean</span><span class="p">,</span> <span class="n">input2CrossvalMean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constantField</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createConstantFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gridFile</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">misvalMask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calcMissingValueMask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">)</span>
+        
+        <span class="n">rangeCount</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getYearRange</span><span class="p">())</span>
+        <span class="n">firstYearList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">lastYearList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">yr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">getYearRange</span><span class="p">():</span>
+            <span class="n">firstYearList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">lastYearList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c">#escape attributes </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">escapeAttributes</span><span class="p">()</span>
+
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">rangeCount</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">input1Anomalies</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">observationRemapped</span><span class="p">,</span><span class="n">input2Anomalies</span><span class="p">,</span>
+                                    <span class="n">firstYearList</span><span class="p">,</span><span class="n">lastYearList</span><span class="p">,</span><span class="s">&#39;analyzeYearRange&#39;</span><span class="p">)</span>
+        <span class="n">resultList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldmean</span><span class="p">:</span>
+            <span class="c">#construct a taylor plot</span>
+            <span class="n">taylor</span> <span class="o">=</span> <span class="n">TaylorPlotMurCSS</span><span class="p">(</span><span class="n">negativeCorr</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">taylor</span><span class="o">.</span><span class="n">constructPlot</span><span class="p">(</span><span class="n">resultList</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#plot fields</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">fileList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">rList</span> <span class="ow">in</span> <span class="n">resultList</span><span class="p">:</span>  
+                    <span class="n">fileList</span> <span class="o">=</span> <span class="n">fileList</span> <span class="o">+</span> <span class="n">rList</span>          
+                <span class="n">filesToPlot</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+                <span class="c">#print fileList</span>
+                <span class="nb">min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">filesToPlot</span><span class="p">)</span>
+                <span class="nb">max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">filesToPlot</span><span class="p">)</span>
+                <span class="n">std_ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span> <span class="k">if</span> <span class="s">&#39;std_ratio&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+                <span class="nb">min</span><span class="p">[</span><span class="n">std_ind</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+                <span class="nb">max</span><span class="p">[</span><span class="n">std_ind</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">filesToPlot</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">fileList</span><span class="p">,</span><span class="nb">list</span><span class="p">(</span><span class="nb">min</span><span class="p">),</span><span class="nb">list</span><span class="p">(</span><span class="nb">max</span><span class="p">),</span><span class="s">&#39;_plotField&#39;</span><span class="p">)</span>
+                <span class="n">resultList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+                  
+        
+           </div>
+<div class="viewcode-block" id="Msss.analyzeYearRange"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.analyzeYearRange">[docs]</a>    <span class="k">def</span> <span class="nf">analyzeYearRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input1Anomalies</span><span class="p">,</span> <span class="n">observationRemapped</span><span class="p">,</span> <span class="n">input2Anomalies</span><span class="p">,</span> <span class="n">startYear</span><span class="p">,</span> <span class="n">endYear</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the MSSS for given timerange. The following steps are perfomed in this method:</span>
+<span class="sd">        </span>
+<span class="sd">        1. temporal smoothing</span>
+<span class="sd">        2. calculation of correlation, bias, and msss</span>
+<span class="sd">        3. calculation of model1 vs. model2</span>
+<span class="sd">        4. plotting of the 9 fields </span>
+<span class="sd">        </span>
+<span class="sd">        :todo: maybe this could be done in multiprocessing --&gt; so different timeranges at once</span>
+<span class="sd">        </span>
+<span class="sd">        :param input1Anomalies: dict with anomalies of model1</span>
+<span class="sd">        :param observationRemapped: dict with anomalies of observations</span>
+<span class="sd">        :param input2Anomalies: dict with anomalies of model2</span>
+<span class="sd">        :param startYear: </span>
+<span class="sd">        :param endYear: </span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;Analyzing year </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">startYear</span><span class="p">,</span> <span class="n">endYear</span><span class="p">)</span>
+
+        <span class="n">base</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">startYear</span><span class="p">,</span> <span class="n">endYear</span><span class="p">)</span>
+        <span class="c">#get file names</span>
+        <span class="n">flag1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insideFolderNameFlag</span><span class="p">,</span><span class="n">exp</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+        <span class="n">flag2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insideFolderNameFlag</span><span class="p">,</span><span class="n">exp</span><span class="o">=</span><span class="s">&#39;2&#39;</span><span class="p">)</span>
+        <span class="n">fnFlag1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileNameFlag</span><span class="p">,</span> <span class="n">exp</span><span class="o">=</span><span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="n">startYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">startYear</span><span class="p">),</span> <span class="n">endYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">endYear</span><span class="p">))</span>
+        <span class="n">fnFlag2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileNameFlag</span><span class="p">,</span> <span class="n">exp</span><span class="o">=</span><span class="s">&#39;2&#39;</span><span class="p">,</span> <span class="n">startYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">startYear</span><span class="p">),</span> <span class="n">endYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">endYear</span><span class="p">))</span>
+        <span class="n">fnFlagVs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fileNameFlagVs</span><span class="p">,</span> <span class="n">exp</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">startYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">startYear</span><span class="p">),</span> <span class="n">endYear</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">endYear</span><span class="p">))</span>
+
+        <span class="c">#make outputfolders</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">model1Output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">flag1</span><span class="o">+</span><span class="s">&#39;/msss&#39;</span><span class="p">)</span>
+            <span class="n">model2Output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">flag2</span><span class="o">+</span><span class="s">&#39;/msss&#39;</span><span class="p">)</span>
+            <span class="n">vsOutput</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/</span><span class="si">%s</span><span class="s">_vs_</span><span class="si">%s</span><span class="s">/msss&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">flag1</span><span class="p">,</span><span class="n">flag2</span><span class="p">))</span>
+            <span class="c">#make plot folders</span>
+            <span class="n">model1Plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">flag1</span><span class="o">+</span><span class="s">&#39;/msss&#39;</span><span class="p">)</span>
+            <span class="n">model2Plot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span><span class="n">flag2</span><span class="o">+</span><span class="s">&#39;/msss&#39;</span><span class="p">)</span>
+            <span class="n">vsPlot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makeFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="o">+</span><span class="n">base</span><span class="o">+</span><span class="s">&#39;/</span><span class="si">%s</span><span class="s">_vs_</span><span class="si">%s</span><span class="s">/msss&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">flag1</span><span class="p">,</span><span class="n">flag2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model1Output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span>
+            <span class="n">model2Output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span>
+            <span class="n">vsOutput</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span>
+                 
+        <span class="n">yearCount</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">yearCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yeardictToList</span><span class="p">(</span><span class="n">input1Anomalies</span><span class="p">),</span><span class="n">startYear</span><span class="p">,</span><span class="n">endYear</span><span class="p">,</span><span class="s">&#39;_tempSmoothing&#39;</span><span class="p">)</span>
+        <span class="n">ensListSelYearTimmean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">yearCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yeardictToList</span><span class="p">(</span><span class="n">observationRemapped</span><span class="p">),</span><span class="n">startYear</span><span class="p">,</span><span class="n">endYear</span><span class="p">,</span><span class="s">&#39;_tempSmoothing&#39;</span><span class="p">)</span>
+        <span class="n">obsSelYearTimmean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">yearCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yeardictToList</span><span class="p">(</span><span class="n">input2Anomalies</span><span class="p">),</span><span class="n">startYear</span><span class="p">,</span><span class="n">endYear</span><span class="p">,</span><span class="s">&#39;_tempSmoothing&#39;</span><span class="p">)</span>
+        <span class="n">histSelYearTimmean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>    
+    
+        <span class="n">startYear</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">startYear</span><span class="p">)</span>
+        <span class="n">endYear</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">endYear</span><span class="p">)</span>
+        <span class="n">correlation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCorrelationAndVariancesAndMSSS</span><span class="p">(</span><span class="n">ensListSelYearTimmean</span><span class="p">,</span><span class="n">obsSelYearTimmean</span><span class="p">,</span> <span class="n">fnFlag1</span><span class="p">,</span> <span class="n">model1Output</span><span class="p">)</span>
+        <span class="n">correlationHist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCorrelationAndVariancesAndMSSS</span><span class="p">(</span><span class="n">histSelYearTimmean</span><span class="p">,</span><span class="n">obsSelYearTimmean</span><span class="p">,</span> <span class="n">fnFlag2</span><span class="p">,</span> <span class="n">model2Output</span><span class="p">)</span>
+        
+        <span class="n">msssInitVsUninit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getInitVsUninit</span><span class="p">(</span><span class="n">correlation</span><span class="p">,</span> <span class="n">correlationHist</span><span class="p">,</span> <span class="n">fnFlagVs</span><span class="p">,</span> <span class="n">vsOutput</span><span class="p">)</span>
+        
+        <span class="n">rmss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRMSS</span><span class="p">(</span><span class="n">correlation</span><span class="p">[</span><span class="s">&#39;msss&#39;</span><span class="p">],</span> <span class="n">fnFlag1</span><span class="p">,</span> <span class="n">model1Output</span><span class="p">)</span>
+        <span class="n">rmssHist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRMSS</span><span class="p">(</span><span class="n">correlationHist</span><span class="p">[</span><span class="s">&#39;msss&#39;</span><span class="p">],</span> <span class="n">fnFlag2</span><span class="p">,</span> <span class="n">model2Output</span><span class="p">)</span>
+        <span class="n">rmssInitvsUninit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRMSS</span><span class="p">(</span><span class="n">msssInitVsUninit</span><span class="p">,</span> <span class="n">fnFlagVs</span><span class="p">,</span> <span class="n">vsOutput</span><span class="p">)</span>  
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">applyMissingValueMask</span><span class="p">(</span><span class="n">startYear</span><span class="p">,</span> <span class="n">endYear</span><span class="p">,</span> <span class="p">[</span><span class="n">model1Output</span><span class="p">,</span><span class="n">model2Output</span><span class="p">,</span><span class="n">vsOutput</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Msss.getInitVsUninit"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.getInitVsUninit">[docs]</a>    <span class="k">def</span> <span class="nf">getInitVsUninit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initResults</span><span class="p">,</span> <span class="n">uninitResults</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">outputDir</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates comparing values between two models/modelversions i.e. initialized vs. uninitialized.</span>
+<span class="sd">        Following variables are computed:</span>
+<span class="sd">        </span>
+<span class="sd">        - correlation: corr1 - corr2 </span>
+<span class="sd">        - conditional bias: abs(bias1) - abs(bias2)</span>
+<span class="sd">        - msss: (msss1-msss2)/(1-msss2)</span>
+<span class="sd">        </span>
+<span class="sd">        :param initResults: dict with &quot;corr&quot;, &quot;bias&quot;, and &quot;msss&quot; of first model</span>
+<span class="sd">        :param uninitResults: dict with &quot;corr&quot;, &quot;bias&quot;, and &quot;msss&quot; of second model</span>
+<span class="sd">        :param tempRange: start- and endyear --&gt; used for filenames </span>
+<span class="sd">        :return: msss filename</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">constantField</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">createConstantFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gridFile</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="n">flag</span><span class="p">)</span>    <span class="c">#Create Constant Field for MSSS</span>
+        
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">initResults</span><span class="p">[</span><span class="s">&#39;corr&#39;</span><span class="p">],</span> <span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;corr&#39;</span><span class="p">]]),</span> 
+                       <span class="n">output</span> <span class="o">=</span> <span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_correlation.nc&#39;</span><span class="p">)</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;-abs &#39;</span> <span class="o">+</span> <span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;bias&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; -abs &#39;</span> <span class="o">+</span> <span class="n">initResults</span><span class="p">[</span><span class="s">&#39;bias&#39;</span><span class="p">],</span> 
+                       <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_conditional_bias.nc&#39;</span><span class="p">)</span>
+        <span class="c">#MSSS vs Plot        </span>
+        <span class="n">msss</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;-sub &#39;</span> <span class="o">+</span> <span class="n">initResults</span><span class="p">[</span><span class="s">&#39;msss&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;msss&#39;</span><span class="p">]</span> <span class="o">+</span> 
+                             <span class="s">&#39; -sub &#39;</span> <span class="o">+</span> <span class="n">constantField</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;msss&#39;</span><span class="p">],</span> 
+                       <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_msss.nc&#39;</span><span class="p">)</span>
+        
+        <span class="c">#conditional bias slope </span>
+        <span class="n">slopeBiasInit</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">initResults</span><span class="p">[</span><span class="s">&#39;biasSlopeMinusOne&#39;</span><span class="p">],</span> 
+                                                     <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">initResults</span><span class="p">[</span><span class="s">&#39;biasSlopeMinusOne&#39;</span><span class="p">])</span><span class="o">+</span><span class="s">&#39;_abs&#39;</span><span class="p">)</span>
+        <span class="n">slopeBiasUninit</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;biasSlopeMinusOne&#39;</span><span class="p">],</span> 
+                                                     <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">uninitResults</span><span class="p">[</span><span class="s">&#39;biasSlopeMinusOne&#39;</span><span class="p">])</span><span class="o">+</span><span class="s">&#39;_abs&#39;</span><span class="p">)</span>
+        <span class="n">slopeBias</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">slopeBiasInit</span><span class="p">,</span> <span class="n">slopeBiasUninit</span><span class="p">]),</span>
+                             <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_biasslope-1.nc&#39;</span><span class="p">)</span>
+        
+        <span class="c">#conditional bias skill score</span>
+        <span class="n">biasSKillScore</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">constantField</span><span class="p">,</span>
+                                                 <span class="n">cdo</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">slopeBiasInit</span><span class="p">,</span> <span class="n">slopeBiasUninit</span><span class="p">]),</span> 
+                                                         <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_biasskillDIV.nc&#39;</span><span class="p">)]),</span>
+                                 <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_biasSkillScore.nc&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">msss</span>
+           </div>
+<div class="viewcode-block" id="Msss.getCorrelationAndVariancesAndMSSS"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.getCorrelationAndVariancesAndMSSS">[docs]</a>    <span class="k">def</span> <span class="nf">getCorrelationAndVariancesAndMSSS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hindcast</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">outputDir</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates the following quantities:</span>
+<span class="sd">        </span>
+<span class="sd">        - correlation bewtween observation and hindcast</span>
+<span class="sd">        - temporal variance of hindcast</span>
+<span class="sd">        - temporal variance of observation</span>
+<span class="sd">        - conditional bias </span>
+<span class="sd">        - msss</span>
+<span class="sd">        - biasSlope so/sh * c</span>
+<span class="sd">        - std ratio so/sh</span>
+<span class="sd">        </span>
+<span class="sd">        :param hindcast: dict of hindcasts</span>
+<span class="sd">        :param observation: dict of observations</span>
+<span class="sd">        :param flag: additional string for filenames</span>
+<span class="sd">        :return: dict with &quot;msss&quot;, &quot;bias&quot;, &quot;corr&quot;, &quot;biasSlope, &quot;stdRatio&quot;, &quot;biasSlopeMinusOne&quot; </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">hindcastStr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">observationStr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">hindcastStr</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">hindcast</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+            <span class="n">observationStr</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">observation</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+        
+        <span class="n">mergeHindcast</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mergetime</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">hindcastStr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;_merged.nc&#39;</span><span class="p">)</span>
+        <span class="n">mergeObservations</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mergetime</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">observationStr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">observation</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;_merged.nc&#39;</span><span class="p">)</span>
+        <span class="n">varianceHindcast</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timstd</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">mergeHindcast</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_variance&#39;</span><span class="p">)</span>
+        <span class="n">varianceObservation</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timstd</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">mergeObservations</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">observation</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_variance&#39;</span><span class="p">)</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timcor</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">mergeHindcast</span><span class="p">,</span> <span class="n">mergeObservations</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_correlation.nc&#39;</span><span class="p">)</span>
+        
+        <span class="c">#standard deviation ratio</span>
+        <span class="n">stdRatio</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">varianceObservation</span><span class="p">,</span> <span class="n">varianceHindcast</span><span class="p">]),</span> 
+                           <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_std_ratio.nc&#39;</span><span class="p">)</span>
+        
+        <span class="c">#slope of conditional bias</span>
+        <span class="n">biasSlope</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">stdRatio</span><span class="p">,</span> <span class="n">corr</span><span class="p">]),</span>
+                            <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_biasslope.nc&#39;</span><span class="p">)</span>
+        
+        <span class="c">#slope -1</span>
+        <span class="n">biasSlopeMinusOne</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">biasSlope</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">constantField</span><span class="p">]),</span>
+                                    <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_biasslope-1.nc&#39;</span><span class="p">)</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">corr</span><span class="o">+</span><span class="s">&#39; &#39;</span><span class="o">+</span> <span class="s">&#39;-div &#39;</span> <span class="o">+</span> <span class="n">varianceHindcast</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">varianceObservation</span><span class="p">,</span> 
+                       <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_conditional_bias.nc&#39;</span><span class="p">)</span>
+        <span class="n">msss</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39;-sqr &#39;</span> <span class="o">+</span> <span class="n">corr</span> <span class="o">+</span> <span class="s">&#39; -sqr &#39;</span> <span class="o">+</span> <span class="n">bias</span><span class="p">,</span> 
+                       <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_msss.nc&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">msss</span><span class="o">=</span> <span class="n">msss</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span> <span class="n">bias</span><span class="p">,</span> <span class="n">corr</span><span class="o">=</span> <span class="n">corr</span><span class="p">,</span> <span class="n">biasSlope</span><span class="o">=</span><span class="n">biasSlope</span><span class="p">,</span> <span class="n">stdRatio</span><span class="o">=</span><span class="n">stdRatio</span><span class="p">,</span> <span class="n">biasSlopeMinusOne</span><span class="o">=</span><span class="n">biasSlopeMinusOne</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Msss.getMSE"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.getMSE">[docs]</a>    <span class="k">def</span> <span class="nf">getMSE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anomalies</span><span class="p">,</span> <span class="n">obsAnom</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method calculates the Mean Squared Error. </span>
+<span class="sd">        </span>
+<span class="sd">        :note: method ist not used at the moment</span>
+<span class="sd">        :param anomalies: dictionary with anomalies</span>
+<span class="sd">        :param obsAnom: dict with observation anomalies</span>
+<span class="sd">        :return: file with mse field</span>
+<span class="sd">        &#39;&#39;&#39;</span>        
+        <span class="n">MSEList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">subTmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">anomalies</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">obsAnom</span><span class="p">[</span><span class="n">year</span><span class="p">]]))</span>
+            <span class="n">MSEList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdo</span><span class="o">.</span><span class="n">sqr</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">subTmp</span><span class="p">))</span> 
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">MSEList</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="s">&#39;mse.nc&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Msss.getRMSS"><a class="viewcode-back" href="../../msss.html#metrics.msss.Msss.getRMSS">[docs]</a>    <span class="k">def</span> <span class="nf">getRMSS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MSSS</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">outputDir</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates the RMSSS using the MSSS</span>
+<span class="sd">        </span>
+<span class="sd">        :param MSSS: netcdf file</span>
+<span class="sd">        :param flag: name flag</span>
+<span class="sd">        :param outputDir: output path </span>
+<span class="sd">        :return: file with RMSSS field </span>
+<span class="sd">        &#39;&#39;&#39;</span>      
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&quot;-sub &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">constantField</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">MSSS</span><span class="p">,</span>                 
+                       <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;rmss_sqrt.nc&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">constantField</span><span class="p">,</span><span class="n">tmp</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="n">outputDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_rmss.nc&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" >metrics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

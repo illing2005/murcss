@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.filehandler &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="index.html" />
+    <link rel="up" title="MurCSS Tool" href="goddard.html" />
+    <link rel="next" title="metrics.significance2" href="significance.html" />
+    <link rel="prev" title="metrics.plotter" href="plotter.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="significance.html" title="metrics.significance2"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="plotter.html" title="metrics.plotter"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="metrics-filehandler">
+<h1>metrics.filehandler<a class="headerlink" href="#metrics-filehandler" title="Permalink to this headline">¶</a></h1>
+<p>Simple class to load and save NetCDF-Files</p>
+<div class="section" id="filehandler-module">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">filehandler</span></tt> Module<a class="headerlink" href="#filehandler-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="metrics.filehandler.FileHandler">
+<em class="property">class </em><tt class="descclassname">metrics.filehandler.</tt><tt class="descname">FileHandler</tt><a class="reference internal" href="_modules/metrics/filehandler.html#FileHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.filehandler.FileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="staticmethod">
+<dt id="metrics.filehandler.FileHandler.saveToNetCDF">
+<em class="property">static </em><tt class="descname">saveToNetCDF</tt><big>(</big><em>field</em>, <em>refFile</em>, <em>tag</em><big>)</big><a class="reference internal" href="_modules/metrics/filehandler.html#FileHandler.saveToNetCDF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.filehandler.FileHandler.saveToNetCDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a numpy array to an netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field</strong> &#8211; numpy array</li>
+<li><strong>refFile</strong> &#8211; File to &#8220;clone&#8221;</li>
+<li><strong>tag</strong> &#8211; new filename</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:return filepath</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="metrics.filehandler.FileHandler.openNetCDFFile">
+<em class="property">static </em><tt class="descname">openNetCDFFile</tt><big>(</big><em>fn</em>, <em>mode='all'</em><big>)</big><a class="reference internal" href="_modules/metrics/filehandler.html#FileHandler.openNetCDFFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.filehandler.FileHandler.openNetCDFFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a file as numpy array
+Either get a dict with &#8220;var&#8221;,&#8221;lon&#8221;,&#8221;lat&#8221; or only &#8220;var&#8221;</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">metrics.filehandler</a><ul>
+<li><a class="reference internal" href="#filehandler-module"><tt class="docutils literal"><span class="pre">filehandler</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="plotter.html"
+                        title="previous chapter">metrics.plotter</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="significance.html"
+                        title="next chapter">metrics.significance2</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/filehandler.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="significance.html" title="metrics.significance2"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="plotter.html" title="metrics.plotter"
+             >previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

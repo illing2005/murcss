@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.msss &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="index.html" />
+    <link rel="up" title="MurCSS Tool" href="goddard.html" />
+    <link rel="next" title="metrics.msssBootstrap" href="msssBootstrap.html" />
+    <link rel="prev" title="metrics.metricAbstract" href="metricAbstract.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="msssBootstrap.html" title="metrics.msssBootstrap"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="metricAbstract.html" title="metrics.metricAbstract"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="metrics-msss">
+<h1>metrics.msss<a class="headerlink" href="#metrics-msss" title="Permalink to this headline">¶</a></h1>
+<p>This class is for calculating the MSESS (Mean Squared Error Skill Score) following the paper
+of <a class="reference external" href="http://link.springer.com/article/10.1007%2Fs00382-012-1481-2">Goddard et al. (2013)</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">author:</th><td class="field-body">Sebastian Illing</td>
+</tr>
+<tr class="field-even field"><th class="field-name">contact:</th><td class="field-body"><a class="reference external" href="mailto:sebastian&#46;illing&#37;&#52;&#48;met&#46;fu-berlin&#46;de">sebastian<span>&#46;</span>illing<span>&#64;</span>met<span>&#46;</span>fu-berlin<span>&#46;</span>de</a></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="msss-module">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">MSSS</span></tt> Module<a class="headerlink" href="#msss-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="metrics.msss.Msss">
+<em class="property">class </em><tt class="descclassname">metrics.msss.</tt><tt class="descname">Msss</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>analysis_type='decadal'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to calculate the MSSS. Call method &#8220;analyze&#8221; to get results</p>
+<dl class="method">
+<dt id="metrics.msss.Msss.analyze">
+<tt class="descname">analyze</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.analyze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main method to calculate the MSSS. Following steps are performed:</p>
+<ol class="arabic simple">
+<li>Searching for file using solr_search</li>
+<li>Remapping Files to coarser grid</li>
+<li>Calculating Ensemble Mean</li>
+<li>Calculating cross-validated mean</li>
+<li>Calculating anomalies for both models</li>
+<li>Analyzing different timeranges</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msss.Msss.analyzeYearRange">
+<tt class="descname">analyzeYearRange</tt><big>(</big><em>input1Anomalies</em>, <em>observationRemapped</em>, <em>input2Anomalies</em>, <em>startYear</em>, <em>endYear</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.analyzeYearRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.analyzeYearRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the MSSS for given timerange. The following steps are perfomed in this method:</p>
+<ol class="arabic simple">
+<li>temporal smoothing</li>
+<li>calculation of correlation, bias, and msss</li>
+<li>calculation of model1 vs. model2</li>
+<li>plotting of the 9 fields</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Todo :</th><td class="field-body"><p class="first">maybe this could be done in multiprocessing &#8211;&gt; so different timeranges at once</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input1Anomalies</strong> &#8211; dict with anomalies of model1</li>
+<li><strong>observationRemapped</strong> &#8211; dict with anomalies of observations</li>
+<li><strong>input2Anomalies</strong> &#8211; dict with anomalies of model2</li>
+<li><strong>startYear</strong> &#8211; </li>
+<li><strong>endYear</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msss.Msss.getInitVsUninit">
+<tt class="descname">getInitVsUninit</tt><big>(</big><em>initResults</em>, <em>uninitResults</em>, <em>flag</em>, <em>outputDir</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.getInitVsUninit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.getInitVsUninit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates comparing values between two models/modelversions i.e. initialized vs. uninitialized.
+Following variables are computed:</p>
+<ul class="simple">
+<li>correlation: corr1 - corr2</li>
+<li>conditional bias: abs(bias1) - abs(bias2)</li>
+<li>msss: (msss1-msss2)/(1-msss2)</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>initResults</strong> &#8211; dict with &#8220;corr&#8221;, &#8220;bias&#8221;, and &#8220;msss&#8221; of first model</li>
+<li><strong>uninitResults</strong> &#8211; dict with &#8220;corr&#8221;, &#8220;bias&#8221;, and &#8220;msss&#8221; of second model</li>
+<li><strong>tempRange</strong> &#8211; start- and endyear &#8211;&gt; used for filenames</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">msss filename</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msss.Msss.getCorrelationAndVariancesAndMSSS">
+<tt class="descname">getCorrelationAndVariancesAndMSSS</tt><big>(</big><em>hindcast</em>, <em>observation</em>, <em>flag</em>, <em>outputDir</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.getCorrelationAndVariancesAndMSSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.getCorrelationAndVariancesAndMSSS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the following quantities:</p>
+<ul class="simple">
+<li>correlation bewtween observation and hindcast</li>
+<li>temporal variance of hindcast</li>
+<li>temporal variance of observation</li>
+<li>conditional bias</li>
+<li>msss</li>
+<li>biasSlope so/sh * c</li>
+<li>std ratio so/sh</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>hindcast</strong> &#8211; dict of hindcasts</li>
+<li><strong>observation</strong> &#8211; dict of observations</li>
+<li><strong>flag</strong> &#8211; additional string for filenames</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict with &#8220;msss&#8221;, &#8220;bias&#8221;, &#8220;corr&#8221;, &#8220;biasSlope, &#8220;stdRatio&#8221;, &#8220;biasSlopeMinusOne&#8221;</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msss.Msss.getMSE">
+<tt class="descname">getMSE</tt><big>(</big><em>anomalies</em>, <em>obsAnom</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.getMSE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.getMSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method calculates the Mean Squared Error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note :</th><td class="field-body"><p class="first">method ist not used at the moment</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>anomalies</strong> &#8211; dictionary with anomalies</li>
+<li><strong>obsAnom</strong> &#8211; dict with observation anomalies</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">file with mse field</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msss.Msss.getRMSS">
+<tt class="descname">getRMSS</tt><big>(</big><em>MSSS</em>, <em>flag</em>, <em>outputDir</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss.getRMSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss.getRMSS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the RMSSS using the MSSS</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>MSSS</strong> &#8211; netcdf file</li>
+<li><strong>flag</strong> &#8211; name flag</li>
+<li><strong>outputDir</strong> &#8211; output path</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">file with RMSSS field</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">metrics.msss</a><ul>
+<li><a class="reference internal" href="#msss-module"><tt class="docutils literal"><span class="pre">MSSS</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="metricAbstract.html"
+                        title="previous chapter">metrics.metricAbstract</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="msssBootstrap.html"
+                        title="next chapter">metrics.msssBootstrap</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/msss.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="msssBootstrap.html" title="metrics.msssBootstrap"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="metricAbstract.html" title="metrics.metricAbstract"
+             >previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

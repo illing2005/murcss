@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.plotter &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="metrics" href="../metrics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" accesskey="U">metrics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.plotter</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 17.08.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s">&#39;Agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">N</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.basemap</span> <span class="kn">import</span> <span class="n">Basemap</span><span class="p">,</span> <span class="n">cm</span>
+
+<span class="kn">from</span> <span class="nn">filehandler</span> <span class="kn">import</span> <span class="n">FileHandler</span>
+
+
+<div class="viewcode-block" id="Plotter"><a class="viewcode-back" href="../../plotter.html#metrics.plotter.Plotter">[docs]</a><span class="k">class</span> <span class="nc">Plotter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+    
+    <span class="n">colorDict</span> <span class="o">=</span>  <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:</span>   <span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="p">(</span><span class="mf">0.35</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="p">(</span><span class="mf">0.45</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.60</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.89</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)),</span>
+                  <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.125</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.375</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),(</span><span class="mf">0.45</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.60</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),(</span><span class="mf">0.65</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.91</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                  <span class="s">&#39;blue&#39;</span><span class="p">:</span>  <span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.11</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.34</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.45</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.55</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mf">0.56</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))}</span>
+    
+<span class="c">#    colorDict2 =  {&#39;red&#39;:   ((0., 1, 1), (1, 1, 1)),</span>
+<span class="c">#                  &#39;green&#39;: ((0., 1, 1), (1, 0.1, 0.1)),</span>
+<span class="c">#                  &#39;blue&#39;:  ((0., 1, 1), (1, 0.1, 0.1))}</span>
+    
+    <span class="n">colorDict2</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;blue&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.96862745285034180</span><span class="p">,</span> <span class="mf">0.96862745285034180</span><span class="p">),</span>
+                           <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.78039216995239258</span><span class="p">,</span> <span class="mf">0.78039216995239258</span><span class="p">),</span>
+                           <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.50980395078659058</span><span class="p">,</span> <span class="mf">0.50980395078659058</span><span class="p">),</span> 
+                           <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.30196079611778259</span><span class="p">,</span> <span class="mf">0.30196079611778259</span><span class="p">),</span> 
+                           <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.16862745583057404</span><span class="p">,</span> <span class="mf">0.16862745583057404</span><span class="p">),</span>
+                           <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.12156862765550613</span><span class="p">,</span> <span class="mf">0.12156862765550613</span><span class="p">),),</span>
+                            
+                  <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.9686274528503418</span><span class="p">,</span> <span class="mf">0.9686274528503418</span><span class="p">),</span>
+                            <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.85882353782653809</span><span class="p">,</span> <span class="mf">0.85882353782653809</span><span class="p">),</span>
+                            <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.64705884456634521</span><span class="p">,</span> <span class="mf">0.64705884456634521</span><span class="p">),</span> 
+                            <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.37647059559822083</span><span class="p">,</span> <span class="mf">0.37647059559822083</span><span class="p">),</span> 
+                            <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">0.094117648899555206</span><span class="p">,</span> <span class="mf">0.094117648899555206</span><span class="p">),</span> 
+                            <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+                            
+                  <span class="s">&#39;red&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.9686274528503418</span><span class="p">,</span> <span class="mf">0.9686274528503418</span><span class="p">),</span>
+                          <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.99215686321258545</span><span class="p">,</span> <span class="mf">0.99215686321258545</span><span class="p">),</span>
+                          <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.95686274766921997</span><span class="p">,</span> <span class="mf">0.95686274766921997</span><span class="p">),</span>
+                          <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.83921569585800171</span><span class="p">,</span> <span class="mf">0.83921569585800171</span><span class="p">),</span>
+                          <span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.69803923368453979</span><span class="p">,</span> <span class="mf">0.69803923368453979</span><span class="p">),</span>
+                          <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.40392157435417175</span><span class="p">,</span> <span class="mf">0.40392157435417175</span><span class="p">))</span>
+                  <span class="p">}</span>
+    
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Plotter.plotField"><a class="viewcode-back" href="../../plotter.html#metrics.plotter.Plotter.plotField">[docs]</a>    <span class="k">def</span> <span class="nf">plotField</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="s">&#39;goddard&#39;</span><span class="p">,</span> <span class="n">output_folder</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">lonlatbox</span><span class="o">=</span><span class="s">&#39;-180,180,-90,90&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Plot any field variable</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileName: filepath</span>
+<span class="sd">        :param vmin: min value for colorbar</span>
+<span class="sd">        :param vmax: max value for colorbar</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">fig1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">7</span><span class="p">),</span><span class="n">dpi</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="n">colormap</span> <span class="o">==</span> <span class="s">&#39;goddard&#39;</span><span class="p">):</span> 
+            <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span><span class="n">Plotter</span><span class="o">.</span><span class="n">colorDict2</span><span class="p">,</span><span class="mi">256</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu_r</span>
+        
+        <span class="n">file_values</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">fileName</span><span class="p">)</span>
+        <span class="n">mVar</span> <span class="o">=</span> <span class="n">file_values</span><span class="p">[</span><span class="s">&#39;variable&#39;</span><span class="p">]</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">file_values</span><span class="p">[</span><span class="s">&#39;lon&#39;</span><span class="p">]</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">file_values</span><span class="p">[</span><span class="s">&#39;lat&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">lonlatbox</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lonlatbox</span> <span class="o">=</span> <span class="s">&#39;-180,180,-90,90&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lonlatbox</span> <span class="o">=</span> <span class="s">&#39;0,360,-90,90&#39;</span>
+        <span class="n">lonlatbox</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">lonlatbox</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">))</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Basemap</span><span class="p">(</span><span class="n">llcrnrlon</span><span class="o">=</span><span class="n">lonlatbox</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">llcrnrlat</span><span class="o">=</span><span class="n">lonlatbox</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">urcrnrlon</span><span class="o">=</span><span class="n">lonlatbox</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">urcrnrlat</span><span class="o">=</span><span class="n">lonlatbox</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">divi</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span>
+        
+        <span class="n">colorSteps</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">divi</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">vmin</span><span class="o">*</span><span class="mi">10</span><span class="p">),</span><span class="nb">int</span><span class="p">((</span><span class="n">vmax</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span><span class="c">#(vmax-vmin)/2))</span>
+        
+        <span class="k">if</span> <span class="n">vmax</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">colorSteps</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.35</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> 
+                          <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+            
+        <span class="k">if</span> <span class="n">vmax</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="n">vmin</span> <span class="o">==</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">colorSteps</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.475</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.45</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.425</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.375</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.35</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.325</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.275</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.225</span><span class="p">,</span> 
+                          <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.175</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.125</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.075</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.025</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            
+        <span class="k">if</span> <span class="n">vmax</span> <span class="o">==</span> <span class="mf">2.</span> <span class="ow">and</span> <span class="n">vmin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">colorSteps</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span><span class="mf">0.95</span><span class="p">,</span> 
+                          <span class="mi">1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.3</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">,</span> <span class="mf">1.9</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+        <span class="n">colorTicks</span> <span class="o">=</span> <span class="n">colorSteps</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">my_cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="s">&quot;grey&quot;</span><span class="p">)</span>                         <span class="c">#set missing value color</span>
+        <span class="c">#maskedArray = N.ma.masked_greater(mVar, 0.8e20) #mask missing Values</span>
+        <span class="n">maskedArray</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_outside</span><span class="p">(</span><span class="n">mVar</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.8e20</span><span class="p">,</span> <span class="mf">0.8e20</span><span class="p">)</span>
+        <span class="c">#discrete colormap</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">colorSteps</span><span class="p">,</span> <span class="n">my_cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">maskedArray</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&quot;nearest&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">my_cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+        <span class="n">cb</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span><span class="s">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="s">&#39;5%&#39;</span> <span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">colorTicks</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">drawcoastlines</span><span class="p">()</span>  
+        <span class="n">m</span><span class="o">.</span><span class="n">drawparallels</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">90.</span><span class="p">,</span><span class="mf">120.</span><span class="p">,</span><span class="mf">30.</span><span class="p">),</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span> <span class="c"># draw parallels</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">drawmeridians</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">420.</span><span class="p">,</span><span class="mf">60.</span><span class="p">),</span><span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="c"># draw meridians</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">Plotter</span><span class="o">.</span><span class="n">__getTitle</span><span class="p">(</span><span class="n">fileName</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">lonlatbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">lon</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">lon</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">lonlatbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="p">(</span><span class="n">lat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">lat</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;MurCSS&#39;</span><span class="p">)</span>
+        <span class="c">#print lonlatbox[0]+lon[1]-lon[0]</span>
+        <span class="k">return</span> <span class="n">m</span>
+        <span class="c">#Plotter.saveFig(output_folder, fn)</span>
+     </div>
+    <span class="nd">@staticmethod</span>    
+    <span class="k">def</span> <span class="nf">saveFig</span><span class="p">(</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;.eps&#39;</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;eps&#39;</span><span class="p">)</span>
+        
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">addCrosses</span><span class="p">(</span><span class="nb">map</span><span class="p">,</span> <span class="n">sig_mask_x</span><span class="p">,</span> <span class="n">sig_mask_y</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">9</span><span class="p">):</span>
+        
+        <span class="nb">map</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">sig_mask_x</span><span class="p">,</span> <span class="n">sig_mask_y</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="n">marker</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    
+    <span class="nd">@staticmethod</span>    
+    <span class="k">def</span> <span class="nf">__getTitle</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>    
+        
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>        
+        <span class="n">title</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">fn</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">+=</span> <span class="n">part</span><span class="o">+</span><span class="s">&#39;_&#39;</span>
+            <span class="n">length</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">60</span> <span class="ow">or</span> <span class="n">part</span> <span class="o">==</span> <span class="s">&#39;vs&#39;</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+                <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">title</span>
+        
+        
+        
+        
+        
+        
+        
+        </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../metrics.html" >metrics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

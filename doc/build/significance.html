@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.significance2 &mdash; MurCSS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.0 documentation" href="index.html" />
+    <link rel="up" title="MurCSS Tool" href="goddard.html" />
+    <link rel="prev" title="metrics.filehandler" href="filehandler.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="filehandler.html" title="metrics.filehandler"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="metrics-significance2">
+<h1>metrics.significance2<a class="headerlink" href="#metrics-significance2" title="Permalink to this headline">¶</a></h1>
+<p>Methods to calculate the significance</p>
+<div class="section" id="significance2-module">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">significance2</span></tt> Module<a class="headerlink" href="#significance2-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="metrics.significance2.Significance">
+<em class="property">class </em><tt class="descclassname">metrics.significance2.</tt><tt class="descname">Significance</tt><big>(</big><em>tmp_dir</em>, <em>output_dir</em><big>)</big><a class="reference internal" href="_modules/metrics/significance2.html#Significance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.significance2.Significance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for significance calculation</p>
+<dl class="method">
+<dt id="metrics.significance2.Significance.checkSignificance">
+<tt class="descname">checkSignificance</tt><big>(</big><em>input</em>, <em>result_file</em>, <em>q1=0.050000000000000003</em>, <em>q2=0.94999999999999996</em>, <em>check_value=0</em><big>)</big><a class="reference internal" href="_modules/metrics/significance2.html#Significance.checkSignificance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.significance2.Significance.checkSignificance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a value is statistically significant different from zero
+Uses the bootstrapped files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> &#8211; list with files or folder of bootstraps</li>
+<li><strong>result_file</strong> &#8211; file to check</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">sig_lon,sig_lat lists with significant points</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.significance2.Significance.save_significance_mask">
+<tt class="descname">save_significance_mask</tt><big>(</big><em>sign_lon</em>, <em>sign_lat</em>, <em>result_file</em><big>)</big><a class="reference internal" href="_modules/metrics/significance2.html#Significance.save_significance_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.significance2.Significance.save_significance_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the significance mask in a netcdf file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sign_lon,sign_lat</strong> &#8211; significant points</li>
+<li><strong>result_file</strong> &#8211; File to overwrite</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.significance2.Significance._Significance__getLonLat">
+<tt class="descname">_Significance__getLonLat</tt><big>(</big><em>ifile</em><big>)</big><a class="headerlink" href="#metrics.significance2.Significance._Significance__getLonLat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get vectors with lon and lat values from a netdf file using cdo.griddes
+Was introduced because we were using a damaged grid
+lon,lat valued are located in the center of a gridbox</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ifile</strong> &#8211; netcdf fn</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Result :</th><td class="field-body">lon,lat vectors</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.significance2.Significance._Significance__getQuantile">
+<tt class="descname">_Significance__getQuantile</tt><big>(</big><em>mVar</em>, <em>q1</em>, <em>q2</em>, <em>precision=1.0</em><big>)</big><a class="headerlink" href="#metrics.significance2.Significance._Significance__getQuantile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the q&#8217;th percentile of the distribution given in the argument
+&#8216;data&#8217;. Uses the &#8216;precision&#8217; parameter to control the noise level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mvar</strong> &#8211; numpy variable</li>
+<li><strong>q1,q2</strong> &#8211; lower and upper level</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">q&#8217;th percentile</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">metrics.significance2</a><ul>
+<li><a class="reference internal" href="#significance2-module"><tt class="docutils literal"><span class="pre">significance2</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="filehandler.html"
+                        title="previous chapter">metrics.filehandler</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/significance.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="filehandler.html" title="metrics.filehandler"
+             >previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
