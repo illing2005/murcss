@@ -83,34 +83,29 @@ class TestCrpss(unittest.TestCase):
         def crps(var,H,O):
             x = (H-O)/var
             crps = -var * (1./np.sqrt(np.pi) - 2. * stats.norm.pdf(x) - x * (2. * stats.norm.cdf(x) - 1.))
+            return crps
         
-        def condBias(H,O):
-            
+        def condBias(H,O):  
             H_ensmean = np.mean(H, axis=1)
             r = np.corrcoef(H_ensmean, O)[0,1]
             std_H = np.std(H_ensmean)
-            std_O = np.std(O)
-            
+            std_O = np.std(O)            
             cond_bias = r * std_O/std_H
-            print cond_bias
+            return cond_bias
             
         from create_testfiles import createCrpssInput, getCrpssTimeseries
-        
-        
-        
-        mse_goal = 3.14
-        ensspread_goal = 2
+        mse_goal = 4
+        ensspread_goal = 3
         ensemble_size = 10
-        length = 50    
+        length = 20    
+        #create timeseries
         (t,hind,obs) = getCrpssTimeseries(mse_goal, ensspread_goal, ensemble_size, length)    
-        
-        condBias(hind, obs)
         
         (hindcasts,observations) = createCrpssInput(1960, hind, obs, ensemble_size, length)
         
         crpssDict = self.crpssDict()
         crpssDict['decadals'] = hindcasts.keys()
-        crpssDict['observation'] = 'hadcrut3v'
+        crpssDict['observation'] = 'HadCrut'
         crpssDict['leadtimes'] = '1'
         crpss = Crpss(**crpssDict)
         crpss.inputRemapped = hindcasts
@@ -118,18 +113,45 @@ class TestCrpss(unittest.TestCase):
         crpss.analyze()
         
         factor = length/(length-2.)
-        RMSE = (factor*np.mean((np.mean(hind,axis=1)-obs)**2))**0.5
-        print "RMSE : %s" % (RMSE)
-        goal_dict = {'ensspreadscore': '',
-                     'ens_ref': '',
-                     'ens_clim': '',
-                     'ref_clim': '',}
+        factor2 = ensemble_size/(ensemble_size-1.)
+
+        ensspread = np.mean((factor2*np.var(hind,axis=1)))**0.5        
+        hind_mean = np.mean(hind,axis=1)
         
-        res_files = sorted([os.path.join(r,f) for r,_,files in os.walk(self.tmp_dir+'/output') for f in files])
-        for i,f in enumerate(res_files):
-            t1 = FileHandler.openNetCDFFile(res_files[i],mode='var')
-            print res_files[i]
-            print t1[12,12]
+        #calculte crossvalidated mean
+        hind_mean_anom = hind_mean.copy()
+        crossval = np.zeros((length))
+        for i in range(length):
+            tmp = np.delete(hind_mean,i)
+            crossval[i] =  np.mean(tmp)
+            hind_mean_anom[i] = hind_mean[i] - crossval[i]
+        hind_mean = hind_mean_anom.copy()
+        
+        #remove conditional bias
+        bias = condBias(hind, obs)
+        for i in range(length):
+            hind[i,:] = hind[i,:] - crossval[i]
+            hind[i,:] = hind[i,:] + (bias-1)*hind_mean[i]
+        hind_mean_corrected = np.mean(hind,axis=1)
+        RMSE = (factor*np.mean((np.mean(hind,axis=1)-obs)**2))**0.5
+        
+        #calculate crpss_goal
+        crps1 = np.zeros((length))
+        crps2 = np.zeros((length))
+        for i in range(length):
+            crps1[i] = crps(ensspread, hind_mean_corrected[i], obs[i])
+            crps2[i] = crps(RMSE,hind_mean_corrected[i],obs[i]) 
+        crpss_goal = 1 - np.mean(crps1)/np.mean(crps2)
+        
+        #test spreadscore
+        tf = crpss.outputDir+'1-1/BASELINE1_output_mpi-esm-lr_decs4e/crpss/1_1_tas_BASELINE1_output_mpi-esm-lr_decs4e_1960-1979_ensspread_vs_referror.nc'
+        t1 = FileHandler.openNetCDFFile(tf,mode='var')
+        self.assertAlmostEqual(t1[12,12],ensspread/RMSE,2)
+
+        #test crpss ens vs ref
+        tf = crpss.outputDir+'1-1/BASELINE1_output_mpi-esm-lr_decs4e/crpss/1_1_tas_BASELINE1_output_mpi-esm-lr_decs4e_1960-1979_ens-vs-ref_crpss.nc'
+        t1 = FileHandler.openNetCDFFile(tf,mode='var')
+        self.assertAlmostEqual(t1[12,12],crpss_goal,2)
         
     def testCrpss(self):
         crpss_dict = self.crpssDict()

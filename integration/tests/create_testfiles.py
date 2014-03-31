@@ -92,7 +92,7 @@ def createCrpssInput(startyear,hind, obs, ensemble_size, length):
         hindcasts[startyear+i] = ensemble_members
     for i,val in enumerate(obs):
         observations[startyear+i] = createDecadal(startyear+i, val, 'observation')
-    
+    print len(observations)
     return (hindcasts, observations)    
     
 
@@ -100,23 +100,17 @@ def getCrpssTimeseries(MSE_goal, Ensspread_goal = 2, ensemble_size=3, length=50)
         
     #val=np.random.multivariate_normal((0,0),[[std1_goal**2,corr_goal*(std1_goal*std2_goal)],[corr_goal*(std1_goal*std2_goal),std2_goal**2]],length)
     t = np.linspace(0,1,length)
-    
     #Create Ensemble Mean
     val = np.random.normal(0,1,length)
     T = val + (t-np.mean(t))
     T = T - np.mean(T)
-    #print np.std(T)
-    #print np.mean(T)
-    factor = length/(length-2.)
-    #print factor    
+    factor = length/(length-2.) 
     MSE=0
     #Create Observations with fixed MSE
     while MSE != MSE_goal:
         Obs = T + np.random.normal(0,MSE_goal,length)
+        Obs = Obs - np.mean(Obs)
         MSE = np.round((factor*np.mean((T-Obs)**2))**0.5,2)
-        #print MSE
-    
-    #print MSE
     
     #create ensemble member
     MSE_ens=0
@@ -124,10 +118,11 @@ def getCrpssTimeseries(MSE_goal, Ensspread_goal = 2, ensemble_size=3, length=50)
     bias = 0
     bias_goal=1
     T_re=0
+    T_re_tmp = 0
     j=0
     while MSE_ens != MSE_goal or Ensspread != Ensspread_goal:
         j+=1
-        del T_re
+        del T_re, T_re_tmp
         for i in range(ensemble_size):
             T_new = T + np.random.normal(0,Ensspread_goal,length)
             try:
@@ -135,34 +130,27 @@ def getCrpssTimeseries(MSE_goal, Ensspread_goal = 2, ensemble_size=3, length=50)
             except UnboundLocalError:
                 T_re = T_new.reshape((T_new.size,1))
         T_ensmean = np.mean(T_re,axis=1)
+        T_re_tmp = T_re
         
-        Ensspread = np.round((np.mean(np.var(T_re,axis=1))**0.5),2)
         #print Ensspread,MSE_ens
         #T_re = T_re - T_ensmean.reshape((T_ensmean.size,1))
         r = np.corrcoef(T_ensmean,Obs)[0,1]
         std_H = np.std(T_ensmean)
         std_O = np.std(Obs)
-        bias = np.round(r * std_O/std_H,2)
-
+        bias = r * std_O/std_H
+        T_ensmean = T_ensmean - np.mean(T_ensmean)
         #bias correction?
-        T_re = T_re - T_ensmean.reshape((T_ensmean.size,1)) * (bias-1)
-        MSE_ens = np.round((factor*np.mean((T_ensmean-Obs)**2))**0.5,2)
-        #print bias
-    #print np.mean(T_ensmean)    
-        
-        
-        
+        T_re_tmp = T_re_tmp - np.mean(T_ensmean)
+        T_re_tmp = T_re_tmp - T_ensmean.reshape((T_ensmean.size,1)) * (bias-1)
+        T_ensmean2 = np.mean(T_re_tmp,axis=1)
+        MSE_ens = np.round((factor*np.mean((T_ensmean2-Obs)**2))**0.5,2)
+        Ensspread = np.round((np.mean(np.var(T_re_tmp,axis=1))**0.5),2)
+              
     r = np.corrcoef(T_ensmean,Obs)[0,1]
     std_H = np.std(T_ensmean)
     std_O = np.std(Obs)
     
     bias = r * std_O/std_H
-    #print r,std_O,std_H
-    #print 'Bias: %s' % (bias)    
-    #print j
-
-#    print np.var(T_re,axis=1)
-    #print np.mean(np.var(T_re,axis=1))
     
     return (t,T_re, Obs)
 

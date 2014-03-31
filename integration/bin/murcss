@@ -33,8 +33,7 @@ def getMurcssDict():
     return dict(output='/tmp/murcss/output', output_plots='/tmp/murcss/plots', decadals='1960,1965,1970,1975,1980,1985', 
             variable='tas', cache='/tmp/murcss/cache', baseDir='..', maskMissingValues=True, model1='mpi-esm-lr', 
             model2='mpi-esm-lr', project1='baseline1', project2='baseline0', observation='HadCrut', product1='output', product2='output1', 
-            ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-9', experiment1='decs4e', exp
-eriment2='decadal',
+            ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-9', experiment1='decs4e', experiment2='decadal',
             result_grid=None, level=None, lonlatbox=None, fieldmean=None, significance=False, bootstrap_number=100)
 
 def printHelp():
@@ -217,10 +216,8 @@ def main(argv=None): # IGNORE:C0111
     crpss2.analyze()
     crpss2.deleteCache()    
 
-    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBoot
-strap, metrics.findFilesSeason
-    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.
-cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
+    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBootstrap, metrics.findFilesSeason
+    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
     print 'Calculation finished.'
     print 'Plots produced in %s' %(msss.outputPlots,)
 

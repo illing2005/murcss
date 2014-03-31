@@ -225,7 +225,8 @@ class Crpss(MetricAbstract):
                 tempSmoothedObs = self.getAnomalies(tempSmoothedObs, obsCrossValMean)
             
             print 'Calculating anomalies'
-            anomalies = self.getAnomalies(ensMeanList, crossValMean)        
+            anomalies = self.getAnomalies(ensMeanList, crossValMean)  
+            #self.printValues(anomalies, 'EnsAnoms')      
             #Calculate Anomalies for Ensemble
             ensList,crossList = list(),list()
             for year in self.decadals:
@@ -234,7 +235,7 @@ class Crpss(MetricAbstract):
 
             poolArgs = self.getPoolArgs(len(ensList),self,ensList,crossList,'_getAnomalies')
             ensAnoms = self.listToYeardict(self.multiProcess(poolArgs))
-
+            #self.printValues(ensAnoms, 'EnsAnoms')
             tmp2 = cdo.ensmean(input=' '.join(tempSmoothedObs.values()))
             #Calculate obs anomalies again because we use only a few points
             for year in self.decadals:
@@ -243,16 +244,15 @@ class Crpss(MetricAbstract):
             print 'Removing Conditional Bias'
             ensAnoms = self.removeConditionalBiasNew(anomalies, tempSmoothedObs, ensAnoms)
             anomalies = self.getEnsembleMean(ensAnoms)
-            
+
             print 'Calculating ensemble variance'
             ensembleVariance = self.getEnsembleStd(ensAnoms)  
-            #print ensembleVariance
-            ensembleVariance = self.getEnsembleStd(tempSmoothedEns) 
-            #self.printFileValue(ensembleVariance, 'Ens std')
+#            ensembleVariance = self.getEnsembleStd(tempSmoothedEns) 
+#            ensembleVariance = self.getEnsembleStd(self.inputRemapped) 
             #print ensembleVariance
             print 'Calculating MSE'
             ensembleVarianceRef = self.getReferenceStd(anomalies, tempSmoothedObs)
-            #self.printFileValue(ensembleVarianceRef, 'MSE')
+            self.printValues(ensembleVarianceRef, 'MSE')
             
             print 'Calculating climatological standard deviation'
             norm = np.sqrt(len(tempSmoothedObs.values())/(len(tempSmoothedObs.values())-1.))
@@ -347,7 +347,7 @@ class Crpss(MetricAbstract):
         ###Wrong: varHindcast/varObservations
         #######################################
         bias = cdo.mul(input=corr+' '+ cdo.div(input=varObservations+' '+varHindcast), output=self.tmpDir+'conditional_biasNew.nc')
-        #self.printFileValue(bias, 'Conditional Bias')     
+        self.printValues(bias, 'Conditional Bias')     
         hindList = list()
         ensembleMembersList = list()
         for year in self.decadals:
@@ -529,18 +529,9 @@ class Crpss(MetricAbstract):
             tmp_spreadscore = cdo.div(input=' '.join([tmp_ensspread, tmp_rmse]),
                                       output=tmpDir+str(i)+'spreadscore_bootstrap')        
             bootstrapList.append(tmp_spreadscore)
-#TODO:
-#        poolArgs = self.getPoolArgs(bootstrap_number,self,ensAnoms,anomalies,tempSmoothedObs, range(0,bootstrap_number),'_multiEnsspreadBootstrap')
-#        bootstrapList = self.multiProcess(poolArgs)    
-       
-            
+   
         significance = Significance(self.tmpDir, self.outputPlots)
         (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, spreadscore, check_value=1)
-        
-#        if tag == 'ens-vs-ref_':
-#            m = Plotter.plotField(crpss, -0.5, 0.5, 'RdBu_r', lonlatbox=self.lonlatbox)
-#        else:
-#            m = Plotter.plotField(crpss, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
         m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
         
         Plotter.addCrosses(m, sig_lon, sig_lat)
