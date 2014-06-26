@@ -62,6 +62,7 @@ Now you can run the tests using
 ```
 python -m unittest discover . '*_test.py'
 ```
+Currently some of the tests are designed for the MiKlip file system. Therfore they are commented out.
 
 Support, Issues, Bugs
 -
