@@ -29,9 +29,15 @@ import time
 import numpy as N
 import sys
 
+import murcss_config
+if murcss_config.file_system == 'miklip':
+    from findFiles import FindFiles
+    from findFilesSeason import FindFilesSeason
+else:
+    from findFilesCustom import FindFilesCustom as FindFiles
+    FindFilesSeason = FindFiles
+
 from filehandler import FileHandler
-from findFiles import FindFiles
-from findFilesSeason import FindFilesSeason
 from plotter import Plotter
 from nondeamonpool import MyPool
 from tool_abstract import ToolAbstract#, unwrap_self_f
@@ -49,7 +55,7 @@ class MetricAbstract(ToolAbstract):
                  baseDir='/', 
                  result_grid=None,
                  observation='HadCrut',
-                 analysis_type='decadal',
+                 leadtimes_mode='yearly',
                  decadals='1960,1965,1970,1975,1980,1985,1990,1995,2000',
                  months=None
                 ):
@@ -91,8 +97,11 @@ class MetricAbstract(ToolAbstract):
             self.gridFile = result_grid         
         
         
-        if analysis_type == 'seasonal':
-            month_list = months.split(',')
+        if leadtimes_mode == 'monthly':
+            if months is not None:
+                month_list = months.split(',')
+            else:
+                month_list = ['']
             init_list = list()
             for month in month_list:
                 for year in decadals:
@@ -101,8 +110,8 @@ class MetricAbstract(ToolAbstract):
         else:
             self.decadals=decadals
         #set special options for "decadal" or "seasonal"
-        self.analysis_type = analysis_type
-        if self.analysis_type == 'decadal':
+        self.leadtimes_mode = leadtimes_mode
+        if self.leadtimes_mode == 'yearly':
             self.analysisOptions = {'cdoSelect' : 'selyear',
                                     'cdomean' : 'yearmean'}
         else:
@@ -110,9 +119,9 @@ class MetricAbstract(ToolAbstract):
                                     'cdomean' : 'monmean'}
                 
         #findFiles instance
-        if analysis_type == 'decadal':
+        if leadtimes_mode == 'yearly':
             self.findFiles = FindFiles(tmpDir=self.tmpDir, level=self.level)
-        elif analysis_type == 'seasonal':
+        elif leadtimes_mode == 'monthly':
             self.findFiles = FindFilesSeason(tmpDir=self.tmpDir, level=self.level)
         
     @abc.abstractmethod    
@@ -180,7 +189,7 @@ class MetricAbstract(ToolAbstract):
         if len(fileList) == 1:
             return fileList[0]
         fileStr = ' '.join(fileList)
-        return cdo.ensmean(input=fileStr, output=fileList[0]+'_'+flag) 
+        return cdo.ensmean(input=fileStr, output=self.tmpDir+self.extractFilename(fileList[0])+'_'+flag) 
     
     def tempSmoothing(self, ensList, startyear, endyear):
         '''
@@ -226,15 +235,51 @@ class MetricAbstract(ToolAbstract):
         fn = fileName.split('/')[-1]
         fileNameOut = self.tmpDir+fn
         
-        method = getattr(cdo, self.analysisOptions['cdomean'])
-        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions['cdomean'])
         
+        #self.analysisOptions['cdomean'] = 'seasmean'
+        #method = getattr(cdo, self.analysisOptions['cdomean'])
+        #meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions['cdomean'])
+        
+#        #test monthly analysis
+#        self.analysisOptions['cdomean'] = 'monmean'
+#        method = getattr(cdo, self.analysisOptions['cdomean'])
+#        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions['cdomean'])        
+#        selstr = ','.join(map(str,range((startyear-1)*12+1,endyear*12+1)))
+#        seldate = cdo.seltimestep(selstr,input=meanFile, output=fileNameOut+'_selYear_'+str(startyear)+'-'+str(endyear)+str(pid)+self.getRandomStr())
+#        tmp = cdo.ymonmean(input=seldate, output=seldate+'Timmean')
+#        return tmp
+#        
+        #TEST SEASONANALYSIS
+#        self.analysisOptions['cdomean'] = 'seasmean'
+#        method = getattr(cdo, self.analysisOptions['cdomean'])
+#        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions['cdomean'])
+#        meanFile = cdo.selseas('JJA',input=meanFile,output=meanFile+'JJA')
+#        selstr = ','.join(map(str,range(startyear,endyear+1)))
+#        seldate = cdo.seltimestep(selstr,input=meanFile, output=fileNameOut+'_selYear_'+str(startyear)+'-'+str(endyear)+str(pid)+self.getRandomStr())
+#        tmp = cdo.timmean(input=seldate, output=seldate+'Timmean')
+#        return tmp
+    
+    
+        method = getattr(cdo, self.analysisOptions['cdomean'])
+        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions['cdomean'])  
         selstr = ','.join(map(str,range(startyear,endyear+1)))
-        #print meanFile
         seldate = cdo.seltimestep(selstr,input=meanFile, output=fileNameOut+'_selYear_'+str(startyear)+'-'+str(endyear)+str(pid)+self.getRandomStr())
         tmp = cdo.timmean(input=seldate, output=seldate+'Timmean')
         return tmp
         
+    def removeSeasonalCycle(self, fn):
+        '''
+        Subtracts the seasonal cycle of monthly data
+        '''
+        print fn
+        seasonalCycle = cdo.ymonavg(input=fn, output=fn+'_meanCycle')
+        print seasonalCycle
+        tmp = cdo.ymonsub(input=' '.join([fn,seasonalCycle]),output=fn+'_noseason')
+        print tmp
+        return tmp
+    
+    
+    
     def getAnomalies(self, ensMeanList, crossMean):
         '''
         Subtracts cross-validated mean from ensembles
@@ -246,6 +291,8 @@ class MetricAbstract(ToolAbstract):
         anomalies = dict()
         for year in self.decadals:
             anomalies[year] = cdo.sub(input=' '.join([ensMeanList[year], crossMean[year]]), output=ensMeanList[year]+'_ANOMALIE')
+            #
+            #anomalies[year] = cdo.sub(input=' '.join([ensMeanList[year], cdo.timmean(input=crossMean[year],output=crossMean[year]+'timmean')]), output=ensMeanList[year]+'_ANOMALIE')        
         return anomalies 
     
     def _getAnomalies(self, ensMeanList, crossMean):
@@ -273,7 +320,7 @@ class MetricAbstract(ToolAbstract):
         for year in self.decadals:
             yearList.append(year)
             meanList = list()
-            flagList.append(str(year)+'_'+flag)
+            flagList.append(str(year)+'_'+flag+self.getRandomStr())
             for key,val in ensMeanList.iteritems():
                 if( key != year):
                     meanList.append(val)
@@ -333,7 +380,6 @@ class MetricAbstract(ToolAbstract):
         ensCount = len(tmpList)   
         poolArgs = self.getPoolArgs(ensCount,self,tmpList,'_getEnsembleVar')
         result = self.listToYeardict(self.multiProcess(poolArgs))
-        
         return cdo.sqrt(input=cdo.ensmean(input=' '.join(result.values()), output=result.values()[0]+'ensmean_afgst'), output=result.values()[0]+'AVGSTD')
             
     def _getEnsembleVar(self, fileList):
@@ -347,6 +393,8 @@ class MetricAbstract(ToolAbstract):
         fileStr = ' '.join(fileList)
         norm = len(fileList)/(len(fileList)-1.)
         ensvar = cdo.ensvar(input=fileStr, output=fileList[0]+'_ENSVAR'+self.getRandomStr())
+        #print len(fileList)
+        
         return cdo.mulc(norm, input=ensvar, output=ensvar+'_BETTER')
     
     
@@ -541,7 +589,51 @@ class MetricAbstract(ToolAbstract):
                                                     output = outputDir+files+'_masked'))
                         else:
                             fileList.append(outputDir+files) 
-        return fileList    
+        return fileList 
+    
+    
+    def detrendTimeSeries(self, fn, keepMean=True):
+        '''
+        Subtracts trend of a timeseries. 
+        If keepMean is True the mean is kept 
+        '''
+        print fn
+        #split file in mothly files
+        tmp = cdo.copy(input=fn,output=fn+'copy',options='-f nc')
+        tmp = cdo.splitmon(input=tmp,output=fn+'monthly',options='-f nc')
+        #print tmp
+        
+        months = ['01','02','03','04','05','06','07','08','09','10','11','12']
+        
+        detrended_list = list()
+        for mon in months:
+            fn_mon = tmp+mon+'.nc'
+            trend_a = fn_mon + 'trend_a'
+            trend_b = fn_mon + 'trend_b'
+            cdo.trend(input=fn_mon, output=' '.join([trend_a,trend_b]))
+            
+            if keepMean:
+                trend_a = cdo.mulc('0.00',input=trend_a,output=trend_a+'_keepMean')
+                
+            detrended_tmp = cdo.subtrend(input=' '.join([fn_mon,trend_a,trend_b]), output=fn_mon+'_detrended')
+            detrended_list.append(detrended_tmp)
+    #        print fn
+    #        print detrended
+        detrended = cdo.mergetime(' '.join(detrended_list), output=fn+'_detrended')    
+        print detrended
+        return detrended
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+           
         
          
         

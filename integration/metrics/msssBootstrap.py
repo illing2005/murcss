@@ -46,7 +46,8 @@ class MsssBootstrap(Msss):
         else:
             ensListProject1 = self.findFiles.getFiles(year, self.project1, self.model1, self.variable, 
                                                     ensemblemembers=self.ensemblemembers1, product=self.product1, 
-                                                    institute=self.institute1, exp_prefix=self.experiment1)
+                                                    institute=self.institute1, exp_prefix=self.experiment1,
+                                                    maxLeadtime=self.maxLeadtime,minLeadtime=self.minLeadtime)
         tmpList = list()
         for ensfile in ensListProject1:
             #yearmean
@@ -66,7 +67,8 @@ class MsssBootstrap(Msss):
         else:
             ensListProject2 = self.findFiles.getFiles(year, self.project2, self.model2, self.variable,
                                                     ensemblemembers=self.ensemblemembers2, product=self.product2, 
-                                                    institute=self.institute2, exp_prefix=self.experiment2)
+                                                    institute=self.institute2, exp_prefix=self.experiment2,
+                                                    maxLeadtime=self.maxLeadtime,minLeadtime=self.minLeadtime)
         tmpList = list()
         for ensfile in ensListProject2:
             #yearmean

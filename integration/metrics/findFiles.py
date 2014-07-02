@@ -57,7 +57,7 @@ class FindFiles(ToolAbstract):
         
         super(FindFiles,self).__init__(output_tmp=tmpDir, output_dir=output)
                
-    def getFiles(self,year,fileType, model, variable, time_frequency='mon', product='*', ensemblemembers='*', institute='*', exp_prefix='d*', maxleadtime=10):
+    def getFiles(self,year,fileType, model, variable, time_frequency='mon', product='*', ensemblemembers='*', institute='*', exp_prefix='d*', maxleadtime=10, minLeadtime=1):
         '''
         Method to get model files with solr_search.
         
@@ -68,7 +68,9 @@ class FindFiles(ToolAbstract):
         :param time_frequency: monthly, yearly, daily and so on
         
         :return: list with all ensemblemembers members found
-        '''                
+        '''   
+        #TODO: BUGFIX for minLeadyear
+        minLeadtime=1                     
         output = list() 
         decStr = exp_prefix+str(year)
         project = fileType.lower()    
@@ -119,18 +121,18 @@ class FindFiles(ToolAbstract):
             yearList = years.split(' ')
             #print years    
             #print fn       
-            if str(year+1) not in yearList or str(year+maxleadtime) not in yearList:
+            if str(year+minLeadtime) not in yearList or str(year+maxleadtime) not in yearList:
                 print year
                 raise NotEnoughYearsInFile, "1Not enough years in %s %s %s for starting year %s" % (fileType, model, product, year)
             
             if(len(years.split(' ')) > maxleadtime):
-                selStr = ','.join(map(str,range(year+1,year+1+maxleadtime)))
+                selStr = ','.join(map(str,range(year+minLeadtime,year+1+maxleadtime)))
                 fileName = str(fn).split('/')[-1]
-                output.append(cdo.selyear(selStr, input=str(fn), output=self.tmpDir+fileName+'_'+str(year+1)+'-'+str(year+maxleadtime)))
+                output.append(cdo.selyear(selStr, input=str(fn), output=self.tmpDir+fileName+'_'+str(year+minLeadtime)+'-'+str(year+maxleadtime)))
             else:    
                 output.append(str(fn))
                 
-            if len(cdo.showyear(input=output[-1])[0].split(' ')) < maxleadtime: 
+            if len(cdo.showyear(input=output[-1])[0].split(' ')) < maxleadtime-minLeadtime: 
                 raise NotEnoughYearsInFile, "2Not enough years in %s %s %s for starting year %s" % (fileType, model, product, year)
                 
         if(not output or not isinstance(output, list)):
@@ -146,7 +148,7 @@ class FindFiles(ToolAbstract):
         else:
             return output
     
-    def getReanalysis(self,year,fileType, experiment, variable, filePath='', time_frequency='mon', maxLeadtime=10):
+    def getReanalysis(self,year,fileType, experiment, variable, filePath='', time_frequency='mon', maxLeadtime=10, observation_ensemble='*', minLeadtime=1):
         '''
         Wrapper method to find reanalysis file with solr_search.
         
@@ -157,6 +159,8 @@ class FindFiles(ToolAbstract):
         :param time_frequency: monthly, yearly, daily and so on
         :return: "decadal" file with observations  
         '''
+        #TODO: BUGFIX for minLeadyear
+        minLeadtime=1
         reanFiles = list()
         if((experiment == 'HadCrut') and (variable == 'tas')):
             return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime)
@@ -165,7 +169,7 @@ class FindFiles(ToolAbstract):
         
         #to use your own reanalysis data
         if os.path.isfile(self.observation):
-            return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime)
+            return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime, minLeadtime=minLeadtime)
         
         
         
@@ -176,7 +180,7 @@ class FindFiles(ToolAbstract):
             try:
                 if facet['data_type'][0] == 'reanalysis':
                     searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
-                                         time_frequency=time_frequency)
+                                         time_frequency=time_frequency, ensemble=observation_ensemble)
                 else:
                     searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency, data_structure='grid')
@@ -188,6 +192,7 @@ class FindFiles(ToolAbstract):
                 fname = str(fn).split('/')[-1]
                 #reanFiles.append(cdo.yearmean(input=str(fn), output=self.tmpDir+fname+'_YEARMEAN'))
                 reanFiles.append(str(fn))
+                #print reanFiles
                 #if more than one year in File we break the loop and expect it to be a observationsfile
                 if(len(yearTmp.split(' ')) > 1 ):
                     break
@@ -196,6 +201,7 @@ class FindFiles(ToolAbstract):
             mergedFile = cdo.mergetime(input=' '.join(reanFiles), output=self.tmpDir+'mergedREAN_YEARMEAN')
             tmpMean = cdo.timmean(input=mergedFile)
             self.mergedReanFile = cdo.sub(input=' '.join([mergedFile, tmpMean]), output=self.tmpDir+'reananomalies.nc')
+            #self.mergedReanFile = cdo.detrend(input=self.tmpDir+'reananomalies.nc', output=self.tmpDir+'reananomalies.nc_notrend')
             #print self.mergedReanFile
             if self.level is not None:
                 self.mergedReanFile = self._selectLevel(self.mergedReanFile)
@@ -206,16 +212,16 @@ class FindFiles(ToolAbstract):
             raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
             
         years = cdo.showyear(input=self.mergedReanFile)[0]
-        if((years.find(str(year+1)) != -1) and (years.find(str(year+maxLeadtime)) != -1)):
+        if((years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1)):
             #create tmp decadal file
-            fileStr = ','.join(map(str,range(year+1,year+maxLeadtime+1)))
+            fileStr = ','.join(map(str,range(year+minLeadtime,year+maxLeadtime+1)))
             tmp= cdo.selyear(fileStr, input=self.mergedReanFile, output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc')
             return tmp
         else:
-            raise NotEnoughYearsInFile, "%s-%s are not part of %s reanalysis" % (year+1, year+maxLeadtime, experiment)            
+            raise NotEnoughYearsInFile, "%s-%s are not part of %s reanalysis" % (year+minLeadtime, year+maxLeadtime, experiment)            
      
 
-    def getObsFiles(self, variable, year, maxLeadtime=10):
+    def getObsFiles(self, variable, year, maxLeadtime=10, minLeadtime=1):
         '''
         Get the observation files from an specified folder
         
@@ -227,18 +233,18 @@ class FindFiles(ToolAbstract):
             raise NoFilesFoundError, '%s does not exist.' % (self.observation)
         
         years = cdo.showyear(input=self.observation)[0]
-        if(years.find(str(year+1)) != -1) and (years.find(str(year+maxLeadtime)) != -1):
+        if(years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1):
             #create tmp decadal file
-            fileStr = ','.join(map(str,range(year+1,year+maxLeadtime+1)))
+            fileStr = ','.join(map(str,range(year+minLeadtime,year+maxLeadtime+1)))
             tmpFile =  cdo.selyear(fileStr, input=self.observation, 
-                                   output=self.tmpDir+self.getFilename(self.observation)+'_'+str(year+1)+'-'+str(year+maxLeadtime))
+                                   output=self.tmpDir+self.getFilename(self.observation)+'_'+str(year+minLeadtime)+'-'+str(year+maxLeadtime))
             if self.level is not None:
                 return self._selectLevel(tmpFile)
             else:
                 return tmpFile    
         else:
-            if years.find(str(year+1)) == -1:
-                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+1, self.observation)
+            if years.find(str(year+minLeadtime)) == -1:
+                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+minLeadtime, self.observation)
             if years.find(str(year+maxLeadtime)) == -1:
                 raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+maxLeadtime, self.observation)
          

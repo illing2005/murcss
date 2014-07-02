@@ -64,6 +64,7 @@ class Msss(MetricAbstract):
                      
                      leadtimes='1,2-9', 
                      observation = 'HadCrut', 
+                     observation_ensemble = '*',
                      maskMissingValues = True,
                      result_grid=None,
                      cache='/tmp/msss/cache/', 
@@ -75,7 +76,7 @@ class Msss(MetricAbstract):
                      bootstrap2=None, 
                      obsRemapped = None, 
                      
-                     analysis_type = 'decadal',
+                     leadtimes_mode = 'yearly',
                      level=None, 
                      lonlatbox=None, 
                      fieldmean=False, #not finally implemented
@@ -125,7 +126,7 @@ class Msss(MetricAbstract):
                             'project1','product1','institute1','model1','experiment2',
                             'project2','product2','institute2','model2','experiment1',
                             'leadtimes','maskMissingValues','level','lonlatbox','fieldmean',
-                            'bootstrap','bootstrap2','obsRemapped',
+                            'bootstrap','bootstrap2','obsRemapped', 'observation_ensemble',
                             'observation_type','colormap','timeFreq']
         for attr in listOfAttributes:
             setattr(self, attr, locals()[attr])
@@ -142,7 +143,7 @@ class Msss(MetricAbstract):
 
         super(Msss,self).__init__(tmpDir = self.checkPath(cache), output=output, output_plots=output_plots,
                                   baseDir=baseDir, result_grid=result_grid, observation=observation,
-                                  analysis_type=analysis_type, decadals=decadals, months=months )
+                                  leadtimes_mode=leadtimes_mode, decadals=decadals, months=months )
 
 
     def prepareInput(self):
@@ -155,15 +156,16 @@ class Msss(MetricAbstract):
             countYears = len(self.decadals)
             poolArgs = self.getPoolArgs(countYears, self.findFiles, list(self.decadals), self.project2, self.model2, self.variable,
                                         'mon', self.product2, self.ensemblemembers2, self.institute2, self.experiment2,
-                                        self.maxLeadtime, 'getFiles')
+                                        self.maxLeadtime, self.minLeadtime, 'getFiles')
             self.input2Dict = self.listToYeardict(self.multiProcess(poolArgs)) 
             #print self.input2Dict
             poolArgs = self.getPoolArgs(countYears, self.findFiles, list(self.decadals), self.project1,self.model1,self.variable,
                                         'mon',self.product1,self.ensemblemembers1,self.institute1,self.experiment1,
-                                        self.maxLeadtime,'getFiles')
+                                        self.maxLeadtime, self.minLeadtime,'getFiles')
             self.input1Dict = self.listToYeardict(self.multiProcess(poolArgs))
             for year in self.decadals:
-                self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable, maxLeadtime=self.maxLeadtime)     
+                self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable, maxLeadtime=self.maxLeadtime, observation_ensemble=self.observation_ensemble, minLeadtime=self.minLeadtime)     
+            #print self.observationDict
             print 'Remapping Files'
             for year in self.decadals:
                 self.input1Remapped[year] = self._remapFiles(self.input1Dict[year], flag=self.product1)
@@ -176,7 +178,7 @@ class Msss(MetricAbstract):
                 self.input2Remapped[year] = self.bootstrap2[year]
                 self.input1Remapped[year] = self.bootstrap[year]
                 if self.obsRemapped == None:
-                    self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable)
+                    self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable, maxLeadtime=self.maxLeadtime, observation_ensemble=self.observation_ensemble, minLeadtime=self.minLeadtime)
                     self.observationRemapped[year] = self.remapFile(self.observationDict[year])
                 else:
                     self.observationRemapped[year] = self.obsRemapped[year]
@@ -214,7 +216,7 @@ class Msss(MetricAbstract):
             for year in self.decadals:
                 self.input1Remapped[year] = self.fieldMean(self.input1Remapped[year])
                 self.input2Remapped[year] = self.fieldMean(self.input2Remapped[year])
-                self.observationRemapped[year] = self._fieldmean(self.observationRemapped[year]) 
+                self.observationRemapped[year] = self._fieldMean(self.observationRemapped[year]) 
             
 
         if self.bootstrap is None:
@@ -228,18 +230,18 @@ class Msss(MetricAbstract):
         print 'Calculating crossvalidated mean'
         input1CrossvalMean = self.getCrossValMean(input1Ensemblemean, 'model')
         input2CrossvalMean = self.getCrossValMean(input2Ensemblemean, 'hist')
-        if self.obsExp != 'HadCrut':
-            if self.obsRemapped == None:
-                obsCrossValMean = self.getCrossValMean(self.observationRemapped, 'obs')
-                self.observationRemapped = self.getAnomalies(self.observationRemapped, obsCrossValMean)
-        self.obsRemapped = self.observationRemapped
+
+        if self.obsRemapped == None or self.bootstrap == True:
+            obsCrossValMean = self.getCrossValMean(self.observationRemapped, 'obs')
+            self.observationRemappedAnom = self.getAnomalies(self.observationRemapped, obsCrossValMean)
+        self.obsRemapped = self.observationRemappedAnom
             
         print 'Calculating Anomalies'
         input1Anomalies = self.getAnomalies(input1Ensemblemean, input1CrossvalMean)
         input2Anomalies = self.getAnomalies(input2Ensemblemean, input2CrossvalMean)
         self.constantField = self.createConstantFile(self.gridFile)
         
-        self.misvalMask = self.calcMissingValueMask(self.observationRemapped)
+        self.misvalMask = self.calcMissingValueMask(self.observationRemappedAnom)
         
         rangeCount = len(self.getYearRange())
         firstYearList = list()
@@ -252,7 +254,7 @@ class Msss(MetricAbstract):
         #escape attributes 
         self.escapeAttributes()
 
-        poolArgs = self.getPoolArgs(rangeCount, self, input1Anomalies,self.observationRemapped,input2Anomalies,
+        poolArgs = self.getPoolArgs(rangeCount, self, input1Anomalies,self.observationRemappedAnom,input2Anomalies,
                                     firstYearList,lastYearList,'analyzeYearRange')
         resultList = self.multiProcess(poolArgs)
         
@@ -273,8 +275,16 @@ class Msss(MetricAbstract):
                 std_ind = [i for i,s in enumerate(fileList) if 'std_ratio' in s]
                 min[std_ind] = 0.5
                 max[std_ind] = 2
+#                corr_ind = [i for i,s in enumerate(fileList) if 'correlation' in s]
+#                min[corr_ind] = -0.6
+#                max[corr_ind] = 0.6
                 poolArgs = self.getPoolArgs(filesToPlot,self,fileList,list(min),list(max),'_plotField')
-                resultList = self.multiProcess(poolArgs)
+                #resultList = self.multiProcess(poolArgs)
+                
+                for i,f in enumerate(fileList):     
+                    if not 'biasslope' in f:
+                        if not 'std_ratio' in f:
+                            self._plotField(f, min[i], max[i])
                   
         
            
@@ -300,8 +310,8 @@ class Msss(MetricAbstract):
 
         base = '%s-%s'%(startYear, endYear)
         #get file names
-        flag1 = self.constructName(self.insideFolderNameFlag,exp='1')
-        flag2 = self.constructName(self.insideFolderNameFlag,exp='2')
+        flag1 = self.constructName(self.insideFolderNameFlag,exp='1', extra='input1')
+        flag2 = self.constructName(self.insideFolderNameFlag,exp='2', extra='input2')
         fnFlag1 = self.constructName(self.fileNameFlag, exp='1', startYear=str(startYear), endYear=str(endYear))
         fnFlag2 = self.constructName(self.fileNameFlag, exp='2', startYear=str(startYear), endYear=str(endYear))
         fnFlagVs = self.constructName(self.fileNameFlagVs, exp='', startYear=str(startYear), endYear=str(endYear))
@@ -407,6 +417,16 @@ class Msss(MetricAbstract):
         
         mergeHindcast = cdo.mergetime(input=hindcastStr, output=hindcast[self.decadals[0]]+flag+self.getRandomStr()+'_merged.nc')
         mergeObservations = cdo.mergetime(input=observationStr, output=observation[self.decadals[0]]+flag+self.getRandomStr()+'_merged.nc')
+        #print mergeHindcast
+        #remove seasonal cycle
+        #mergeHindcast = self.removeSeasonalCycle(mergeHindcast)
+        #mergeObservations = self.removeSeasonalCycle(mergeObservations)
+        #print mergeHindcast
+        
+        #detrend data
+        #mergeHindcast = self.detrendTimeSeries(mergeHindcast,keepMean=False)
+        #mergeObservations = self.detrendTimeSeries(mergeObservations,keepMean=False)
+        
         varianceHindcast = cdo.timstd(input=mergeHindcast, output=hindcast[self.decadals[0]]+flag+'_variance')
         varianceObservation = cdo.timstd(input=mergeObservations, output=observation[self.decadals[0]]+flag+'_variance')
         corr = cdo.timcor(input=' '.join([mergeHindcast, mergeObservations]), output=outputDir+flag+'_correlation.nc')
@@ -424,8 +444,12 @@ class Msss(MetricAbstract):
                                     output=outputDir+flag+'_biasslope-1.nc')
         bias = cdo.sub(input=corr+' '+ '-div ' + varianceHindcast + ' ' + varianceObservation, 
                        output=outputDir+flag+'_conditional_bias.nc')
+#        bias = cdo.sub(input=corr+' '+ cdo.div(input=varianceHindcast + ' ' + varianceObservation, output=varianceHindcast+'div'), 
+#                       output=outputDir+flag+'_conditional_bias.nc')
         msss = cdo.sub(input='-sqr ' + corr + ' -sqr ' + bias, 
                        output=outputDir+flag+'_msss.nc')
+#        msss = cdo.sub(input=cdo.sqr(input=corr,output=corr+'sqr') + ' ' + cdo.sqr(input=bias,output=bias+'sqr'), 
+#                       output=outputDir+flag+'_msss.nc')
         
         return dict(msss= msss, bias= bias, corr= corr, biasSlope=biasSlope, stdRatio=stdRatio, biasSlopeMinusOne=biasSlopeMinusOne)
         

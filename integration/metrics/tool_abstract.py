@@ -24,6 +24,7 @@ import os
 import time
 
 from nondeamonpool import MyPool
+import murcss_config
 
 def unwrap_self_f(arg, **kwarg):
     '''
@@ -62,20 +63,24 @@ class ToolAbstract(object):
         result = list()
         splitList = self.leadtimes.split(',')
         maxValue = list()
+        minValue = list()
         for yrange in splitList:
             try:
                 result.append((int(yrange),int(yrange)))
                 maxValue.append(int(yrange))
+                minValue.append(int(yrange))
             except:
                 tmp_range = yrange.split('-')
                 result.append((int(tmp_range[0]),int(tmp_range[1])))
-                maxValue.append(int(tmp_range[1]))    
-        self.maxLeadtime = max(maxValue)            
+                maxValue.append(int(tmp_range[1]))
+                minValue.append(int(tmp_range[0]))    
+        self.maxLeadtime = max(maxValue)           
+        self.minLeadtime = min(minValue) 
         return result
     
     def multiProcess(self, poolArgs):    
         
-        pool = MyPool(processes=min([len(poolArgs),24]))
+        pool = MyPool(processes=min([len(poolArgs),murcss_config.proc_count]))
         result = pool.map(unwrap_self_f, poolArgs)
         pool.terminate()
         pool.close()
@@ -111,8 +116,9 @@ class ToolAbstract(object):
         else:
             return filePath
         
-    def constructName(self,structure, exp='', startYear='',endYear=''):
+    def constructName(self,structure, exp='', startYear='',endYear='',extra=''):
         output = list()
+        
         for var in structure:
             if hasattr(self, var+exp):
                 temp_val = getattr(self, var+exp)
@@ -141,7 +147,8 @@ class ToolAbstract(object):
             else:
                 escaped_var = var.replace('*','')
                 output.append(escaped_var)                
-                
+        if extra != '':
+            output.append(extra)   
         return '_'.join(output)    
     
     

@@ -61,6 +61,7 @@ class Crpss(MetricAbstract):
                     
                     leadtimes='1,2-9', 
                     observation = 'HadCrut',
+                    observation_ensemble = '*',
                     ensemblemembers='*', 
                      
                     maskMissingValues = True,
@@ -73,10 +74,12 @@ class Crpss(MetricAbstract):
                     bootstrapSwitch=True,
                     bootstrap_number = 2,
                     
-                    analysis_type = 'decadal',
+                    leadtimes_mode = 'yearly',
                     level=None, 
                     lonlatbox='', 
-                    fieldmean=None, 
+                    fieldmean=False, 
+                    
+                    input_part = 'input1',
                     
                     #not really used
                     colormap='goddard',
@@ -105,9 +108,9 @@ class Crpss(MetricAbstract):
         #Add kwargs to attributes
         listOfAttributes = ['decadals','variable',
                             'project','product1','institute1','model','experiment', #input data
-                            'leadtimes','maskMissingValues','level','lonlatbox','fieldmean', 
+                            'leadtimes','maskMissingValues','level','lonlatbox','fieldmean', 'observation_ensemble', 
                             'bootstrapSwitch','bootstrap_number', #for bootstrapping
-                            'observation_type','colormap','timeFreq']  #not used 
+                            'observation_type','colormap','timeFreq','input_part']  #not used 
         for attr in listOfAttributes:
             setattr(self, attr, locals()[attr])
 
@@ -118,7 +121,7 @@ class Crpss(MetricAbstract):
 
         super(Crpss,self).__init__(tmpDir = self.checkPath(cache), output=output, output_plots=output_plots,
                                    baseDir=baseDir, result_grid=result_grid,observation=observation,
-                                   analysis_type=analysis_type, decadals=decadals, months=months)
+                                   leadtimes_mode=leadtimes_mode, decadals=decadals, months=months)
 
 
         
@@ -135,10 +138,10 @@ class Crpss(MetricAbstract):
         countYears= len(self.decadals)
         poolArgs = self.getPoolArgs(countYears,self.findFiles,list(self.decadals),self.project,self.model,self.variable,
                                     self.timeFreq,self.product1,self.ensemblemembers,self.institute1,
-                                    self.experiment,self.maxLeadtime,'getFiles')    
+                                    self.experiment,self.maxLeadtime,self.minLeadtime,'getFiles')    
         self.inputDict = self.listToYeardict(self.multiProcess(poolArgs))
         for year in self.decadals:
-            self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable, maxLeadtime=self.maxLeadtime)
+            self.observationDict[year] = self.findFiles.getReanalysis(year, self.observation_type, self.obsExp, self.variable, maxLeadtime=self.maxLeadtime, observation_ensemble=self.observation_ensemble, minLeadtime=self.minLeadtime)
 
         self.inputRemapped = dict()
         self.observationRemapped = dict()
@@ -184,8 +187,15 @@ class Crpss(MetricAbstract):
                 self.inputRemapped[year] = self.sellonlatbox(self.inputRemapped[year])
                 self.observationRemapped[year] = self._sellonlatbox(self.observationRemapped[year])  
         
+        if self.fieldmean:
+            print 'Calculating field mean'
+            for year in self.decadals:
+                self.inputRemapped[year] = self.fieldMean(self.inputRemapped[year])
+                self.observationRemapped[year] = self._fieldMean(self.observationRemapped[year]) 
+        
         #get missing value mask
-        self.misvalMask = self.calcMissingValueMask(self.observationRemapped)
+        if self.maskMissingValues:
+            self.misvalMask = self.calcMissingValueMask(self.observationRemapped)
         
         #escape attributes 
         self.escapeAttributes()
@@ -205,7 +215,7 @@ class Crpss(MetricAbstract):
             
             tmp_outdir = self.outputDir
             tmp_outplot = self.outputPlots 
-            flag1 = self.constructName(self.insideFolderNameFlag,exp='1')
+            flag1 = self.constructName(self.insideFolderNameFlag,exp='1',extra=self.input_part)
             fnFlag1 = self.constructName(self.fileNameFlag, exp='1', startYear=str(startyear), endYear=str(endyear))
             self.outputDir = self.makeFolder(self.outputDir+'%s/%s/crpss'%(rangeStr,flag1))
             self.outputPlots = self.makeFolder(self.outputPlots+'%s/%s/crpss'%(rangeStr,flag1))
@@ -282,6 +292,7 @@ class Crpss(MetricAbstract):
             #print ensvarSelYear
             #print ensvarRefSelYear
             ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
+            ensemblespreadscore_ln = cdo.ln(input=ensemblespreadscore, output = self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc')
             crpss =  self.getCrpss(crpsEns, crpsRef, '_'.join([fnFlag1,'ens-vs-ref']))
             crpssEC =  self.getCrpss(crpsEns, crpsClim, '_'.join([fnFlag1,'ens-vs-clim']))
             crpssRC =  self.getCrpss(crpsRef, crpsClim, '_'.join([fnFlag1,'ref-vs-clim']))
@@ -290,29 +301,34 @@ class Crpss(MetricAbstract):
             
             #apply missing value mask
             filesToPlot = self.applyMissingValueMask(str(startyear), str(endyear), [self.outputDir])
+            #print filesToPlot
             if self.maskMissingValues:
                 ensemblespreadscore = filesToPlot[0]
-                crpss = filesToPlot[1]
-                crpssEC = filesToPlot[2]
-                crpssRC = filesToPlot[3]
+                ensemblespreadscore_ln = filesToPlot[1]
+                crpss = filesToPlot[2]
+                crpssEC = filesToPlot[3]
+                crpssRC = filesToPlot[4]
             
-            if self.bootstrapSwitch:
-                print 'Bootstrapping'
-                b_ens_ref = self.bootstrap(crpsEns, crpsRef, 'ens-vs-ref_'+rangeStr, crpss, self.bootstrap_number, plot_range=[-0.5,0.], colorbar='goddard')
-                b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
-                b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
-                self.bootstrapEnsembleSpreadscore(ensAnoms, anomalies, tempSmoothedObs, ensemblespreadscore, self.bootstrap_number)
-#                Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
-#                Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
-            else:
-                Plotter.plotField(crpss, -0.5, 0., 'goddard', lonlatbox=self.lonlatbox)
-                Plotter.saveFig(self.outputPlots, self.extractFilename(crpss))
-                Plotter.plotField(crpssEC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-                Plotter.saveFig(self.outputPlots, self.extractFilename(crpssEC))
-                Plotter.plotField(crpssRC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-                Plotter.saveFig(self.outputPlots, self.extractFilename(crpssRC))
-                Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
-                Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
+            if not self.fieldmean:
+                if self.bootstrapSwitch:
+                    print 'Bootstrapping'
+                    b_ens_ref = self.bootstrap(crpsEns, crpsRef, 'ens-vs-ref_'+rangeStr, crpss, self.bootstrap_number, plot_range=[-0.5,0.], colorbar='goddard')
+                    b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
+                    b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
+                    self.bootstrapEnsembleSpreadscore(ensAnoms, anomalies, tempSmoothedObs, ensemblespreadscore, self.bootstrap_number, ensemblespreadscore_ln)
+    #                Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+    #                Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
+                else:
+                    Plotter.plotField(crpss, -0.5, 0., 'goddard', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpss))
+                    Plotter.plotField(crpssEC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpssEC))
+                    Plotter.plotField(crpssRC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpssRC))
+                    Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
+                    Plotter.plotField(ensemblespreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore_ln))
                 
             self.outputDir =tmp_outdir
             self.outputPlots = tmp_outplot
@@ -411,9 +427,20 @@ class Crpss(MetricAbstract):
         xCopy = np.ma.masked_greater(x, 0.8e20)
         varVar = FileHandler.openNetCDFFile(variance, mode='var')
         #Calculation of CRPS after Gneiting and Raferty  
+        #print x.shape
+        x = x.squeeze()
+        xCopy = xCopy.squeeze()
+        #print xCopy.shape
+        #print x.shape
+        #print varVar.shape
         crps = - varVar * (1/np.sqrt(np.pi) - 2. * stats.norm.pdf(x) - x * (2. * stats.norm.cdf(x) - 1.))
+        #print '1'
         crps = np.ma.array(crps, mask=xCopy.mask, fill_value=1e20)
         crps = crps.filled(1e20)
+        #print '2'
+        #crps = np.expand_dims(crps,axis=1)
+        #crps = np.expand_dims(crps,axis=1)
+        #print crps.shape
         crpsFile = FileHandler.saveToNetCDF(crps, hindcast, 'crps'+tag) 
         return crpsFile
     
@@ -507,7 +534,7 @@ class Crpss(MetricAbstract):
         
         return tmp_spreadscore 
     
-    def bootstrapEnsembleSpreadscore(self, ensAnoms, anomalies, tempSmoothedObs, spreadscore, bootstrap_number):
+    def bootstrapEnsembleSpreadscore(self, ensAnoms, anomalies, tempSmoothedObs, spreadscore, bootstrap_number, spreadscore_ln):
         print 'Bootstrapping spreadscore'
         tmpDir = self.tmpDir + 'bootstrap_ensspread/'
         if not os.path.isdir(tmpDir):
@@ -533,9 +560,13 @@ class Crpss(MetricAbstract):
         significance = Significance(self.tmpDir, self.outputPlots)
         (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, spreadscore, check_value=1)
         m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
-        
         Plotter.addCrosses(m, sig_lon, sig_lat)
         Plotter.saveFig(self.outputPlots, spreadscore.split('/')[-1])
+        
+        m = Plotter.plotField(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+        Plotter.addCrosses(m, sig_lon, sig_lat)
+        Plotter.saveFig(self.outputPlots, spreadscore_ln.split('/')[-1])
+        
             
         return bootstrapList  
         

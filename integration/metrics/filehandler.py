@@ -52,7 +52,7 @@ class FileHandler(object):
         Open a file as numpy array
         Either get a dict with "var","lon","lat" or only "var"
         '''
-        f = S.NetCDFFile(fn, mode='r')
+        f = S.NetCDFFile(fn, mode='r') 
         try:
             lon = f.variables['lon'].getValue()
             lat = f.variables['lat'].getValue()
@@ -62,7 +62,7 @@ class FileHandler(object):
                 lat = f.variables['Y'].getValue() 
             except:
                 print 'Can\'t find lon/lat variables.'
-                
+       
         varName = cdo.showname(input = fn)[0]     #TODO: Better way to get the variable name
         mVar = f.variables[varName].getValue()
         

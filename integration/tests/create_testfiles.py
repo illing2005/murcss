@@ -27,7 +27,7 @@ import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
 
-folder = '/pf/b/b324057/goddard-metrics/test_files/test_data/'
+folder = ''#'/pf/b/b324057/goddard-metrics/test_files/test_data/'
 prename = 'start_files.nc'
 output = '/tmp/msss_test/test_data/'
 if not os.path.isdir(output):

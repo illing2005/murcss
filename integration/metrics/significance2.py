@@ -22,7 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 import numpy as np
 import os
 
-from findFiles import FindFiles
+import murcss_config
+if murcss_config.file_system == 'miklip':
+    from findFiles import FindFiles
+else:
+    from findFilesCustom import FindFilesCustom as FindFiles
 from filehandler import FileHandler
 
 
