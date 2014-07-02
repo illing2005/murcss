@@ -21,9 +21,9 @@ import sys
 import getopt
 import os
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__))+'/../metrics/')
-from msss import Msss
-from crpss import Crpss
+from metrics import __version__
+from metrics.msss import Msss
+from metrics.crpss import Crpss
 
 _short_args = "hnd"
 _args = ['help', 'config_file=']
@@ -37,7 +37,7 @@ def getMurcssDict():
             result_grid=None, level=None, lonlatbox=None, fieldmean=None, significance=False, bootstrap_number=100)
 
 def printHelp():
-    print """MurCSS (v1.0.0): The tool calculates the Mean Squared Error Skill Score (MSESS) its decomposition (Correlation + Conditional Bi
+    print """MurCSS (%s): \nThe tool calculates the Mean Squared Error Skill Score (MSESS) its decomposition (Correlation + Conditional Bi
 as) and the Continuous Ranked Probability Skill Score (CRPSS)
 as proposed by Goddard et al. [2013]. 
 The MSSS of both models and the MSSS "between" the two models (model versions) are calculated for different leadtimes.
@@ -91,7 +91,7 @@ observation       (default: HadCrut) [mandatory]
 significance      (default: False)
                   Whether you want to calculate significance levels.
                   WARNING: This could take up to 1 day!
-bootstrap_number  (default: 500)
+bootstrap_number  (default: 100)
                   Number of bootstrap runs.
 level             (default: None)
                   Level to select. If you are using 3D-Files
@@ -103,13 +103,12 @@ maskMissingValues (default: True)
 cache             (default: "/tmp/murcss/cache/")
                   Workdir
 result_grid       (default: <undefined>)
-                  You can specify a gridfile or a grid description like r20x25"""
+                  You can specify a gridfile or a grid description like r20x25""" % (__version__)
 
 def main(argv=None): # IGNORE:C0111
     '''Command line options.'''
     if argv is None:
        argv = sys.argv[1:]
-    
     args, lastargs = getopt.getopt(argv, _short_args, _args)
     
     for flag,arg in args:
@@ -131,20 +130,22 @@ def main(argv=None): # IGNORE:C0111
     print 'Calculating the MSSS'
     print '#######################'
     #Calculation of MSESS
+    #import metrics as test
+    #print test.__version__
+    
     if(not murcss_dict['significance']):
         msss_dict = murcss_dict.copy()
         msss_dict.pop('bootstrap_number')
         msss_dict.pop('significance')
-        try:
-            msss = Msss(**msss_dict)
-            msss.prepareInput()
-            msss.analyze()   
-        finally:
-            msss.deleteCache()
+        #try:
+        msss = Msss(**msss_dict)
+        msss.prepareInput()
+        msss.analyze()   
+        #finally:
+        msss.deleteCache()
     else:
         from metrics.msssBootstrap import main
         msss = main(murcss_dict.copy(),'..')
-
     print '#######################'
     print 'Calculating the CRPSS for Model1'
     print '#######################'
@@ -208,7 +209,7 @@ def main(argv=None): # IGNORE:C0111
                        fieldmean=murcss_dict['fieldmean'],
                        
                        cache=murcss_dict['cache'], 
-                       
+                       input_part='input2',
                        baseDir = murcss_dict['baseDir'])
     crpss2.outputDir = msss.outputDir
     crpss2.outputPlots = msss.outputPlots
@@ -216,8 +217,8 @@ def main(argv=None): # IGNORE:C0111
     crpss2.analyze()
     crpss2.deleteCache()    
 
-    import metrics.msss, metrics.metricAbstract, metrics.findFiles, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBootstrap, metrics.findFilesSeason
-    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.findFiles.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.cdo, metrics.msssBootstrap.cdo, metrics.findFilesSeason.cdo
+    import metrics.msss, metrics.metricAbstract, metrics.filehandler, metrics.taylorplot, metrics.crpss, metrics.msssBootstrap
+    del metrics.msss.cdo, metrics.metricAbstract.cdo, metrics.filehandler.cdo, metrics.taylorplot.cdo, metrics.crpss.cdo, metrics.msssBootstrap.cdo
     print 'Calculation finished.'
     print 'Plots produced in %s' %(msss.outputPlots,)
 
