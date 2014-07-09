@@ -58,7 +58,7 @@ DRS_STRUCTURE = {
 
 #### Generate Sample output:
 
-Download the files in /sample_data/ and the files in /sample_output/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. Webpage and user informations:
+To generate the sample files in /sample_output/ download the files in /sample_data/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. Webpage and user informations:
 http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html 
 Download and unzip e.g. the median of the HadCRUT4 dataset 
 ```
