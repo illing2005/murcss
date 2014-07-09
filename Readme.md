@@ -74,6 +74,7 @@ murcss variable=tas project1=miklip product1=initialized institute1=mpi-m model1
 Unittests
 -
 Download the files in /integration/tests/ and navigate to the directory.
+You should also download the sample_data and adapt the DRS_Structure to run the tests for the file input component. 
 Now run the tests using
 ```
 python -m unittest discover . '*_test.py'
