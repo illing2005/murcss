@@ -2,7 +2,10 @@ MurCSS
 =====
 A Tool for Standardized Evaluation of Decadal Hindcast Systems
 
-This Readme is for the MurCSS tool.
+The tool calculates the Mean Squared Error Skill Score (MSESS) its decomposition (Correlation + Conditional Bi
+as) and the Continuous Ranked Probability Skill Score (CRPSS) as proposed by Goddard et al. [2013]. 
+The MSESS of both models and the MSESS "between" the two models (model versions) are calculated for different leadtimes.
+The CRPSS is calculated for both models defined by the input parameters. 
 
 The main documentation can be found here /doc/build/index.html and here https://www-miklip.dkrz.de/about/murcss
 
