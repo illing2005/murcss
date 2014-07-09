@@ -82,6 +82,8 @@ class Significance(object):
         ysize = searchGriddes(grid,'ysize')
         lon = np.arange(xfirst+xinc/2, xsize*xinc+xfirst+xinc/2, xinc, dtype=float)
         lat = np.arange(yfirst+yinc/2, ysize*yinc+yfirst+yinc/2, yinc, dtype=float)
+        lon = np.arange(xfirst, xsize*xinc+xfirst, xinc, dtype=float)
+        lat = np.arange(yfirst, ysize*yinc+yfirst, yinc, dtype=float)
 #        lon = np.arange(xfirst, xsize*xinc+xfirst, xinc, dtype=float)
 #        lat = np.arange(yfirst, ysize*yinc+yfirst, yinc, dtype=float)
         return (lon,lat)

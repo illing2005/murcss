@@ -18,7 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
-
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -34,10 +33,6 @@ class Plotter(object):
     colorDict =  {'red':   ((0., 0, 0),  (0.35, 0, 0),  (0.45, 1,1),(0.5, 1,1),(0.55, 1,1),(0.60, 0.1, 0.1), (0.65, 1.0, 1.0), (0.89,1, 1),(1, 0.5, 0.5)),
                   'green': ((0., 0, 0), (0.125,0, 0), (0.375,1, 1),(0.45, 1,1), (0.5, 1,1), (0.55, 1,1),(0.60,1, 1),(0.65,1,1),(0.91,0,0), (1, 0, 0)),
                   'blue':  ((0., 0.5, 0.5), (0.11, 1, 1), (0.34, 1, 1), (0.45, 1,1),(0.5, 1,1),(0.55, 1,1),(0.56,0, 0),(1, 0, 0))}
-    
-#    colorDict2 =  {'red':   ((0., 1, 1), (1, 1, 1)),
-#                  'green': ((0., 1, 1), (1, 0.1, 0.1)),
-#                  'blue':  ((0., 1, 1), (1, 0.1, 0.1))}
     
     colorDict2 = {'blue': ((0.0, 0.96862745285034180, 0.96862745285034180),
                            (0.2, 0.78039216995239258, 0.78039216995239258),
@@ -61,17 +56,7 @@ class Plotter(object):
                           (1.0, 0.40392157435417175, 0.40392157435417175))
                   }
     
-    colorDict2 = {'blue': [#(0.0, 0.12156862765550613,0.12156862765550613), 
-                           #(0.10000000000000001, 0.16862745583057404,0.16862745583057404), 
-                           #(0.20000000000000001, 0.30196079611778259,0.30196079611778259), 
-                           #(0.29999999999999999, 0.50980395078659058,0.50980395078659058), 
-                           #(0.40000000000000002, 0.78039216995239258,0.78039216995239258), 
-                           
-                           
-                            
-                            
-                            
-                            (0.0, 0.3803921639919281, 0.3803921639919281),
+    colorDict2 = {'blue': [ (0.0, 0.3803921639919281, 0.3803921639919281),
                             (0.2, 0.67450982332229614, 0.67450982332229614), 
                             (0.4, 0.76470589637756348, 0.76470589637756348),
                   
@@ -79,33 +64,14 @@ class Plotter(object):
                   (0.8, 0.94117647409439087, 0.94117647409439087),
                   (1, 0.9686274528503418, 0.9686274528503418),],
                             
-                    'green': [#(0.0, 0.0, 0.0), 
-                              #(0.10000000000000001,0.094117648899555206, 0.094117648899555206), 
-                              #(0.20000000000000001,0.37647059559822083, 0.37647059559822083), 
-                              #(0.29999999999999999,0.64705884456634521, 0.64705884456634521), 
-                              #(0.40000000000000002,0.85882353782653809, 0.85882353782653809), 
-                              
-                              
-                              
-                              
-                              
-                              (0.0,0.18823529779911041, 0.18823529779911041),
+                    'green': [ (0.0,0.18823529779911041, 0.18823529779911041),
                               (0.2,0.40000000596046448, 0.40000000596046448), 
                               (0.4,0.57647061347961426, 0.57647061347961426), 
                               (0.6,0.77254903316497803, 0.77254903316497803), 
                               (0.8,0.89803922176361084, 0.89803922176361084), 
                               (1.0,0.9686274528503418, 0.9686274528503418), ],
                             
-                    'red': [    #(0.0, 0.40392157435417175, 0.40392157435417175),
-                                #(0.10000000000000001, 0.69803923368453979, 0.69803923368453979),
-                                #(0.20000000000000001, 0.83921569585800171, 0.83921569585800171),
-                                #(0.29999999999999999, 0.95686274766921997, 0.95686274766921997),
-                                #(0.40000000000000002, 0.99215686321258545, 0.99215686321258545),
-                                
-                                
-                                
-                                
-                                
+                    'red': [
                                 (0.0, 0.019607843831181526, 0.019607843831181526),
                                 (0.2, 0.12941177189350128, 0.12941177189350128),
                                 (0.4, 0.26274511218070984, 0.26274511218070984),
@@ -115,7 +81,7 @@ class Plotter(object):
     
     
     @staticmethod
-    def plotField(fileName, vmin, vmax, colormap='goddard', output_folder='/', lonlatbox='-180,180,-90,90'):
+    def plotField(fileName, vmin, vmax, colormap='goddard', output_folder='/', lonlatbox=None):
         '''
         Plot any field variable
         
@@ -123,8 +89,8 @@ class Plotter(object):
         :param vmin: min value for colorbar
         :param vmax: max value for colorbar
         ''' 
-        fig1 = plt.figure(figsize=(12,7),dpi=500)
-        
+        #fig1 = plt.figure(figsize=(12,7),dpi=500)
+        fig, ax = plt.subplots(figsize=(12,7),dpi=500)
         if(colormap == 'goddard'): 
             my_cmap = mpl.colors.LinearSegmentedColormap('my_colormap',Plotter.colorDict2,256)
         else:
@@ -134,14 +100,33 @@ class Plotter(object):
         mVar = file_values['variable']
         lon = file_values['lon']
         lat = file_values['lat']
+        
+        
+        step = (lon[1]-lon[0])/2.
+        
+        lon = N.insert(lon,lon.shape[0],lon[-1]+2*step)
+        lon = N.insert(lon,lon.shape[0],lon[-1]+2*step)
+        
+        lat = N.insert(lat,lat.shape[0],lat[-1]+2*step)
+        lat = N.insert(lat,lat.shape[0],lat[-1]+2*step)
 
+        mVarF = mVar[:,0:2]
+        mVar = N.concatenate((mVar,mVarF),axis=1)
+
+        def plus(lon):
+            return lon-step
+        
         if lonlatbox is None:
-            if lon[0] < 0:
+            if lon[0] < 0 and lon[1] < 0:
                 lonlatbox = '-180,180,-90,90'
             else:
                 lonlatbox = '0,360,-90,90'
+        lon = N.array(map(plus,lon))
+        lat = N.array(map(plus,lat))
+        
         lonlatbox = map(int,lonlatbox.split(','))
-        m = Basemap(llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3])
+        step=0
+        m = Basemap(llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3],lon_0=0)
 
         def divi(x):
             return float(x)/10
@@ -172,21 +157,21 @@ class Plotter(object):
         
         colorTicks = colorSteps[0::2]
         my_cmap.set_bad("grey")                         #set missing value color
-        #maskedArray = N.ma.masked_greater(mVar, 0.8e20) #mask missing Values
         maskedArray = N.ma.masked_outside(mVar, -0.8e20, 0.8e20)
         #discrete colormap
         norm = mpl.colors.BoundaryNorm(colorSteps, my_cmap.N)
-        cs = m.imshow(maskedArray, interpolation="nearest", cmap=my_cmap, norm=norm)
+        #cs = m.imshow(maskedArray, interpolation="nearest", cmap=my_cmap, norm=norm)
+        #x,y = m(lon, lat)
+        x,y = N.meshgrid(lon, lat)
+        cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm)#, latlon=False)
         cb = m.colorbar(cs,"right", size="5%", pad='5%' , ticks=colorTicks)
-        m.drawcoastlines()  
+        m.drawcoastlines(ax=ax)  
         m.drawparallels(N.arange(-90.,120.,30.),labels=[1,0,0,0]) # draw parallels
         m.drawmeridians(N.arange(0.,420.,60.),labels=[0,0,0,1]) # draw meridians
         
         plt.title(Plotter.__getTitle(fileName))
         plt.text(lonlatbox[0]+(lon[1]-lon[0])/2, lonlatbox[2]+(lat[1]-lat[0])/2, 'MurCSS')
-        #print lonlatbox[0]+lon[1]-lon[0]
         return m
-        #Plotter.saveFig(output_folder, fn)
      
     @staticmethod    
     def saveFig(output_folder, fn):
@@ -203,10 +188,7 @@ class Plotter(object):
         
         sign_mask = FileHandler.openNetCDFFile(fn)
         lon = sign_mask['lon']
-        print lon[0]
-        print lon[1]
         lon = lon + (lon[1]-lon[0])/2
-        print lon[0]
         lat = sign_mask['lat']
         lat = lat + (lat[1]-lat[0])/2
         sign_mask = sign_mask['variable']
@@ -237,8 +219,12 @@ class Plotter(object):
         return title
         
         
-        
-        
+if __name__ == '__main__':
+    print 'test'
+    fn = '/home/illing/workspace/murcss/integration/metrics/1_1_tos_b324031_b1seasonal_mpi-esm-lr_seasonal_198204-201104_correlation.nc_masked'
+    Plotter.plotField(fn, -1, 1, 'RdBu')
+    Plotter.saveFig('', 'test')
+    plt.show()      
         
         
         

@@ -267,6 +267,6 @@ def main(config_dict, baseDir):
         return Msss 
     finally: 
         Msss.tmpDir = config_dict['cache']
-        Msss.deleteCache()
+        #Msss.deleteCache()
         
         
