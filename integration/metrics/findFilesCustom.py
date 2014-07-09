@@ -141,8 +141,7 @@ class FindFilesCustom(ToolAbstract):
         :return: "decadal" file with observations  
         '''
         #to use your own reanalysis data
-        if os.path.isfile(self.observation):
-            return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime, minLeadtime=minLeadtime)
+        return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime, minLeadtime=minLeadtime)
  
     def getObsFiles(self, variable, year, maxLeadtime=10, minLeadtime=1):
         '''
@@ -154,6 +153,11 @@ class FindFilesCustom(ToolAbstract):
         '''    
         if not os.path.isfile(self.observation):
             raise NoFilesFoundError, '%s does not exist.' % (self.observation)
+        
+        variable_file = cdo.showname(input=self.observation)[0]
+        if variable != variable_file:
+            print 'WARNING: Variable in observation file is not %s. \n Variable will be renamed.' % (variable)
+            self.observation = cdo.chvar(variable_file+','+variable, input=self.observation, output=self.tmpDir+self.getFilename(self.observation))
         
         years = cdo.showyear(input=self.observation)[0]
         if(years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1):
