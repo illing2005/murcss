@@ -47,7 +47,8 @@ setup(
                       'numpy>=1.5.0',
                       'cdo',
                       'scipy>=0.8.0',
-                      'basemap'],
+                      'basemap',
+		      'scientificpython'],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here. If using Python 2.6 or less, then these
