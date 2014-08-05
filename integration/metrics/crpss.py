@@ -39,6 +39,39 @@ class VariableName(CrpssError): pass
 class Crpss(MetricAbstract):
     '''
     Class to calculate the CRPSS. Call method "analyze" to get results
+    
+    :param output: Path where the results are saved
+    :param output_plot: Path where the plots are saved
+    :param decadals: a list with decadal experiments, i.e. [1960,1960,...,1995]
+    :param variable: CMOR-Name of variable like 'tas' (Near Surface Temperature)
+    :param project: CMOR-Name of the project like CMIP5 or BASELINE1
+    :param product1: CMOR-Parameter 
+    :param institute1: CMOR-Name of the institute like MPI-M
+    :param model: CMOR-Name of the used model like MPI-ESM-LR
+    :param experiment: Experiment name like decs4e or historical
+    
+	 :param leadtimes: Leadtimes to analyze, ie. 1,2-9
+	 :param observation: Observation or Reanalysis Experiment, HadCrut or ERA-Int or path to observation file	    
+    
+	 :param ensemblemembers: Comma separated string of esemble members like 'r1i1p1,r2i1p1,...'
+	  
+	 :param maskMissingValues: Boolean value. Whether you want to mask missing values or not
+	 :param result_grid: Griddescription of resultgrid like r72x36
+	 :param cache: Path for cachedir during analysis    
+	 :param baseDir: Path of Class to find default files
+	 :param timeFreq: Timefrequency of the files, ie 'mon' or 'day'
+    :param bootstrapSwitch: If you want calculating Significance using Bootstrap methods
+	 :param bootstrap_number: Number of Bootstrap runs    
+    :param leatimes_mode: 'monthly' or 'yearly' calculation
+    :param level: For 3D-Files --> Select a single level
+	 :param lonlatbox: If you want to select a specific lonlat-Box   
+    :param fieldmean: Boolean - If you want to calculate field mean
+    
+    :param colormap: Matplotlib Colormap used for ploting
+    :param observation_type: NOT USED ANYMORE!!!
+    :param reanpath: NOT USED ANYMORE!!!
+    
+    :param months: Usefull if your analysing monthly and your experiment name has a month included
     '''
 
     outputFolderStruct = 'TIME_variable_project_model_product1_obsExp_YEARRANGE'.split('_')
@@ -65,7 +98,7 @@ class Crpss(MetricAbstract):
                     ensemblemembers='*', 
                      
                     maskMissingValues = True,
-                    result_grid=False, 
+                    result_grid='r72x36', 
                     cache='/tmp/crpss/cache', 
                     baseDir = './', 
                     timeFreq = 'mon',  
@@ -89,21 +122,6 @@ class Crpss(MetricAbstract):
                     ):
         '''
         Constructor. Set parameters and calls parent constructor (metricAbstarct)
-        
-        :param output:
-        :param output_plot:
-        :param decadals:
-        :param variable:
-        :param cache:
-        :param baseDir:
-        :param maskMissingValues:
-        :param model:
-        :param project:
-        :param spatianSmoothing:
-        :param colormap:
-        :param timeFreq:
-        :param observation:
-        :param obsExp:
         '''
         #Add kwargs to attributes
         listOfAttributes = ['decadals','variable',

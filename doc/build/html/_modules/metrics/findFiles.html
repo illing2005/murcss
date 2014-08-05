@@ -1,0 +1,426 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.findFiles &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.findFiles</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 12.03.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cdo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">cdo</span> <span class="o">=</span> <span class="n">Cdo</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">lowercase</span><span class="p">,</span> <span class="n">translate</span><span class="p">,</span> <span class="n">maketrans</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="c">#from evaluation_system.model.file import *</span>
+<span class="kn">from</span> <span class="nn">evaluation_system.model.solr</span> <span class="kn">import</span> <span class="n">SolrFindFiles</span>
+
+<span class="kn">from</span> <span class="nn">tool_abstract</span> <span class="kn">import</span> <span class="n">ToolAbstract</span><span class="p">,</span> <span class="n">unwrap_self_f</span>
+
+<span class="k">class</span> <span class="nc">FileError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">NoFilesFoundError</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">UnexpectedFileFormat</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">NotEnoughYearsInFile</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">WrongDrsStruct</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">LevelNotFound</span><span class="p">(</span><span class="n">FileError</span><span class="p">):</span> <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="FindFiles"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles">[docs]</a><span class="k">class</span> <span class="nc">FindFiles</span><span class="p">(</span><span class="n">ToolAbstract</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Wrapper class to use solr_search with &quot;python friendly&quot; output --&gt; lists or dicts</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmpDir</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="n">observation</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Constructor</span>
+<span class="sd">        </span>
+<span class="sd">        :param tmpDir: cache folder</span>
+<span class="sd">        :param observation: folder of &quot;special&quot; observation data </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">tmpDir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="n">observation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
+        
+        <span class="nb">super</span><span class="p">(</span><span class="n">FindFiles</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">output_tmp</span><span class="o">=</span><span class="n">tmpDir</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+               
+<div class="viewcode-block" id="FindFiles.getFiles"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.getFiles">[docs]</a>    <span class="k">def</span> <span class="nf">getFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">year</span><span class="p">,</span><span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">time_frequency</span><span class="o">=</span><span class="s">&#39;mon&#39;</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">ensemblemembers</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">institute</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">exp_prefix</span><span class="o">=</span><span class="s">&#39;d*&#39;</span><span class="p">,</span> <span class="n">maxleadtime</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">minLeadtime</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method to get model files with solr_search.</span>
+<span class="sd">        </span>
+<span class="sd">        :param year: decadal starting year</span>
+<span class="sd">        :param fileType: baseline1, cmip5, historical or...</span>
+<span class="sd">        :param model: model name i.e. MPI-ESM-LR</span>
+<span class="sd">        :param variable: CMOR variable</span>
+<span class="sd">        :param time_frequency: monthly, yearly, daily and so on</span>
+<span class="sd">        </span>
+<span class="sd">        :return: list with all ensemblemembers members found</span>
+<span class="sd">        &#39;&#39;&#39;</span>   
+        <span class="c">#TODO: BUGFIX for minLeadyear</span>
+        <span class="n">minLeadtime</span><span class="o">=</span><span class="mi">1</span>                     
+        <span class="n">output</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span> 
+        <span class="n">decStr</span> <span class="o">=</span> <span class="n">exp_prefix</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">fileType</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>    
+        <span class="n">tmpList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">experiment</span><span class="o">=</span><span class="n">decStr</span><span class="p">,</span> <span class="n">latest_version</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="n">product</span><span class="p">,</span> <span class="n">institute</span><span class="o">=</span><span class="n">institute</span><span class="p">,</span>
+                                      <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;nc&#39;</span><span class="p">):</span>
+                <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">tmpList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">time</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c"># delays for 5 seconds</span>
+            <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">experiment</span><span class="o">=</span><span class="n">decStr</span><span class="p">,</span> <span class="n">latest_version</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="n">product</span><span class="p">,</span> <span class="n">institute</span><span class="o">=</span><span class="n">institute</span><span class="p">,</span>
+                                      <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">):</span>
+                <span class="k">print</span> <span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+                <span class="k">if</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;nc&#39;</span><span class="p">):</span>
+                    <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="n">tmpList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">exp_prefix</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> experiment: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+                <span class="c">#OK we can&#39;t find files, now try one last time using only the exp_prefix, i.e. &quot;historical&quot;</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">experiment</span><span class="o">=</span><span class="n">exp_prefix</span><span class="p">,</span> <span class="n">latest_version</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">product</span><span class="o">=</span><span class="n">product</span><span class="p">,</span> <span class="n">institute</span><span class="o">=</span><span class="n">institute</span><span class="p">,</span>
+                                      <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">):</span>
+                    <span class="k">if</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;nc&#39;</span><span class="p">):</span>
+                        <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">test</span> <span class="o">=</span> <span class="n">tmpList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="c">#OK, there are no Files...</span>
+                    <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> experiment: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>  
+        
+        <span class="c">#select only wanted ensemblemembers</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ensemblemembers</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="n">ensemblemembers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;*&#39;</span><span class="p">:</span>
+            <span class="n">ensList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">ens</span> <span class="ow">in</span> <span class="n">ensemblemembers</span><span class="p">:</span>
+                <span class="n">onlyfiles</span> <span class="o">=</span>  <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tmpList</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">ens</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">onlyfiles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ensList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">onlyfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">tmpList</span> <span class="o">=</span> <span class="n">ensList</span>
+              
+        <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">tmpList</span><span class="p">:</span>
+            
+            <span class="n">years</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">showyear</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">yearList</span> <span class="o">=</span> <span class="n">years</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+            <span class="c">#print years    </span>
+            <span class="c">#print fn       </span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yearList</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxleadtime</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">yearList</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">year</span>
+                <span class="k">raise</span> <span class="n">NotEnoughYearsInFile</span><span class="p">,</span> <span class="s">&quot;1Not enough years in </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> for starting year </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+            
+            <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">years</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">maxleadtime</span><span class="p">):</span>
+                <span class="n">selStr</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">,</span><span class="n">year</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">maxleadtime</span><span class="p">)))</span>
+                <span class="n">fileName</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdo</span><span class="o">.</span><span class="n">selyear</span><span class="p">(</span><span class="n">selStr</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">fileName</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxleadtime</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>    
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+                
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cdo</span><span class="o">.</span><span class="n">showyear</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">maxleadtime</span><span class="o">-</span><span class="n">minLeadtime</span><span class="p">:</span> 
+                <span class="k">raise</span> <span class="n">NotEnoughYearsInFile</span><span class="p">,</span> <span class="s">&quot;2Not enough years in </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> for starting year </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+                
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">output</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> for starting year </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">fileType</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+
+        <span class="c">#check for curvilinear grid</span>
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;curvilinearGrid&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">curvilinearGrid</span> <span class="o">==</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkGrid</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+        <span class="c">#user wants to select levels</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectLevel</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">output</span>
+    </div>
+<div class="viewcode-block" id="FindFiles.getReanalysis"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.getReanalysis">[docs]</a>    <span class="k">def</span> <span class="nf">getReanalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">year</span><span class="p">,</span><span class="n">fileType</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">filePath</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">time_frequency</span><span class="o">=</span><span class="s">&#39;mon&#39;</span><span class="p">,</span> <span class="n">maxLeadtime</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">observation_ensemble</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">minLeadtime</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Wrapper method to find reanalysis file with solr_search.</span>
+<span class="sd">        </span>
+<span class="sd">        :param year: startyear</span>
+<span class="sd">        :param fileType: reanalysis or observation</span>
+<span class="sd">        :param experiment: i.e. NCEP, HadCrut or MERRA</span>
+<span class="sd">        :param variable: CMOR Variable</span>
+<span class="sd">        :param time_frequency: monthly, yearly, daily and so on</span>
+<span class="sd">        :return: &quot;decadal&quot; file with observations  </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#TODO: BUGFIX for minLeadyear</span>
+        <span class="n">minLeadtime</span><span class="o">=</span><span class="mi">1</span>
+        <span class="n">reanFiles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">((</span><span class="n">experiment</span> <span class="o">==</span> <span class="s">&#39;HadCrut&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">variable</span> <span class="o">==</span> <span class="s">&#39;tas&#39;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getObsFiles</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">maxLeadtime</span><span class="o">=</span><span class="n">maxLeadtime</span><span class="p">)</span>
+        
+        
+        
+        <span class="c">#to use your own reanalysis data</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getObsFiles</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">maxLeadtime</span><span class="o">=</span><span class="n">maxLeadtime</span><span class="p">,</span> <span class="n">minLeadtime</span><span class="o">=</span><span class="n">minLeadtime</span><span class="p">)</span>
+        
+        
+        
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;mergedReanFile&#39;</span><span class="p">)):</span>
+            <span class="c">#Observation or reanalysis?</span>
+            <span class="n">facet</span> <span class="o">=</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">facets</span><span class="p">(</span><span class="n">facets</span><span class="o">=</span><span class="s">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">experiment</span><span class="o">=</span><span class="n">experiment</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> 
+                                         <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">facet</span><span class="p">[</span><span class="s">&#39;data_type&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;reanalysis&#39;</span><span class="p">:</span>
+                    <span class="n">searchList</span> <span class="o">=</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">data_type</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;reanalysis&#39;</span><span class="p">,</span><span class="s">&#39;observations&#39;</span><span class="p">],</span> <span class="n">experiment</span><span class="o">=</span><span class="n">experiment</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> 
+                                         <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">=</span><span class="n">observation_ensemble</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">searchList</span> <span class="o">=</span> <span class="n">SolrFindFiles</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">data_type</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;reanalysis&#39;</span><span class="p">,</span><span class="s">&#39;observations&#39;</span><span class="p">],</span> <span class="n">experiment</span><span class="o">=</span><span class="n">experiment</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">variable</span><span class="p">,</span> 
+                                         <span class="n">time_frequency</span><span class="o">=</span><span class="n">time_frequency</span><span class="p">,</span> <span class="n">data_structure</span><span class="o">=</span><span class="s">&#39;grid&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">searchList</span><span class="p">:</span>
+                <span class="n">yearTmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">showyear</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>      
+                <span class="n">fname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c">#reanFiles.append(cdo.yearmean(input=str(fn), output=self.tmpDir+fname+&#39;_YEARMEAN&#39;))</span>
+                <span class="n">reanFiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fn</span><span class="p">))</span>
+                <span class="c">#print reanFiles</span>
+                <span class="c">#if more than one year in File we break the loop and expect it to be a observationsfile</span>
+                <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">yearTmp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reanFiles</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>    
+            <span class="n">mergedFile</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mergetime</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reanFiles</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="s">&#39;mergedREAN_YEARMEAN&#39;</span><span class="p">)</span>
+            <span class="n">tmpMean</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">mergedFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mergedReanFile</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">mergedFile</span><span class="p">,</span> <span class="n">tmpMean</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="s">&#39;reananomalies.nc&#39;</span><span class="p">)</span>
+            <span class="c">#self.mergedReanFile = cdo.detrend(input=self.tmpDir+&#39;reananomalies.nc&#39;, output=self.tmpDir+&#39;reananomalies.nc_notrend&#39;)</span>
+            <span class="c">#print self.mergedReanFile</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mergedReanFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selectLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mergedReanFile</span><span class="p">)</span>
+            
+            <span class="c">#print self.mergedReanFile</span>
+        
+        <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s">&#39;mergedReanFile&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&quot;Couldn&#39;t find files for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+            
+        <span class="n">years</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">showyear</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mergedReanFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span><span class="p">((</span><span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="c">#create tmp decadal file</span>
+            <span class="n">fileStr</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">,</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="n">tmp</span><span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">selyear</span><span class="p">(</span><span class="n">fileStr</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mergedReanFile</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="s">&#39;reanalysis_&#39;</span><span class="o">+</span><span class="n">experiment</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.nc&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tmp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotEnoughYearsInFile</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s"> are not part of </span><span class="si">%s</span><span class="s"> reanalysis&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">,</span> <span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>            
+     
+</div>
+<div class="viewcode-block" id="FindFiles.getObsFiles"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.getObsFiles">[docs]</a>    <span class="k">def</span> <span class="nf">getObsFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">maxLeadtime</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">minLeadtime</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the observation files from an specified folder</span>
+<span class="sd">        </span>
+<span class="sd">        :param variable:</span>
+<span class="sd">        :param year: start year of decadal</span>
+<span class="sd">        :return tmp file with maxLeadtime years of observation </span>
+<span class="sd">        &#39;&#39;&#39;</span>    
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NoFilesFoundError</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> does not exist.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span>
+        
+        <span class="n">years</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">showyear</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c">#create tmp decadal file</span>
+            <span class="n">fileStr</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">,</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="n">tmpFile</span> <span class="o">=</span>  <span class="n">cdo</span><span class="o">.</span><span class="n">selyear</span><span class="p">(</span><span class="n">fileStr</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">,</span> 
+                                   <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getFilename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selectLevel</span><span class="p">(</span><span class="n">tmpFile</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tmpFile</span>    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FileError</span><span class="p">,</span> <span class="s">&#39;Can</span><span class="se">\&#39;</span><span class="s">t find data for year </span><span class="si">%s</span><span class="s"> in observational data! </span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">minLeadtime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">years</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">FileError</span><span class="p">,</span> <span class="s">&#39;Can</span><span class="se">\&#39;</span><span class="s">t find data for year </span><span class="si">%s</span><span class="s"> in observational data! </span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">year</span><span class="o">+</span><span class="n">maxLeadtime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="p">)</span>
+         </div>
+<div class="viewcode-block" id="FindFiles.checkGrid"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.checkGrid">[docs]</a>    <span class="k">def</span> <span class="nf">checkGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fList</span><span class="p">,</span><span class="n">model</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Checks if the file has a curvlinear grid. And remaps to lonlat grid after </span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">gridInfo</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">griddes</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fList</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">gridType</span> <span class="o">=</span> <span class="n">gridInfo</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gridType</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;curvilinear&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curvilinearGrid</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="n">fList</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">curvilinearGrid</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__str2int</span><span class="p">(</span><span class="n">gridInfo</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+            <span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__str2int</span><span class="p">(</span><span class="n">gridInfo</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
+        <span class="c">#single process, becaus multiproccessing caused memory problems</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">fList</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ceckGrid</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_ceckGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;MPI-ESM&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">lon</span><span class="o">=</span><span class="n">lon</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">sel_str</span> <span class="o">=</span> <span class="s">&#39;2,</span><span class="si">%s</span><span class="s">,1,</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">selindexbox</span><span class="p">(</span><span class="n">sel_str</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getFilename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_sel_box&#39;</span><span class="p">)</span>
+                
+        <span class="n">grid_str</span> <span class="o">=</span> <span class="s">&#39;r</span><span class="si">%s</span><span class="s">x</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">remapbil</span><span class="p">(</span><span class="n">grid_str</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getFilename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_lonlat&#39;</span><span class="p">)</span>
+        
+    
+<div class="viewcode-block" id="FindFiles.getFilename"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.getFilename">[docs]</a>    <span class="k">def</span> <span class="nf">getFilename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Helper to extract a filename out of a path</span>
+<span class="sd">        :deprecated !!!</span>
+<span class="sd">        :param fn</span>
+<span class="sd">        :return filename</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__str2int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Filter digits and convert str to int</span>
+<span class="sd">        </span>
+<span class="sd">        :param str:</span>
+<span class="sd">        :return int</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="nb">all</span> <span class="o">=</span> <span class="n">maketrans</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">nodigs</span> <span class="o">=</span> <span class="nb">all</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="nb">all</span><span class="p">,</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="nb">all</span><span class="p">,</span> <span class="n">nodigs</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">getAllFilesInFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span>
+        <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">isfile</span><span class="p">,</span> <span class="n">join</span>
+        <span class="n">onlyfiles</span> <span class="o">=</span> <span class="p">[</span> <span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="k">if</span> <span class="n">isfile</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span><span class="n">f</span><span class="p">))</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="n">onlyfiles</span>
+    
+    <span class="k">def</span> <span class="nf">getAllFilesInSubfolders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
+        
+        <span class="n">file_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">subdirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">folder</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                <span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">file_list</span>        
+        
+    <span class="k">def</span> <span class="nf">_selectLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">):</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sellevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getFilename</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;.nc&#39;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LevelNotFound</span><span class="p">,</span> <span class="s">&#39;Level </span><span class="si">%s</span><span class="s"> not found in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>
+
+            
+<div class="viewcode-block" id="FindFiles.selectLevel"><a class="viewcode-back" href="../../findfiles.html#metrics.findFiles.FindFiles.selectLevel">[docs]</a>    <span class="k">def</span> <span class="nf">selectLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fileList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Select a specific level from the files</span>
+<span class="sd">        &#39;&#39;&#39;</span>        
+        <span class="c">#multi processing</span>
+        <span class="n">num_proc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="nb">min</span><span class="p">([</span><span class="n">num_proc</span><span class="p">,</span><span class="mi">24</span><span class="p">]))</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">([</span><span class="bp">self</span><span class="p">]</span><span class="o">*</span><span class="n">num_proc</span><span class="p">,</span> <span class="n">fileList</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;_selectLevel&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">num_proc</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span>  <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">unwrap_self_f</span><span class="p">,</span> <span class="n">poolArgs</span><span class="p">)</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="n">result</span>
+
+    
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to MurCSS User Guide! &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" />
+    <link rel="next" title="MurCSS Tool" href="goddard.html" />
+    <link rel="prev" title="Welcome to MurCSS documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="goddard.html" title="MurCSS Tool"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to MurCSS documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-murcss-user-guide">
+<h1>Welcome to MurCSS User Guide!<a class="headerlink" href="#welcome-to-murcss-user-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Download and install MurCSS via pypi:</p>
+<div class="highlight-python"><pre>pip install murcss</pre>
+</div>
+<p>Or you can clone this repository:</p>
+<div class="highlight-python"><pre>git clone https://github.com/illing2005/murcss.git</pre>
+</div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>MurCSS needs some additional python packages. If you install MurCSS using pypi, they will be downloaded and installed automatically.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Matplotlib &gt;= 1.1.0</li>
+<li>Basemap</li>
+<li>NumPy &gt;= 1.5.0</li>
+<li>SciPy &gt;= 0.8.0</li>
+<li>CDOpy</li>
+<li>scientificpython</li>
+</ul>
+</div></blockquote>
+<p>Additionally MurCSS requires a working binary of the Climate Data Operators ( <a class="reference external" href="https://code.zmaw.de/projects/cdo">CDO &gt;= 1.5.4</a> ).</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>After installation you can use the tool typing murcss in your terminal.</p>
+<div class="section" id="help">
+<h3>Help:<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">murcss</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<p>Now you can see all parameters accepted by MurCSS.</p>
+</div>
+<div class="section" id="outside-of-miklip">
+<h3>Outside of MiKlip:<a class="headerlink" href="#outside-of-miklip" title="Permalink to this headline">¶</a></h3>
+<p>If you are using MurCSS outside of MiKlip, you have to set the file_system = &#8216;custom&#8217; and specify your data structure in murcss_config.py.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#If you are working on your own filesystem specify the folder structure:</span>
+<span class="n">DRS_STRUCTURE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s">&quot;root_dir&quot;</span><span class="p">:</span><span class="s">&quot;/scratch/ROOTDIR_OF_YOUR_DATA/&quot;</span><span class="p">,</span>
+      <span class="s">&quot;parts_dir&quot;</span><span class="p">:</span><span class="s">&quot;project/product/institute/model/experiment/time_frequency/realm/variable/ensemble/file_name&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">),</span>
+      <span class="s">&quot;defaults&quot;</span> <span class="p">:</span> <span class="p">{}</span>
+     <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generate-sample-output">
+<h3>Generate Sample output:<a class="headerlink" href="#generate-sample-output" title="Permalink to this headline">¶</a></h3>
+<p>To generate the sample files in <a class="reference external" href="https://github.com/illing2005/murcss/tree/master/sample_output">/sample_output/</a> download the files in <a class="reference external" href="https://github.com/illing2005/murcss/tree/master/sample_data">/sample_data/</a> . Adjust the DRS_STRUCTURE in murcss_config.py to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. Webpage and user informations: <a class="reference external" href="http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html">http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html</a> Download and unzip e.g. the median of the HadCRUT4 dataset:</p>
+<div class="highlight-python"><pre>cd /observations/path/
+wget http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/gridded_fields/HadCRUT.4.2.0.0.median_netcdf.zip .
+unzip HadCRUT.4.2.0.0.median_netcdf.zip</pre>
+</div>
+<p>Now you can generate the sample output using:</p>
+<div class="highlight-python"><pre>murcss variable=tas project1=miklip product1=initialized institute1=mpi-m model1=mpi-esm-lr experiment1=initialized project2=miklip product2=uninitialized institute2=mpi-m model2=mpi-esm-lr experiment2=uninitialized decadals=1960,1965,1970,1975,1980,1985,1990,1995,2000 leadtimes=1,2-5 result_grid=r72x36 observation=/PATH/TO/OBSERVATION_FILE metrics=all</pre>
+</div>
+</div>
+<div class="section" id="inside-a-python-script">
+<h3>Inside a Python Script:<a class="headerlink" href="#inside-a-python-script" title="Permalink to this headline">¶</a></h3>
+<p>MurCSS constits of two types of metrics, accuracy and ensemble_spread. The first is located in <a class="reference internal" href="msss.html"><em>metrics.msss</em></a> and the second in <a class="reference internal" href="crpss.html"><em>metrics.crpss</em></a>
+Here is a simple script to calculate the accuracy part:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">metrics.msss</span> <span class="kn">import</span> <span class="n">Msss</span>
+<span class="n">msss</span> <span class="o">=</span> <span class="n">Msss</span><span class="p">(</span><span class="o">**</span><span class="n">parameter_dict</span><span class="p">)</span>   <span class="c">#Create an instance of Msss Class</span>
+<span class="n">msss</span><span class="o">.</span><span class="n">prepareInput</span><span class="p">()</span>             <span class="c">#Search and prepare input Files (ie. remapping)</span>
+<span class="n">msss</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>                  <span class="c">#Calculates the actual skill scores</span>
+<span class="n">msss</span><span class="o">.</span><span class="n">deleteCache</span><span class="p">()</span>              <span class="c">#Delete all temporary files</span>
+</pre></div>
+</div>
+<p>First we create an instance of Msss. Msss takes a bunch of keywords arguments, which can be separated in two parts:</p>
+<ol class="arabic simple">
+<li>arguments to find the input data</li>
+<li>specific options  for calculation</li>
+</ol>
+<p>For a complete list and description of the keyword arguments see <a class="reference internal" href="msss.html#metrics.msss.Msss" title="metrics.msss.Msss"><tt class="xref py py-class docutils literal"><span class="pre">metrics.msss.Msss</span></tt></a>. Then we search and prepare the input data for the final calculation. The prepared files will be stored in msss.input1Remapped, msss.input2Remapped and msss.observationRemapped for later use.
+The main calculation is done in msss.analyze() (see <a class="reference internal" href="msss.html#metrics.msss.Msss.analyze" title="metrics.msss.Msss.analyze"><tt class="xref py py-meth docutils literal"><span class="pre">metrics.msss.Msss.analyze()</span></tt></a>). After the calculation is finished we delete the working direcory.</p>
+<p>And here for the ensemble spread part:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">metrics.crpss</span> <span class="kn">import</span> <span class="n">Crpss</span>
+<span class="n">crpss</span> <span class="o">=</span> <span class="n">Crpss</span><span class="p">(</span><span class="o">**</span><span class="n">parameter_dict</span><span class="p">)</span> <span class="c">#Create an instance of Crpss Class</span>
+<span class="n">crpss</span><span class="o">.</span><span class="n">prepareInput</span><span class="p">()</span>            <span class="c">#Search and prepare input Files (ie. remapping)</span>
+<span class="n">crpss</span><span class="o">.</span><span class="n">analyze</span><span class="p">()</span>                 <span class="c">#Calculates the actual skill scores</span>
+<span class="n">crpss</span><span class="o">.</span><span class="n">deleteCache</span><span class="p">()</span>             <span class="c">#Delete all temporary files</span>
+</pre></div>
+</div>
+<p>crpss.prepareInput() stores the input files in crpss.inputRemapped and crpss.observationRemapped. As you can see the scripts looks almost the same. The major difference is that crpss expects only data information about one model (see <a class="reference internal" href="crpss.html#metrics.crpss.Crpss" title="metrics.crpss.Crpss"><tt class="xref py py-class docutils literal"><span class="pre">metrics.crpss.Crpss</span></tt></a>).</p>
+</div>
+</div>
+<div class="section" id="unittests">
+<h2>Unittests<a class="headerlink" href="#unittests" title="Permalink to this headline">¶</a></h2>
+<p>Download the files in /integration/tests/ and navigate to the directory. You should also download the sample_data and adapt the DRS_Structure to run the tests for the file input component. Now run the tests using:</p>
+<div class="highlight-python"><pre>python -m unittest discover . '*_test.py'</pre>
+</div>
+<p>Currently some of the tests are designed for the MiKlip file system. Therfore they are commented out.</p>
+</div>
+<div class="section" id="support-issues-bugs">
+<h2>Support, Issues, Bugs<a class="headerlink" href="#support-issues-bugs" title="Permalink to this headline">¶</a></h2>
+<p>Please open an issue on <a class="reference external" href="https://github.com/illing2005/murcss">GitHub</a> or write an email to <a class="reference external" href="mailto:sebastian&#46;illing&#37;&#52;&#48;met&#46;fu-berlin&#46;de">sebastian<span>&#46;</span>illing<span>&#64;</span>met<span>&#46;</span>fu-berlin<span>&#46;</span>de</a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to MurCSS User Guide!</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#help">Help:</a></li>
+<li><a class="reference internal" href="#outside-of-miklip">Outside of MiKlip:</a></li>
+<li><a class="reference internal" href="#generate-sample-output">Generate Sample output:</a></li>
+<li><a class="reference internal" href="#inside-a-python-script">Inside a Python Script:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#unittests">Unittests</a></li>
+<li><a class="reference internal" href="#support-issues-bugs">Support, Issues, Bugs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to MurCSS documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="goddard.html"
+                        title="next chapter">MurCSS Tool</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="goddard.html" title="MurCSS Tool"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to MurCSS documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

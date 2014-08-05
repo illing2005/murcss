@@ -1,0 +1,729 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.metricAbstract &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.metricAbstract</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 11.03.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cdo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c">#from integration.metrics.filehandler import FileHandler</span>
+<span class="n">cdo</span> <span class="o">=</span> <span class="n">Cdo</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">N</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">murcss_config</span>
+<span class="k">if</span> <span class="n">murcss_config</span><span class="o">.</span><span class="n">file_system</span> <span class="o">==</span> <span class="s">&#39;miklip&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">findFiles</span> <span class="kn">import</span> <span class="n">FindFiles</span>
+    <span class="kn">from</span> <span class="nn">findFilesSeason</span> <span class="kn">import</span> <span class="n">FindFilesSeason</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">findFilesCustom</span> <span class="kn">import</span> <span class="n">FindFilesCustom</span> <span class="k">as</span> <span class="n">FindFiles</span>
+    <span class="n">FindFilesSeason</span> <span class="o">=</span> <span class="n">FindFiles</span>
+
+<span class="kn">from</span> <span class="nn">filehandler</span> <span class="kn">import</span> <span class="n">FileHandler</span>
+<span class="kn">from</span> <span class="nn">plotter</span> <span class="kn">import</span> <span class="n">Plotter</span>
+<span class="kn">from</span> <span class="nn">nondeamonpool</span> <span class="kn">import</span> <span class="n">MyPool</span>
+<span class="kn">from</span> <span class="nn">tool_abstract</span> <span class="kn">import</span> <span class="n">ToolAbstract</span><span class="c">#, unwrap_self_f</span>
+
+<div class="viewcode-block" id="MetricAbstract"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract">[docs]</a><span class="k">class</span> <span class="nc">MetricAbstract</span><span class="p">(</span><span class="n">ToolAbstract</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Abstract class for calculating any metric of decadal runs with CDO</span>
+<span class="sd">    Every reusable function which uses CDO commands should go in here.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                 <span class="n">tmpDir</span> <span class="o">=</span> <span class="s">&#39;./tmp&#39;</span><span class="p">,</span> 
+                 <span class="n">output</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> 
+                 <span class="n">output_plots</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">,</span> 
+                 <span class="n">baseDir</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">,</span> 
+                 <span class="n">result_grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">observation</span><span class="o">=</span><span class="s">&#39;HadCrut&#39;</span><span class="p">,</span>
+                 <span class="n">leadtimes_mode</span><span class="o">=</span><span class="s">&#39;yearly&#39;</span><span class="p">,</span>
+                 <span class="n">decadals</span><span class="o">=</span><span class="s">&#39;1960,1965,1970,1975,1980,1985,1990,1995,2000&#39;</span><span class="p">,</span>
+                 <span class="n">months</span><span class="o">=</span><span class="bp">None</span>
+                <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Constructor. Sets variables and creates Folders</span>
+<span class="sd">         </span>
+<span class="sd">        :param tmpDir: </span>
+<span class="sd">        :param output: </span>
+<span class="sd">        :param output_plots: self.outputPlots</span>
+<span class="sd">        :param baseDir: Path to search for source filesself.outputPlots</span>
+<span class="sd">        :param result_grid: grid to remap to</span>
+<span class="sd">        :param observation: observation name or file used for analysis</span>
+<span class="sd">        &#39;&#39;&#39;</span>    
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;obsExp&#39;</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span> <span class="c">#TODO: Wrong named kwarg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>    
+        <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span> <span class="o">==</span> <span class="s">&#39;HadCrut&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable</span> <span class="o">==</span> <span class="s">&#39;tas&#39;</span><span class="p">):</span>  
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="n">baseDir</span> <span class="o">+</span> <span class="s">&#39;/../src/obs2/tas_obs_HadCrut3.nc&#39;</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        
+        <span class="c">#Initialize MaxLeadYear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getYearRange</span><span class="p">()</span>        
+        <span class="n">outputFolder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputFolderStruct</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MetricAbstract</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">+</span><span class="n">outputFolder</span><span class="p">,</span> 
+                                             <span class="n">output_plots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">output_plots</span><span class="p">)</span><span class="o">+</span><span class="n">outputFolder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">+</span><span class="n">outputFolder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">output_plots</span><span class="p">)</span><span class="o">+</span><span class="n">outputFolder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseDir</span> <span class="o">=</span> <span class="n">baseDir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">tmpDir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">tmpDir</span><span class="p">)):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkPath</span><span class="p">(</span><span class="n">tmpDir</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">result_grid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">gridFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseDir</span> <span class="o">+</span> <span class="s">&#39;/../src/grids/griddes_HadCrut3_5x5.txt&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gridFile</span> <span class="o">=</span> <span class="n">result_grid</span>         
+        
+        
+        <span class="k">if</span> <span class="n">leadtimes_mode</span> <span class="o">==</span> <span class="s">&#39;monthly&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">months</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">month_list</span> <span class="o">=</span> <span class="n">months</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">month_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+            <span class="n">init_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">month_list</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">decadals</span><span class="p">:</span>
+                    <span class="n">init_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="n">month</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span> <span class="o">=</span> <span class="n">init_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="o">=</span><span class="n">decadals</span>
+        <span class="c">#set special options for &quot;decadal&quot; or &quot;seasonal&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">leadtimes_mode</span> <span class="o">=</span> <span class="n">leadtimes_mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">leadtimes_mode</span> <span class="o">==</span> <span class="s">&#39;yearly&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analysisOptions</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;cdoSelect&#39;</span> <span class="p">:</span> <span class="s">&#39;selyear&#39;</span><span class="p">,</span>
+                                    <span class="s">&#39;cdomean&#39;</span> <span class="p">:</span> <span class="s">&#39;yearmean&#39;</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analysisOptions</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;cdoSelect&#39;</span> <span class="p">:</span> <span class="s">&#39;selmon&#39;</span><span class="p">,</span>
+                                    <span class="s">&#39;cdomean&#39;</span> <span class="p">:</span> <span class="s">&#39;monmean&#39;</span><span class="p">}</span>
+                
+        <span class="c">#findFiles instance</span>
+        <span class="k">if</span> <span class="n">leadtimes_mode</span> <span class="o">==</span> <span class="s">&#39;yearly&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span> <span class="o">=</span> <span class="n">FindFiles</span><span class="p">(</span><span class="n">tmpDir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">leadtimes_mode</span> <span class="o">==</span> <span class="s">&#39;monthly&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">findFiles</span> <span class="o">=</span> <span class="n">FindFilesSeason</span><span class="p">(</span><span class="n">tmpDir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        
+    <span class="nd">@abc.abstractmethod</span>    
+<div class="viewcode-block" id="MetricAbstract.analyze"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Abstract Method to calculate a metric</span>
+<span class="sd">        Must be implemented in child classes</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+        </div>
+<div class="viewcode-block" id="MetricAbstract._remapFiles"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._remapFiles">[docs]</a>    <span class="k">def</span> <span class="nf">_remapFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensList</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiprocessing for remapping files</span>
+<span class="sd">        remap observations and model files</span>
+<span class="sd">        </span>
+<span class="sd">        :param ensList: list of files</span>
+<span class="sd">        :return: list of remapped files</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="n">ensCount</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ensList</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">ensCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">ensList</span><span class="p">,</span><span class="n">flag</span><span class="p">,</span><span class="s">&#39;remapFile&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="MetricAbstract.remapFile"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.remapFile">[docs]</a>    <span class="k">def</span> <span class="nf">remapFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> 
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Remaps a single file width CDO&#39;s remapcon</span>
+<span class="sd">        </span>
+<span class="sd">        :param inputfile </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">iFile</span><span class="o">=</span> <span class="n">arg</span>  
+        <span class="n">iFile</span><span class="o">=</span><span class="n">iFile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">flag</span> <span class="o">==</span> <span class="s">&#39;output*&#39;</span><span class="p">:</span>
+                <span class="n">flag</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">flag</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span>
+        <span class="n">fName</span> <span class="o">=</span> <span class="n">iFile</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">remapcon</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gridFile</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">iFile</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">fName</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;.remapped&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract.getEnsembleMean"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.getEnsembleMean">[docs]</a>    <span class="k">def</span> <span class="nf">getEnsembleMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :todo: Multiprocessing</span>
+<span class="sd">        Should do ensmean in multiprocessing!!! At the moment only single approach</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileList: dict of filelists</span>
+<span class="sd">        :return: dict of ensemble means</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">ensMeanList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yeardictToList</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+            
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ensMeanList</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">count</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">ensMeanList</span><span class="p">,</span><span class="s">&#39;_getEnsembleMean&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+
+    </div>
+<div class="viewcode-block" id="MetricAbstract._getEnsembleMean"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._getEnsembleMean">[docs]</a>    <span class="k">def</span> <span class="nf">_getEnsembleMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileList</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="s">&#39;ENSMEAN&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates ensemble Mean</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileList: list of files</span>
+<span class="sd">        :return: ensemble mean file </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fileList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fileStr</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fileStr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">fileList</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="n">flag</span><span class="p">)</span> 
+    </div>
+<div class="viewcode-block" id="MetricAbstract.tempSmoothing"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.tempSmoothing">[docs]</a>    <span class="k">def</span> <span class="nf">tempSmoothing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensList</span><span class="p">,</span> <span class="n">startyear</span><span class="p">,</span> <span class="n">endyear</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiprocessing approach for temporal smoothing</span>
+<span class="sd">        Starts a process for every file in ensList</span>
+<span class="sd">        </span>
+<span class="sd">        :param ensList: List of files</span>
+<span class="sd">        :param startyear: int</span>
+<span class="sd">        :param endyear: int</span>
+<span class="sd">        :return: list of temporal smoothed files</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ensList</span><span class="p">,</span><span class="nb">list</span><span class="p">)):</span>
+            <span class="n">ensCount</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ensList</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ensCount</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">ensCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">ensList</span><span class="p">,</span><span class="n">startyear</span><span class="p">,</span><span class="n">endyear</span><span class="p">,</span><span class="s">&#39;_tempSmoothing&#39;</span><span class="p">)</span>
+        <span class="k">return</span>  <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract._tempSmoothing"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._tempSmoothing">[docs]</a>    <span class="k">def</span> <span class="nf">_tempSmoothing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileName</span><span class="p">,</span> <span class="n">startyear</span><span class="p">,</span> <span class="n">endyear</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Temporal smoothing. I.e. timmean over year 2-9</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileName: filepath</span>
+<span class="sd">        :param startyear: first year to select (int)</span>
+<span class="sd">        :param endyear: last year to select (int)</span>
+<span class="sd">        :return: temp smoothed file</span>
+<span class="sd">        &#39;&#39;&#39;</span>  
+<span class="c">#        pid= os.getpid()</span>
+<span class="c">#        filestartyear = int(cdo.showyear(input=fileName)[0].split(&#39; &#39;)[0])</span>
+<span class="c">#        selyearstr = &#39;&#39;</span>
+<span class="c">#        fn = fileName.split(&#39;/&#39;)[-1]</span>
+<span class="c">#        fileNameOut = self.tmpDir+fn</span>
+<span class="c">#        for i in range(startyear, endyear+1):</span>
+<span class="c">#            selyearstr = &#39;,&#39;.join([selyearstr, str(filestartyear+i-1)])</span>
+<span class="c">#        selyear = cdo.selyear(selyearstr, input=fileName, output=fileNameOut+&#39;_selYear_&#39;+str(startyear)+&#39;-&#39;+str(endyear)+str(pid))</span>
+<span class="c">#        return cdo.timmean(input=selyear, output=selyear+&#39;Timmean&#39;)</span>
+        
+        <span class="c">#perform yearmean or monthmean</span>
+        <span class="c">#try:</span>
+        
+        
+        <span class="n">pid</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">fileName</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">fileNameOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">fn</span>
+        
+        
+        <span class="c">#self.analysisOptions[&#39;cdomean&#39;] = &#39;seasmean&#39;</span>
+        <span class="c">#method = getattr(cdo, self.analysisOptions[&#39;cdomean&#39;])</span>
+        <span class="c">#meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions[&#39;cdomean&#39;])</span>
+        
+<span class="c">#        #test monthly analysis</span>
+<span class="c">#        self.analysisOptions[&#39;cdomean&#39;] = &#39;monmean&#39;</span>
+<span class="c">#        method = getattr(cdo, self.analysisOptions[&#39;cdomean&#39;])</span>
+<span class="c">#        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions[&#39;cdomean&#39;])        </span>
+<span class="c">#        selstr = &#39;,&#39;.join(map(str,range((startyear-1)*12+1,endyear*12+1)))</span>
+<span class="c">#        seldate = cdo.seltimestep(selstr,input=meanFile, output=fileNameOut+&#39;_selYear_&#39;+str(startyear)+&#39;-&#39;+str(endyear)+str(pid)+self.getRandomStr())</span>
+<span class="c">#        tmp = cdo.ymonmean(input=seldate, output=seldate+&#39;Timmean&#39;)</span>
+<span class="c">#        return tmp</span>
+<span class="c">#        </span>
+        <span class="c">#TEST SEASONANALYSIS</span>
+<span class="c">#        self.analysisOptions[&#39;cdomean&#39;] = &#39;seasmean&#39;</span>
+<span class="c">#        method = getattr(cdo, self.analysisOptions[&#39;cdomean&#39;])</span>
+<span class="c">#        meanFile =  method(input = fileName, output=self.tmpDir+fn+str(pid)+self.analysisOptions[&#39;cdomean&#39;])</span>
+<span class="c">#        meanFile = cdo.selseas(&#39;JJA&#39;,input=meanFile,output=meanFile+&#39;JJA&#39;)</span>
+<span class="c">#        selstr = &#39;,&#39;.join(map(str,range(startyear,endyear+1)))</span>
+<span class="c">#        seldate = cdo.seltimestep(selstr,input=meanFile, output=fileNameOut+&#39;_selYear_&#39;+str(startyear)+&#39;-&#39;+str(endyear)+str(pid)+self.getRandomStr())</span>
+<span class="c">#        tmp = cdo.timmean(input=seldate, output=seldate+&#39;Timmean&#39;)</span>
+<span class="c">#        return tmp</span>
+    
+    
+        <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cdo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysisOptions</span><span class="p">[</span><span class="s">&#39;cdomean&#39;</span><span class="p">])</span>
+        <span class="n">meanFile</span> <span class="o">=</span>  <span class="n">method</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="n">fileName</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">fn</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">analysisOptions</span><span class="p">[</span><span class="s">&#39;cdomean&#39;</span><span class="p">])</span>  
+        <span class="n">selstr</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">startyear</span><span class="p">,</span><span class="n">endyear</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">seldate</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">seltimestep</span><span class="p">(</span><span class="n">selstr</span><span class="p">,</span><span class="nb">input</span><span class="o">=</span><span class="n">meanFile</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">fileNameOut</span><span class="o">+</span><span class="s">&#39;_selYear_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">startyear</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">endyear</span><span class="p">)</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">())</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">seldate</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">seldate</span><span class="o">+</span><span class="s">&#39;Timmean&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tmp</span>
+        </div>
+<div class="viewcode-block" id="MetricAbstract.removeSeasonalCycle"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.removeSeasonalCycle">[docs]</a>    <span class="k">def</span> <span class="nf">removeSeasonalCycle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Subtracts the seasonal cycle of monthly data</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">print</span> <span class="n">fn</span>
+        <span class="n">seasonalCycle</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ymonavg</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;_meanCycle&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">seasonalCycle</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ymonsub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">fn</span><span class="p">,</span><span class="n">seasonalCycle</span><span class="p">]),</span><span class="n">output</span><span class="o">=</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;_noseason&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">tmp</span>
+        <span class="k">return</span> <span class="n">tmp</span>
+    
+    
+    </div>
+<div class="viewcode-block" id="MetricAbstract.getAnomalies"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.getAnomalies">[docs]</a>    <span class="k">def</span> <span class="nf">getAnomalies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensMeanList</span><span class="p">,</span> <span class="n">crossMean</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Subtracts cross-validated mean from ensembles</span>
+<span class="sd">        </span>
+<span class="sd">        :param ensMEanList: dict with filenames</span>
+<span class="sd">        :param crossMean: dict width cross-val means</span>
+<span class="sd">        :return: dict width cross-validated anomalies</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">anomalies</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">anomalies</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ensMeanList</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">crossMean</span><span class="p">[</span><span class="n">year</span><span class="p">]]),</span> <span class="n">output</span><span class="o">=</span><span class="n">ensMeanList</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;_ANOMALIE&#39;</span><span class="p">)</span>
+            <span class="c">#</span>
+            <span class="c">#anomalies[year] = cdo.sub(input=&#39; &#39;.join([ensMeanList[year], cdo.timmean(input=crossMean[year],output=crossMean[year]+&#39;timmean&#39;)]), output=ensMeanList[year]+&#39;_ANOMALIE&#39;)        </span>
+        <span class="k">return</span> <span class="n">anomalies</span> 
+    </div>
+    <span class="k">def</span> <span class="nf">_getAnomalies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensMeanList</span><span class="p">,</span> <span class="n">crossMean</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ensMeanList</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">tmpList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ensMeanList</span><span class="p">):</span>
+                <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getAnomalies</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">crossMean</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">tmpList</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">ensMeanList</span><span class="p">,</span> <span class="n">crossMean</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="n">ensMeanList</span><span class="o">+</span><span class="s">&#39;_ANOMALIE&#39;</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="MetricAbstract.getCrossValMean"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.getCrossValMean">[docs]</a>    <span class="k">def</span> <span class="nf">getCrossValMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensMeanList</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates cross-validated means (averages through forecast times, excluding the forecast in question)</span>
+<span class="sd">        </span>
+<span class="sd">        :param ensMeanList: Dict of filnames</span>
+<span class="sd">        :param flag: String value added to new filenames</span>
+<span class="sd">        :return: dict with cross-validated means</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">poolMeanList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        
+        <span class="n">yearList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">flagList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">yearList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+            <span class="n">meanList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">flagList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">ensMeanList</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="k">if</span><span class="p">(</span> <span class="n">key</span> <span class="o">!=</span> <span class="n">year</span><span class="p">):</span>
+                    <span class="n">meanList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        
+            <span class="n">poolMeanList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meanList</span><span class="p">)</span>
+        
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">poolMeanList</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">count</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">poolMeanList</span><span class="p">,</span><span class="n">flagList</span><span class="p">,</span><span class="s">&#39;_getEnsembleMean&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+            
+    </div>
+<div class="viewcode-block" id="MetricAbstract.getVariance"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.getVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate &quot;variance&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        :deprecated: Not used in goddard metrics --&gt; should not be used </span>
+<span class="sd">        :param list: filelist</span>
+<span class="sd">        :param flag: string for filenames</span>
+<span class="sd">        :return: kind of standard deviation of anomalies</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">squareList</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">squareStr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">squareList</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sqr</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;_square&#39;</span><span class="p">)</span>
+            <span class="n">squareStr</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span><span class="o">+</span><span class="n">squareList</span><span class="p">[</span><span class="n">year</span><span class="p">]</span>
+            
+        <span class="n">squareSum</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">squareStr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_goddardVar&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">squareSum</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;_goddardStd&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract.createConstantFile"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.createConstantFile">[docs]</a>    <span class="k">def</span> <span class="nf">createConstantFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gridFile</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Creates a constant field with value 1</span>
+<span class="sd">        </span>
+<span class="sd">        :param gridFile: grid description file (txt)</span>
+<span class="sd">        :return: filename</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldmean</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="s">&#39;1,r1x1&#39;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;constantField.nc&#39;</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="s">&#39;-f nc&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">const</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="s">&#39;1,&#39;</span><span class="o">+</span><span class="n">gridFile</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="n">flag</span><span class="o">+</span><span class="s">&#39;constantField.nc&#39;</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="s">&#39;-f nc&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sellonlatbox</span><span class="p">(</span><span class="n">const</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">const</span>
+   </div>
+<div class="viewcode-block" id="MetricAbstract.getEnsembleStd"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.getEnsembleStd">[docs]</a>    <span class="k">def</span> <span class="nf">getEnsembleStd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates the mean ensemble STD for a given dictionary</span>
+<span class="sd">        Keys in dict have to be the starting years </span>
+<span class="sd">        </span>
+<span class="sd">        :param ensList: dict with ensembles</span>
+<span class="sd">        :return: file with mean ensemble std</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">tmpList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            <span class="n">tmpList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ensList</span><span class="p">[</span><span class="n">year</span><span class="p">])</span>
+        <span class="n">ensCount</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmpList</span><span class="p">)</span>   
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">ensCount</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">tmpList</span><span class="p">,</span><span class="s">&#39;_getEnsembleVar&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">cdo</span><span class="o">.</span><span class="n">ensmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">output</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;ensmean_afgst&#39;</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;AVGSTD&#39;</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="MetricAbstract._getEnsembleVar"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._getEnsembleVar">[docs]</a>    <span class="k">def</span> <span class="nf">_getEnsembleVar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates the ensemble Variance of a given file list (ensembles)</span>
+<span class="sd">        </span>
+<span class="sd">        :note: CDO norally divides by n here this is changed to n-1</span>
+<span class="sd">        :param fileList: List of files</span>
+<span class="sd">        :return: file with ensemble variance</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">fileStr</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span>
+        <span class="n">ensvar</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">ensvar</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fileStr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">fileList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;_ENSVAR&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">())</span>
+        <span class="c">#print len(fileList)</span>
+        
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mulc</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">ensvar</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">ensvar</span><span class="o">+</span><span class="s">&#39;_BETTER&#39;</span><span class="p">)</span>
+    
+    </div>
+<div class="viewcode-block" id="MetricAbstract.printValues"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.printValues">[docs]</a>    <span class="k">def</span> <span class="nf">printValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method for debugging. Prints our values of a list, dict or file.</span>
+<span class="sd">        </span>
+<span class="sd">        :note: Printing is only activated for TESTDATA</span>
+<span class="sd">        </span>
+<span class="sd">        :todo: Maybe extend for numpy arrays</span>
+<span class="sd">        </span>
+<span class="sd">        :param variable: variable to print</span>
+<span class="sd">        :param msg: name of variable</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obsExp</span> <span class="o">!=</span> <span class="s">&#39;TESTDATA&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        
+        <span class="n">typeName</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="k">if</span> <span class="n">typeName</span> <span class="o">==</span> <span class="s">&#39;str&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">printFileValue</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">typeName</span> <span class="o">==</span> <span class="s">&#39;list&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">variable</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">printValues</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">typeName</span> <span class="o">==</span> <span class="s">&#39;dict&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">printValues</span><span class="p">(</span><span class="n">variable</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="n">msg</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Cant recognize filetype.&#39;</span>         
+            </div>
+<div class="viewcode-block" id="MetricAbstract.printFileValue"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.printFileValue">[docs]</a>    <span class="k">def</span> <span class="nf">printFileValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method for debugging. Prints a specific value of a given netCDF File.</span>
+<span class="sd">        </span>
+<span class="sd">        :param filename:</span>
+<span class="sd">        :param msg: additional message to print out. Like the name of the variable</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;var&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Value of </span><span class="si">%s</span><span class="s"> is: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span><span class="n">variable</span><span class="p">[</span><span class="mi">16</span><span class="p">,</span><span class="mi">37</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Value of </span><span class="si">%s</span><span class="s"> is: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span><span class="n">variable</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">37</span><span class="p">])</span>
+        
+    </div>
+<div class="viewcode-block" id="MetricAbstract.calcMissingValueMask"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.calcMissingValueMask">[docs]</a>    <span class="k">def</span> <span class="nf">calcMissingValueMask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculates a missing value mask using the observations. </span>
+<span class="sd">        At the moment all gridpoints are masked at missing value where at least one value is missing</span>
+<span class="sd">        </span>
+<span class="sd">        :TODO: find a less strict solution. Maybe 10% available?</span>
+<span class="sd">        DONE!</span>
+<span class="sd">        </span>
+<span class="sd">        :param observations: dict with all observations</span>
+<span class="sd">        :return netcdf file with missing values mask 1/0</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+<span class="c">#        for year in self.decadals:</span>
+<span class="c">#            </span>
+<span class="c">#            tmp_array = FileHandler.openNetCDFFile(observations[year], &#39;var&#39;)</span>
+<span class="c">#            tmp_array = np.expand_dims(tmp_array, axis=2)</span>
+<span class="c">#            try:</span>
+<span class="c">#                master = np.concatenate((master,tmp_array),axis=2)</span>
+<span class="c">#            except NameError:</span>
+<span class="c">#                master = tmp_array  </span>
+<span class="c">#        missing_value_mask = np.zeros((master.shape[0],master.shape[1]))</span>
+<span class="c">#        #This loop is probably not the best idea</span>
+<span class="c">#        #TODO: Change to numpy function </span>
+<span class="c">#        for x in xrange(master.shape[0]):</span>
+<span class="c">#            for y in xrange(master.shape[1]):</span>
+<span class="c">#                missing_count=0</span>
+<span class="c">#                for i in xrange(len(self.decadals)):</span>
+<span class="c">#                    </span>
+<span class="c">#                    if master[x,y,i] &gt; 0.9e20:</span>
+<span class="c">#                        missing_count+=1</span>
+<span class="c">#                if missing_count &gt; round(0.1*len(self.decadals)):</span>
+<span class="c">#                    missing_value_mask[x,y] = 1e20</span>
+<span class="c">#                else:</span>
+<span class="c">#                    missing_value_mask[x,y] = 1</span>
+<span class="c">#                #print missing_count</span>
+<span class="c">#        misval_new = FileHandler.saveToNetCDF(missing_value_mask, observations.values()[0], &#39;missing_value_new&#39;)</span>
+
+
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">:</span>
+            
+            <span class="n">tmp_array</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="n">year</span><span class="p">],</span> <span class="s">&#39;var&#39;</span><span class="p">)</span>
+            <span class="c">#tmp_array = np.expand_dims(tmp_array, axis=2)</span>
+            <span class="n">tmp_array_1d</span> <span class="o">=</span> <span class="n">tmp_array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="n">tmp_array</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">master</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">master</span><span class="p">,</span><span class="n">tmp_array_1d</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">tmp_array</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">master</span> <span class="o">=</span> <span class="n">tmp_array_1d</span>  
+        <span class="c">#sum along axis</span>
+        <span class="n">sum_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">master</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c">#missing_value_mask = np.zeros((1,tmp_array.size))</span>
+        <span class="n">missing_value_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sum_array</span><span class="o">&lt;</span><span class="mf">0.1</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span><span class="o">*</span><span class="mf">1e20</span><span class="p">),</span><span class="n">sum_array</span><span class="p">,</span><span class="mf">1e20</span><span class="p">)</span>
+        <span class="n">missing_value_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sum_array</span><span class="o">&gt;=</span><span class="mf">0.1</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decadals</span><span class="p">)</span><span class="o">*</span><span class="mf">1e20</span><span class="p">),</span><span class="n">missing_value_mask</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c">#print missing_count</span>
+        <span class="n">missing_value_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">missing_value_mask</span><span class="p">,</span> <span class="n">orig_shape</span><span class="p">)</span>
+        <span class="n">misval_new</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">saveToNetCDF</span><span class="p">(</span><span class="n">missing_value_mask</span><span class="p">,</span> <span class="n">observations</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;missing_value_new2&#39;</span><span class="p">)</span>
+        <span class="n">misval_new</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">timmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">misval_new</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">misval_new</span><span class="o">+</span><span class="s">&#39;timmean&#39;</span><span class="p">)</span>
+<span class="c">#        tmpList = list()</span>
+<span class="c">#        for year in self.decadals:    </span>
+<span class="c">#            #Mark every gridpoint as missing, if it is missing once</span>
+<span class="c">#            tmpList.append(cdo.timavg(input=observations[year], output=self.tmpDir+&#39;misvalmask_tmp&#39;+str(year)))  </span>
+<span class="c">#            #Mark only as missing if it is missing the whole year</span>
+<span class="c">#            print observations[year]</span>
+<span class="c">#            #tmpList.append(cdo.yearmean(input=observations[year], output=self.tmpDir+&#39;misvalmask_tmp&#39;+str(year))) </span>
+<span class="c">#        misval_tmp = cdo.mergetime(input=&#39; &#39;.join(tmpList), output=self.tmpDir+&#39;misvalmask_tmp_all&#39;) </span>
+<span class="c">#        misval = cdo.timavg(input=misval_tmp, output=self.tmpDir+&#39;misvalmask_all_years&#39;)</span>
+<span class="c">#        misval_old = cdo.setrtoc(&#39;-1000,1000,1&#39;, input=misval, output=self.tmpDir+&#39;missingValueMask.nc&#39;)                    </span>
+
+        <span class="k">return</span> <span class="n">misval_new</span>        
+                
+    </div>
+<div class="viewcode-block" id="MetricAbstract.sellonlatbox"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.sellonlatbox">[docs]</a>    <span class="k">def</span> <span class="nf">sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Method to select a lon-lat-box using CDO</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileList: list with files of single file </span>
+<span class="sd">        :return: new filelist </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>        
+            <span class="c">#Mult Processor            </span>
+            <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+            <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">count</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">fileList</span><span class="p">,</span><span class="s">&#39;_sellonlatbox&#39;</span><span class="p">)</span>
+            <span class="n">resultList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span>     
+            <span class="k">return</span> <span class="n">resultList</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sellonlatbox</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract._sellonlatbox"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._sellonlatbox">[docs]</a>    <span class="k">def</span> <span class="nf">_sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">file</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Single process for selecting lon-lat-box with cdo</span>
+<span class="sd">        </span>
+<span class="sd">        :param: file</span>
+<span class="sd">        :return: new file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sellonlatbox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">file</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_sellonlatbox&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract.fieldMean"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.fieldMean">[docs]</a>    <span class="k">def</span> <span class="nf">fieldMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiprocess Method to calc fieldmean</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileList:</span>
+<span class="sd">        :return: fieldmean list</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c">#Mult Processor            </span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileList</span><span class="p">)</span>
+        <span class="n">poolArgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPoolArgs</span><span class="p">(</span><span class="n">count</span><span class="p">,</span><span class="bp">self</span><span class="p">,</span><span class="n">fileList</span><span class="p">,</span><span class="s">&#39;_fieldMean&#39;</span><span class="p">)</span>
+        <span class="n">resultList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">resultList</span>
+    </div>
+<div class="viewcode-block" id="MetricAbstract._fieldMean"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._fieldMean">[docs]</a>    <span class="k">def</span> <span class="nf">_fieldMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Single process calculating fieldmean using CDO</span>
+<span class="sd">        </span>
+<span class="sd">        :param fn:</span>
+<span class="sd">        :return: fieldmean fn</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">fldmean</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">extractFilename</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;_fldmean&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="MetricAbstract._plotField"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract._plotField">[docs]</a>    <span class="k">def</span> <span class="nf">_plotField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileName</span><span class="p">,</span> <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        @deprecated: use the static Plotter class instead</span>
+<span class="sd">        Plot any field variable</span>
+<span class="sd">        </span>
+<span class="sd">        :param fileName: filepath</span>
+<span class="sd">        :param vmin: min value for colorbar</span>
+<span class="sd">        :param vmax: max value for colorbar</span>
+<span class="sd">        &#39;&#39;&#39;</span> 
+        <span class="n">Plotter</span><span class="o">.</span><span class="n">plotField</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">output_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">,</span> <span class="n">lonlatbox</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lonlatbox</span><span class="p">)</span>
+        <span class="n">Plotter</span><span class="o">.</span><span class="n">saveFig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">,</span> <span class="n">fileName</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+       </div>
+<div class="viewcode-block" id="MetricAbstract.applyMissingValueMask"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.applyMissingValueMask">[docs]</a>    <span class="k">def</span> <span class="nf">applyMissingValueMask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">outputDirList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Multiply results with a missing value mask</span>
+<span class="sd">        </span>
+<span class="sd">        :todo: At the moment all files in the outputdir are multiplied. This should be changed</span>
+<span class="sd">        :param start: startyear</span>
+<span class="sd">        :param end: endyear</span>
+<span class="sd">        :return: list of changed files</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">fileList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">outputDir</span> <span class="ow">in</span> <span class="n">outputDirList</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">outputDir</span><span class="p">):</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outputDir</span><span class="o">+</span><span class="n">files</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">outputDir</span><span class="o">+</span><span class="n">files</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;masked&#39;</span><span class="p">):</span>
+                    <span class="n">file_parts</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">file_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">file_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">end</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskMissingValues</span><span class="p">:</span>
+                            <span class="n">fileList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdo</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">outputDir</span><span class="o">+</span><span class="n">files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">misvalMask</span><span class="p">]),</span>
+                                                    <span class="n">output</span> <span class="o">=</span> <span class="n">outputDir</span><span class="o">+</span><span class="n">files</span><span class="o">+</span><span class="s">&#39;_masked&#39;</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">fileList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outputDir</span><span class="o">+</span><span class="n">files</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">fileList</span> 
+    
+    </div>
+<div class="viewcode-block" id="MetricAbstract.detrendTimeSeries"><a class="viewcode-back" href="../../metricAbstract.html#metrics.metricAbstract.MetricAbstract.detrendTimeSeries">[docs]</a>    <span class="k">def</span> <span class="nf">detrendTimeSeries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">keepMean</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Subtracts trend of a timeseries. </span>
+<span class="sd">        If keepMean is True the mean is kept </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">print</span> <span class="n">fn</span>
+        <span class="c">#split file in mothly files</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;copy&#39;</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="s">&#39;-f nc&#39;</span><span class="p">)</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">splitmon</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">tmp</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;monthly&#39;</span><span class="p">,</span><span class="n">options</span><span class="o">=</span><span class="s">&#39;-f nc&#39;</span><span class="p">)</span>
+        <span class="c">#print tmp</span>
+        
+        <span class="n">months</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;01&#39;</span><span class="p">,</span><span class="s">&#39;02&#39;</span><span class="p">,</span><span class="s">&#39;03&#39;</span><span class="p">,</span><span class="s">&#39;04&#39;</span><span class="p">,</span><span class="s">&#39;05&#39;</span><span class="p">,</span><span class="s">&#39;06&#39;</span><span class="p">,</span><span class="s">&#39;07&#39;</span><span class="p">,</span><span class="s">&#39;08&#39;</span><span class="p">,</span><span class="s">&#39;09&#39;</span><span class="p">,</span><span class="s">&#39;10&#39;</span><span class="p">,</span><span class="s">&#39;11&#39;</span><span class="p">,</span><span class="s">&#39;12&#39;</span><span class="p">]</span>
+        
+        <span class="n">detrended_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">mon</span> <span class="ow">in</span> <span class="n">months</span><span class="p">:</span>
+            <span class="n">fn_mon</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">+</span><span class="n">mon</span><span class="o">+</span><span class="s">&#39;.nc&#39;</span>
+            <span class="n">trend_a</span> <span class="o">=</span> <span class="n">fn_mon</span> <span class="o">+</span> <span class="s">&#39;trend_a&#39;</span>
+            <span class="n">trend_b</span> <span class="o">=</span> <span class="n">fn_mon</span> <span class="o">+</span> <span class="s">&#39;trend_b&#39;</span>
+            <span class="n">cdo</span><span class="o">.</span><span class="n">trend</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">fn_mon</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">trend_a</span><span class="p">,</span><span class="n">trend_b</span><span class="p">]))</span>
+            
+            <span class="k">if</span> <span class="n">keepMean</span><span class="p">:</span>
+                <span class="n">trend_a</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mulc</span><span class="p">(</span><span class="s">&#39;0.00&#39;</span><span class="p">,</span><span class="nb">input</span><span class="o">=</span><span class="n">trend_a</span><span class="p">,</span><span class="n">output</span><span class="o">=</span><span class="n">trend_a</span><span class="o">+</span><span class="s">&#39;_keepMean&#39;</span><span class="p">)</span>
+                
+            <span class="n">detrended_tmp</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">subtrend</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">fn_mon</span><span class="p">,</span><span class="n">trend_a</span><span class="p">,</span><span class="n">trend_b</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="n">fn_mon</span><span class="o">+</span><span class="s">&#39;_detrended&#39;</span><span class="p">)</span>
+            <span class="n">detrended_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">detrended_tmp</span><span class="p">)</span>
+    <span class="c">#        print fn</span>
+    <span class="c">#        print detrended</span>
+        <span class="n">detrended</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mergetime</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">detrended_list</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">fn</span><span class="o">+</span><span class="s">&#39;_detrended&#39;</span><span class="p">)</span>    
+        <span class="k">print</span> <span class="n">detrended</span>
+        <span class="k">return</span> <span class="n">detrended</span>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+           
+        
+         
+        
+        
+    
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

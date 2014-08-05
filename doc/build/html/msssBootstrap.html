@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.msssBootstrap &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="metrics-msssbootstrap">
+<h1>metrics.msssBootstrap<a class="headerlink" href="#metrics-msssbootstrap" title="Permalink to this headline">¶</a></h1>
+<p>Class with special methods for bootstrapping the MSESS</p>
+<div class="section" id="msssbootstrap-module">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">msssBootstrap</span></tt> Module<a class="headerlink" href="#msssbootstrap-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="metrics.msssBootstrap.MsssBootstrap">
+<em class="property">class </em><tt class="descclassname">metrics.msssBootstrap.</tt><tt class="descname">MsssBootstrap</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class with special method for bootstrapping</p>
+<dl class="method">
+<dt id="metrics.msssBootstrap.MsssBootstrap._prepareBootstrap">
+<tt class="descname">_prepareBootstrap</tt><big>(</big><em>year</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap._prepareBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap._prepareBootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the files for specific year, remaps them, and calculates ensemblemean</p>
+<p>:param year
+:return ensmeanProject1, ensmeanProject2</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msssBootstrap.MsssBootstrap.prepareBootstrap">
+<tt class="descname">prepareBootstrap</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap.prepareBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap.prepareBootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiprocess approach
+Uses _prepareBootstrap to prepare the Bootstrap files for input1 and input2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ensMeanProject1Dict, ensMeanProject2Dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msssBootstrap.MsssBootstrap.bootstrapGoddard">
+<tt class="descname">bootstrapGoddard</tt><big>(</big><em>outputFolder='./tmp/'</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap.bootstrapGoddard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap.bootstrapGoddard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actual method for selecting files of a bootstrap run.
+Select input data from bootstrap pool by choice from bootstrap pool
+together with corresponding obs data
+&#8211;&gt; constraint is to select within a 5 Year range only (because of a trend in the data)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outputFolder</strong> &#8211; temp folder</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msssBootstrap.MsssBootstrap._calcSignificance">
+<tt class="descname">_calcSignificance</tt><big>(</big><em>bootstrap_folders</em>, <em>output_folder</em>, <em>plot_folder</em>, <em>file_to_check</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap._calcSignificance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap._calcSignificance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Caluclate the significance for the intput field (file_to_check)
+The field is also plotted with significance crosses</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bootstrap_folder</strong> &#8211; path of bootstraped data</li>
+<li><strong>output_folder</strong> &#8211; path</li>
+<li><strong>plot_folder</strong> &#8211; path</li>
+<li><strong>file_to_check</strong> &#8211; fn</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.msssBootstrap.MsssBootstrap.calcSignificance">
+<tt class="descname">calcSignificance</tt><big>(</big><em>bootstrap_folders</em>, <em>output_folder</em>, <em>plot_folder</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap.calcSignificance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap.calcSignificance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiprocessing of &#8220;_calcSignificance&#8221;. Start 1 Process for every result file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bootstrap_folder</strong> &#8211; path of bootstraped data</li>
+<li><strong>output_folder</strong> &#8211; path</li>
+<li><strong>plot_folder</strong> &#8211; path</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">metrics.msssBootstrap</a><ul>
+<li><a class="reference internal" href="#msssbootstrap-module"><tt class="docutils literal"><span class="pre">msssBootstrap</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/msssBootstrap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

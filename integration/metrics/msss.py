@@ -33,6 +33,40 @@ class MsssError(Exception): pass
 class Msss(MetricAbstract):
     '''
     Class to calculate the MSSS. Call method "analyze" to get results
+    
+    :param output: Path where the results are saved
+    :param output_plots: Path where the plots are saved
+    :param decadals: a list with decadal experiments, i.e. [1960,1960,...,1995]
+    :param variable: CMOR-Name of variable like 'tas' (Near Surface Temperature)
+    :param project1: CMOR-Name of the project like CMIP5 or BASELINE1
+    :param product1: CMOR-Parameter
+    :param institute1: CMOR-Name of the institute like MPI-M
+    :param model1: CMOR-Name of the used model like MPI-ESM-LR
+    :param experiment1: Experiment name like decadal or historical
+    :param ensemblemembers1: Comma separated string of esemble members like 'r1i1p1,r2i1p1,...'
+    :param project2: CMOR-Name of the project like CMIP5 or BASELINE1
+    :param product2: CMOR-Parameter
+    :param institute2: CMOR-Name of the institute like MPI-M
+    :param model2: CMOR-Name of the used model like MPI-ESM-LR
+    :param experiment2: Experiment name like decs4e or historical
+    :param ensemblemembers2: Comma separated string of esemble members like 'r1i1p1,r2i1p1,...'
+    :param leadtimes: Leadtimes to analyze, ie. 1,2-9
+    :param observation: Observation or Reanalysis Experiment, HadCrut or ERA-Int
+	 :param observation_ensemble: If your observation has multiple ensemble members. Not necesary if you use an observation file    
+    :param maskMissingValues: Boolean
+    :param result_grid: Griddescription of resultgrid like r72x36
+    :param cache: Path for cachedir during analysis
+    :param baseDir: Path of Class to find default files
+    :param timeFreq: Timefrequency of the files, ie 'mon' or 'day'
+    :param bootstrap:
+    :param bootstrap2:
+    :param obsRemapped:
+    :param level: For 3D-Files --> Select a single level
+    :param lonlatbox: If you want to select a specific lonlat-Box
+    :param fieldmean: Boolean - If you want to calculate global mean
+    :param colormap: Matplotlib Colormap used for ploting
+    :param observation_type: NOT USED ANYMORE!!!
+    :param reanpath: NOT USED ANYMORE!!!
     '''
     #Here the output filenames and folder structure get defined
     outputFolderStruct = 'TIME_variable_project1_product1_institute1_model1_experiment1_project2_product2_institute2_model2_experiment2_obsExp_LEVEL_SELLONLAT_YEARRANGE'.split('_')

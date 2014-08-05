@@ -1,0 +1,557 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.metricAbstract &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" />
+    <link rel="up" title="MurCSS Tool" href="goddard.html" />
+    <link rel="next" title="FindFiles" href="findfiles.html" />
+    <link rel="prev" title="metrics.crpss" href="crpss.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="findfiles.html" title="FindFiles"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="crpss.html" title="metrics.crpss"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="metrics-metricabstract">
+<h1>metrics.metricAbstract<a class="headerlink" href="#metrics-metricabstract" title="Permalink to this headline">¶</a></h1>
+<p>This package contains the base class for metrics.
+It&#8217;s an abstract class with a abstract method &#8220;analyze&#8221;.
+MSSS and CRPSS are child classes of this one.
+Most methods use CDO commands.</p>
+<div class="section" id="metricabstract-module">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">metricAbstract</span></tt> Module<a class="headerlink" href="#metricabstract-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="metrics.metricAbstract.MetricAbstract">
+<em class="property">class </em><tt class="descclassname">metrics.metricAbstract.</tt><tt class="descname">MetricAbstract</tt><big>(</big><em>tmpDir='./tmp'</em>, <em>output='/'</em>, <em>output_plots='/'</em>, <em>baseDir='/'</em>, <em>result_grid=None</em>, <em>observation='HadCrut'</em>, <em>leadtimes_mode='yearly'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class for calculating any metric of decadal runs with CDO
+Every reusable function which uses CDO commands should go in here.</p>
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.analyze">
+<tt class="descname">analyze</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.analyze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract Method to calculate a metric
+Must be implemented in child classes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._remapFiles">
+<tt class="descname">_remapFiles</tt><big>(</big><em>ensList</em>, <em>flag=''</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._remapFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._remapFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiprocessing for remapping files
+remap observations and model files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ensList</strong> &#8211; list of files</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of remapped files</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.remapFile">
+<tt class="descname">remapFile</tt><big>(</big><em>*arg</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.remapFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.remapFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remaps a single file width CDO&#8217;s remapcon</p>
+<p>:param inputfile</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getEnsembleMean">
+<tt class="descname">getEnsembleMean</tt><big>(</big><em>fileList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.getEnsembleMean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getEnsembleMean" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Todo :</th><td class="field-body">Multiprocessing</td>
+</tr>
+</tbody>
+</table>
+<p>Should do ensmean in multiprocessing!!! At the moment only single approach</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileList</strong> &#8211; dict of filelists</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict of ensemble means</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._getEnsembleMean">
+<tt class="descname">_getEnsembleMean</tt><big>(</big><em>fileList</em>, <em>flag='ENSMEAN'</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._getEnsembleMean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._getEnsembleMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates ensemble Mean</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileList</strong> &#8211; list of files</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">ensemble mean file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.tempSmoothing">
+<tt class="descname">tempSmoothing</tt><big>(</big><em>ensList</em>, <em>startyear</em>, <em>endyear</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.tempSmoothing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.tempSmoothing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiprocessing approach for temporal smoothing
+Starts a process for every file in ensList</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ensList</strong> &#8211; List of files</li>
+<li><strong>startyear</strong> &#8211; int</li>
+<li><strong>endyear</strong> &#8211; int</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of temporal smoothed files</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._tempSmoothing">
+<tt class="descname">_tempSmoothing</tt><big>(</big><em>fileName</em>, <em>startyear</em>, <em>endyear</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._tempSmoothing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._tempSmoothing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Temporal smoothing. I.e. timmean over year 2-9</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fileName</strong> &#8211; filepath</li>
+<li><strong>startyear</strong> &#8211; first year to select (int)</li>
+<li><strong>endyear</strong> &#8211; last year to select (int)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">temp smoothed file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.removeSeasonalCycle">
+<tt class="descname">removeSeasonalCycle</tt><big>(</big><em>fn</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.removeSeasonalCycle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.removeSeasonalCycle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts the seasonal cycle of monthly data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getAnomalies">
+<tt class="descname">getAnomalies</tt><big>(</big><em>ensMeanList</em>, <em>crossMean</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.getAnomalies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getAnomalies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts cross-validated mean from ensembles</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ensMEanList</strong> &#8211; dict with filenames</li>
+<li><strong>crossMean</strong> &#8211; dict width cross-val means</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict width cross-validated anomalies</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getCrossValMean">
+<tt class="descname">getCrossValMean</tt><big>(</big><em>ensMeanList</em>, <em>flag</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.getCrossValMean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getCrossValMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates cross-validated means (averages through forecast times, excluding the forecast in question)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ensMeanList</strong> &#8211; Dict of filnames</li>
+<li><strong>flag</strong> &#8211; String value added to new filenames</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict with cross-validated means</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getVariance">
+<tt class="descname">getVariance</tt><big>(</big><em>list</em>, <em>flag</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.getVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate &#8220;variance&#8221;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated :</th><td class="field-body"><p class="first">Not used in goddard metrics &#8211;&gt; should not be used</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>list</strong> &#8211; filelist</li>
+<li><strong>flag</strong> &#8211; string for filenames</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">kind of standard deviation of anomalies</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.createConstantFile">
+<tt class="descname">createConstantFile</tt><big>(</big><em>gridFile</em>, <em>flag=''</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.createConstantFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.createConstantFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a constant field with value 1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gridFile</strong> &#8211; grid description file (txt)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">filename</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getEnsembleStd">
+<tt class="descname">getEnsembleStd</tt><big>(</big><em>ensList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.getEnsembleStd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getEnsembleStd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the mean ensemble STD for a given dictionary
+Keys in dict have to be the starting years</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ensList</strong> &#8211; dict with ensembles</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">file with mean ensemble std</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._getEnsembleVar">
+<tt class="descname">_getEnsembleVar</tt><big>(</big><em>fileList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._getEnsembleVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._getEnsembleVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the ensemble Variance of a given file list (ensembles)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note :</th><td class="field-body">CDO norally divides by n here this is changed to n-1</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileList</strong> &#8211; List of files</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">file with ensemble variance</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.printValues">
+<tt class="descname">printValues</tt><big>(</big><em>variable</em>, <em>msg</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.printValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.printValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for debugging. Prints our values of a list, dict or file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note :</th><td class="field-body"><p class="first">Printing is only activated for TESTDATA</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Todo :</th><td class="field-body"><p class="first">Maybe extend for numpy arrays</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> &#8211; variable to print</li>
+<li><strong>msg</strong> &#8211; name of variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.printFileValue">
+<tt class="descname">printFileValue</tt><big>(</big><em>filename</em>, <em>msg</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.printFileValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.printFileValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for debugging. Prints a specific value of a given netCDF File.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> &#8211; </li>
+<li><strong>msg</strong> &#8211; additional message to print out. Like the name of the variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.calcMissingValueMask">
+<tt class="descname">calcMissingValueMask</tt><big>(</big><em>observations</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.calcMissingValueMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.calcMissingValueMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a missing value mask using the observations. 
+At the moment all gridpoints are masked at missing value where at least one value is missing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Todo :</th><td class="field-body">find a less strict solution. Maybe 10% available?</td>
+</tr>
+</tbody>
+</table>
+<p>DONE!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>observations</strong> &#8211; dict with all observations</td>
+</tr>
+</tbody>
+</table>
+<p>:return netcdf file with missing values mask 1/0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.sellonlatbox">
+<tt class="descname">sellonlatbox</tt><big>(</big><em>fileList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.sellonlatbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.sellonlatbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to select a lon-lat-box using CDO</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileList</strong> &#8211; list with files of single file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">new filelist</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._sellonlatbox">
+<tt class="descname">_sellonlatbox</tt><big>(</big><em>file</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._sellonlatbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._sellonlatbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single process for selecting lon-lat-box with cdo</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param :</th><td class="field-body">file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">new file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.fieldMean">
+<tt class="descname">fieldMean</tt><big>(</big><em>fileList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.fieldMean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.fieldMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiprocess Method to calc fieldmean</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileList</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">fieldmean list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._fieldMean">
+<tt class="descname">_fieldMean</tt><big>(</big><em>fn</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._fieldMean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._fieldMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single process calculating fieldmean using CDO</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fn</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">fieldmean fn</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._plotField">
+<tt class="descname">_plotField</tt><big>(</big><em>fileName</em>, <em>vmin</em>, <em>vmax</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._plotField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._plotField" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;deprecated: use the static Plotter class instead
+Plot any field variable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fileName</strong> &#8211; filepath</li>
+<li><strong>vmin</strong> &#8211; min value for colorbar</li>
+<li><strong>vmax</strong> &#8211; max value for colorbar</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.applyMissingValueMask">
+<tt class="descname">applyMissingValueMask</tt><big>(</big><em>start</em>, <em>end</em>, <em>outputDirList</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.applyMissingValueMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.applyMissingValueMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply results with a missing value mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Todo :</th><td class="field-body"><p class="first">At the moment all files in the outputdir are multiplied. This should be changed</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> &#8211; startyear</li>
+<li><strong>end</strong> &#8211; endyear</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of changed files</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.detrendTimeSeries">
+<tt class="descname">detrendTimeSeries</tt><big>(</big><em>fn</em>, <em>keepMean=True</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.detrendTimeSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.detrendTimeSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts trend of a timeseries. 
+If keepMean is True the mean is kept</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">metrics.metricAbstract</a><ul>
+<li><a class="reference internal" href="#metricabstract-module"><tt class="docutils literal"><span class="pre">metricAbstract</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="crpss.html"
+                        title="previous chapter">metrics.crpss</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="findfiles.html"
+                        title="next chapter">FindFiles</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/metricAbstract.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="findfiles.html" title="FindFiles"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="crpss.html" title="metrics.crpss"
+             >previous</a> |</li>
+        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

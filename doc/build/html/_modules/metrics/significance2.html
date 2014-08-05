@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>metrics.significance2 &mdash; MurCSS 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MurCSS 1.5.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for metrics.significance2</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on 17.08.2013</span>
+
+<span class="sd">:author: Sebastian Illing</span>
+<span class="sd">:contact: sebastian.illing@met.fu-berlin.de</span>
+
+<span class="sd">Copyright (C) 2014  Sebastian Illing</span>
+<span class="sd">This program is free software: you can redistribute it and/or modify</span>
+<span class="sd">it under the terms of the GNU General Public License as published by</span>
+<span class="sd">the Free Software Foundation, either version 3 of the License, or</span>
+<span class="sd">(at your option) any later version.</span>
+
+<span class="sd">This program is distributed in the hope that it will be useful,</span>
+<span class="sd">but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="sd">GNU General Public License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU General Public License</span>
+<span class="sd">along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">murcss_config</span>
+<span class="k">if</span> <span class="n">murcss_config</span><span class="o">.</span><span class="n">file_system</span> <span class="o">==</span> <span class="s">&#39;miklip&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">findFiles</span> <span class="kn">import</span> <span class="n">FindFiles</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">findFilesCustom</span> <span class="kn">import</span> <span class="n">FindFilesCustom</span> <span class="k">as</span> <span class="n">FindFiles</span>
+<span class="kn">from</span> <span class="nn">filehandler</span> <span class="kn">import</span> <span class="n">FileHandler</span>
+
+
+<span class="k">class</span> <span class="nc">WrongArgument</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="Significance"><a class="viewcode-back" href="../../significance.html#metrics.significance2.Significance">[docs]</a><span class="k">class</span> <span class="nc">Significance</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class for significance calculation</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">find_files</span> <span class="o">=</span> <span class="n">FindFiles</span><span class="p">(</span><span class="n">tmpDir</span> <span class="o">=</span> <span class="n">tmp_dir</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span>
+        
+    <span class="k">def</span> <span class="nf">__getQuantile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mVar</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Returns the q&#39;th percentile of the distribution given in the argument</span>
+<span class="sd">            &#39;data&#39;. Uses the &#39;precision&#39; parameter to control the noise level.</span>
+<span class="sd">            </span>
+<span class="sd">            :param mvar: numpy variable</span>
+<span class="sd">            :param q1,q2: lower and upper level</span>
+<span class="sd">            :return: q&#39;th percentile </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mVar</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">mVar</span><span class="p">))</span>
+            
+            <span class="n">k</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">precision</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+            <span class="n">norm_cumul</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">k</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">bins</span><span class="p">[</span><span class="n">norm_cumul</span> <span class="o">&gt;</span> <span class="n">q2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="p">[</span><span class="n">norm_cumul</span> <span class="o">&gt;</span> <span class="n">q1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+    
+    <span class="k">def</span> <span class="nf">__getLonLat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ifile</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get vectors with lon and lat values from a netdf file using cdo.griddes</span>
+<span class="sd">        Was introduced because we were using a damaged grid</span>
+<span class="sd">        lon,lat valued are located in the center of a gridbox</span>
+<span class="sd">        </span>
+<span class="sd">        :param ifile: netcdf fn</span>
+<span class="sd">        :result: lon,lat vectors</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">needle</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">grid</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">needle</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        
+        <span class="kn">from</span> <span class="nn">cdo</span> <span class="kn">import</span> <span class="n">Cdo</span>
+        <span class="n">cdo</span> <span class="o">=</span> <span class="n">Cdo</span><span class="p">()</span>  
+        <span class="n">grid</span> <span class="o">=</span><span class="n">cdo</span><span class="o">.</span><span class="n">griddes</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">ifile</span><span class="p">)</span>
+        <span class="n">xinc</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;xinc&#39;</span><span class="p">)</span>
+        <span class="n">xsize</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;xsize&#39;</span><span class="p">)</span>
+        <span class="n">yinc</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;yinc&#39;</span><span class="p">)</span> 
+        <span class="n">xfirst</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;xfirst&#39;</span><span class="p">)</span> 
+        <span class="n">yfirst</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;yfirst&#39;</span><span class="p">)</span>
+        <span class="n">ysize</span> <span class="o">=</span> <span class="n">searchGriddes</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span><span class="s">&#39;ysize&#39;</span><span class="p">)</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">xfirst</span><span class="o">+</span><span class="n">xinc</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">xsize</span><span class="o">*</span><span class="n">xinc</span><span class="o">+</span><span class="n">xfirst</span><span class="o">+</span><span class="n">xinc</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">xinc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">yfirst</span><span class="o">+</span><span class="n">yinc</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">ysize</span><span class="o">*</span><span class="n">yinc</span><span class="o">+</span><span class="n">yfirst</span><span class="o">+</span><span class="n">yinc</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">yinc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">xfirst</span><span class="p">,</span> <span class="n">xsize</span><span class="o">*</span><span class="n">xinc</span><span class="o">+</span><span class="n">xfirst</span><span class="p">,</span> <span class="n">xinc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">yfirst</span><span class="p">,</span> <span class="n">ysize</span><span class="o">*</span><span class="n">yinc</span><span class="o">+</span><span class="n">yfirst</span><span class="p">,</span> <span class="n">yinc</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="c">#        lon = np.arange(xfirst, xsize*xinc+xfirst, xinc, dtype=float)</span>
+<span class="c">#        lat = np.arange(yfirst, ysize*yinc+yfirst, yinc, dtype=float)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Significance.checkSignificance"><a class="viewcode-back" href="../../significance.html#metrics.significance2.Significance.checkSignificance">[docs]</a>    <span class="k">def</span> <span class="nf">checkSignificance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">result_file</span><span class="p">,</span> <span class="n">q1</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">q2</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">check_value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Checks if a value is statistically significant different from zero</span>
+<span class="sd">        Uses the bootstrapped files</span>
+<span class="sd">        </span>
+<span class="sd">        :param input: list with files or folder of bootstraps</span>
+<span class="sd">        :param result_file: file to check</span>
+<span class="sd">        :return: sig_lon,sig_lat lists with significant points</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">bootstrap_files</span> <span class="o">=</span> <span class="nb">input</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+            <span class="n">bootstrap_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_files</span><span class="o">.</span><span class="n">getAllFilesInFolder</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongArgument</span><span class="p">,</span> <span class="s">&#39;Input has to be a list of files or a folder&#39;</span>
+            
+        <span class="n">bootstrap_arrays</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        
+        <span class="c">#load all files to arrays</span>
+        <span class="k">for</span> <span class="n">b_file</span> <span class="ow">in</span> <span class="n">bootstrap_files</span><span class="p">:</span>
+            <span class="n">tmp_var</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">b_file</span><span class="p">)</span>
+            <span class="n">bootstrap_arrays</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_var</span><span class="p">[</span><span class="s">&#39;variable&#39;</span><span class="p">])</span>
+            
+        <span class="n">result</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">result_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;var&#39;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">imax</span><span class="p">,</span><span class="n">jmax</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>    
+        
+        <span class="n">lon</span><span class="p">,</span><span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getLonLat</span><span class="p">(</span><span class="n">result_file</span><span class="p">)</span>
+        <span class="n">sig_lon</span><span class="p">,</span><span class="n">sig_lat</span><span class="p">,</span><span class="n">sig_x</span><span class="p">,</span><span class="n">sig_y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span><span class="nb">list</span><span class="p">(),</span><span class="nb">list</span><span class="p">(),</span><span class="nb">list</span><span class="p">()</span>
+
+        <span class="c">#loop array</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">imax</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">jmax</span><span class="p">):</span>
+                <span class="n">test_sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bootstrap_files</span><span class="p">))</span>
+                <span class="n">k</span><span class="o">=</span><span class="mi">0</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">bootstrap_arrays</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e10</span> <span class="ow">and</span> <span class="n">item</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">1e10</span><span class="p">:</span> <span class="c">#don&#39;t test missing values</span>
+                        <span class="n">test_sample</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>  <span class="c">#construct testsample</span>
+                        <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="n">test_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">test_sample</span><span class="p">)</span>
+                    
+                <span class="n">quant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getQuantile</span><span class="p">(</span><span class="n">test_sample</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">)</span>
+                <span class="c">#mark significant values</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">quant</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">check_value</span> <span class="ow">and</span> <span class="n">quant</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">check_value</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">quant</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">check_value</span> <span class="ow">and</span> <span class="n">quant</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">check_value</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">test_mean</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">1e19</span> <span class="ow">and</span> <span class="n">test_mean</span> <span class="o">&lt;</span> <span class="mf">1e19</span><span class="p">:</span>
+                        <span class="c">#no missingvalue in result</span>
+                        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e10</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">1e10</span><span class="p">:</span>
+                            <span class="n">sig_lon</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lon</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                            <span class="n">sig_lat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lat</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                            <span class="n">sig_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                            <span class="n">sig_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+       
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_significance_mask</span><span class="p">(</span><span class="n">sig_y</span><span class="p">,</span> <span class="n">sig_x</span><span class="p">,</span> <span class="n">result_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sig_lon</span><span class="p">,</span> <span class="n">sig_lat</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Significance.save_significance_mask"><a class="viewcode-back" href="../../significance.html#metrics.significance2.Significance.save_significance_mask">[docs]</a>    <span class="k">def</span> <span class="nf">save_significance_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sign_lon</span><span class="p">,</span> <span class="n">sign_lat</span><span class="p">,</span> <span class="n">result_file</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Saves the significance mask in a netcdf file</span>
+<span class="sd">        </span>
+<span class="sd">        :param sign_lon,sign_lat: significant points</span>
+<span class="sd">        :param result_file: File to overwrite</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">openNetCDFFile</span><span class="p">(</span><span class="n">result_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;var&#39;</span><span class="p">)</span>
+        <span class="n">res_shape</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+        
+        <span class="n">sign_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">res_shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">sign_lon</span><span class="p">)):</span>
+            <span class="c">#pass</span>
+            <span class="n">sign_array</span><span class="p">[</span><span class="n">sign_lon</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sign_lat</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">saveToNetCDF</span><span class="p">(</span><span class="n">sign_array</span><span class="p">,</span> <span class="n">result_file</span><span class="p">,</span> <span class="s">&#39;_significance_mask&#39;</span><span class="p">)</span>     
+ </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Sebastian Illing.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
