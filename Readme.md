@@ -75,7 +75,7 @@ murcss variable=tas project1=miklip product1=initialized institute1=mpi-m model1
 
 ####Inside a Python Script:
 
-MurCSS consists of two types of metrics, accuracy and ensemble_spread. The first is located in `metrics.msss` and the second in `metrics.crpss`.
+MurCSS consists of two types of metrics, accuracy and ensemble spread. The first is located in `metrics.msss` and the second in `metrics.crpss`.
 Here is a simple script to calculate the accuracy part:
 ```
    from metrics.msss import Msss 
