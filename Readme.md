@@ -2,16 +2,18 @@ MurCSS
 =====
 A Tool for Standardized Evaluation of Decadal Hindcast Systems
 
-The tool calculates the Mean Squared Error Skill Score (MSESS) its decomposition (Correlation + Conditional Bi
-as) and the Continuous Ranked Probability Skill Score (CRPSS) as proposed by Goddard et al. [2013]. 
-The MSESS of both models and the MSESS "between" the two models (model versions) are calculated for different leadtimes.
-The CRPSS is calculated for both models defined by the input parameters. 
+The tool calculates the Mean Squared Error Skill Score (MSESS) its
+decomposition (Correlation + Conditional Bias) and the Continuous
+Ranked Probability Skill Score (CRPSS) as proposed by Goddard et
+al. [2013]. The MSESS of both models and the MSESS "between" the two
+models (model versions) are calculated for different leadtimes. The
+CRPSS is calculated for both models defined by the input parameters.
 
-The main documentation can be found here /doc/build/index.html and here https://www-miklip.dkrz.de/about/murcss
+The main documentation can be found [here][local-docs] and [here][homepage].
 
 Installation
 -
-Download and install MurCSS via pypi
+Download and install MurCSS via [PyPI][]
 ```
 pip install murcss
 ```
@@ -23,7 +25,7 @@ git clone https://github.com/illing2005/murcss.git
 
 Requirements
 -
-MurCSS needs some additional python packages. If you install MurCSS using pypi, they will be downloaded and installed automatically. 
+MurCSS needs some additional python packages. If you install MurCSS using [PyPI][], they will be downloaded and installed automatically. 
 * Matplotlib >= 1.1.0
 * Basemap
 * NumPy >= 1.5.0
@@ -59,8 +61,7 @@ DRS_STRUCTURE = {
 
 #### Generate Sample output:
 
-To generate the sample files in /sample_output/ download the files in /sample_data/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. Webpage and user informations:
-http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html 
+To generate the sample files in `/sample_output/` download the files in `/sample_data/`. Adjust the `DRS_STRUCTURE` in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
 Download and unzip e.g. the median of the HadCRUT4 dataset 
 ```
 cd /observations/path/
@@ -74,7 +75,7 @@ murcss variable=tas project1=miklip product1=initialized institute1=mpi-m model1
 
 ####Inside a Python Script:
 
-MurCSS constits of two types of metrics, accuracy and ensemble_spread. The first is located in metrics.msss and the second in metrics.crpss
+MurCSS consists of two types of metrics, accuracy and ensemble spread. The first is located in `metrics.msss` and the second in `metrics.crpss`.
 Here is a simple script to calculate the accuracy part:
 ```
    from metrics.msss import Msss 
@@ -88,8 +89,8 @@ First we create an instance of Msss. Msss takes a bunch of keywords arguments, w
 * arguments to find the input data
 * specific options  for calculation
 
-For a complete list and description of the keyword arguments see `metrics.msss.Msss`. Then we search and prepare the input data for the final calculation. The prepared files will be stored in msss.input1Remapped, msss.input2Remapped and msss.observationRemapped for later use.
-The main calculation is done in `msss.analyze()` (see :`metrics.msss.Msss.analyze`). After the calculation is finished we delete the working direcory. 
+For a complete list and description of the keyword arguments see `metrics.msss.Msss`. Then we search and prepare the input data for the final calculation. The prepared files will be stored in `msss.input1Remapped`, `msss.input2Remapped` and `msss.observationRemapped` for later use.
+The main calculation is done in `msss.analyze()` (see :`metrics.msss.Msss.analyze`). After the calculation is finished we delete the working directory. 
 
 And here for the ensemble spread part:
 ```
@@ -99,11 +100,11 @@ And here for the ensemble spread part:
    crpss.analyze()                 #Calculates the actual skill scores
    crpss.deleteCache()             #Delete all temporary files
 ```
-crpss.prepareInput() stores the input files in crpss.inputRemapped and crpss.observationRemapped. As you can see the scripts looks almost the same. The major difference is that crpss expects only data information about one model (see `metrics.crpss.Crpss`). 
+`crpss.prepareInput()` stores the input files in `crpss.inputRemapped` and `crpss.observationRemapped`. As you can see the scripts looks almost the same. The major difference is that crpss expects only data information about one model (see `metrics.crpss.Crpss`).
 
 Unittests
 -
-Download the files in /integration/tests/ and navigate to the directory.
+Download the files in `/integration/tests/` and navigate to the directory.
 You should also download the sample_data and adapt the DRS_Structure to run the tests for the file input component. 
 Now run the tests using
 ```
@@ -113,7 +114,7 @@ Currently some of the tests are designed for the MiKlip file system. Therfore th
 
 Support, Issues, Bugs
 -
-Please open an issue on GitHub or write an email to sebastian.illing@met.fu-berlin.de
+Please open an issue on GitHub or write an email to `sebastian.illing@met.fu-berlin.de`.
 
 
 License
@@ -123,3 +124,8 @@ Copyright (C) 2014 Sebastian Illing This program is free software: you can redis
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/
+
+[local-docs]: ./doc/build/index.html
+[homepage]: https://www-miklip.dkrz.de/about/murcss
+[PyPI]: https://pypi.python.org/pypi/murcss
+[HadCRUT]: http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html
