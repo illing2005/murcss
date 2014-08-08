@@ -125,7 +125,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/
 
-[local-docs]: ./doc/build/html/index.html
+[local-docs]: https://rawgit.com/illing2005/murcss/master/doc/build/html/index.html
 [sample data]: ./sample_data
 [sample output]: ./sample_output
 [unittests]: ./integration/tests
