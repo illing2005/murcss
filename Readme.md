@@ -7,7 +7,7 @@ as) and the Continuous Ranked Probability Skill Score (CRPSS) as proposed by God
 The MSESS of both models and the MSESS "between" the two models (model versions) are calculated for different leadtimes.
 The CRPSS is calculated for both models defined by the input parameters. 
 
-The main documentation can be found here /doc/build/index.html and here https://www-miklip.dkrz.de/about/murcss
+The main documentation can be found [here][local-docs] and [here][homepage].
 
 Installation
 -
@@ -59,8 +59,7 @@ DRS_STRUCTURE = {
 
 #### Generate Sample output:
 
-To generate the sample files in /sample_output/ download the files in /sample_data/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. Webpage and user informations:
-http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html 
+To generate the sample files in /sample_output/ download the files in /sample_data/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
 Download and unzip e.g. the median of the HadCRUT4 dataset 
 ```
 cd /observations/path/
@@ -123,3 +122,7 @@ Copyright (C) 2014 Sebastian Illing This program is free software: you can redis
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/
+
+[local-docs]: ./doc/build/index.html
+[homepage]: https://www-miklip.dkrz.de/about/murcss
+[HadCRUT]: http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html
