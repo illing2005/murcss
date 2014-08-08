@@ -13,7 +13,7 @@ The main documentation can be found [here][local-docs] and [here][homepage].
 
 Installation
 -
-Download and install MurCSS via pypi
+Download and install MurCSS via [PyPI][]
 ```
 pip install murcss
 ```
@@ -25,7 +25,7 @@ git clone https://github.com/illing2005/murcss.git
 
 Requirements
 -
-MurCSS needs some additional python packages. If you install MurCSS using pypi, they will be downloaded and installed automatically. 
+MurCSS needs some additional python packages. If you install MurCSS using [PyPI][], they will be downloaded and installed automatically. 
 * Matplotlib >= 1.1.0
 * Basemap
 * NumPy >= 1.5.0
@@ -127,4 +127,5 @@ You should have received a copy of the GNU General Public License along with thi
 
 [local-docs]: ./doc/build/index.html
 [homepage]: https://www-miklip.dkrz.de/about/murcss
+[PyPI]: https://pypi.python.org/pypi/murcss
 [HadCRUT]: http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html
