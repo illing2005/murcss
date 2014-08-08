@@ -61,7 +61,7 @@ DRS_STRUCTURE = {
 
 #### Generate Sample output:
 
-To generate the sample files in /sample_output/ download the files in /sample_data/. Adjust the DRS_STRUCTURE in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
+To generate the sample files in `/sample_output/` download the files in `/sample_data/`. Adjust the `DRS_STRUCTURE` in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
 Download and unzip e.g. the median of the HadCRUT4 dataset 
 ```
 cd /observations/path/
@@ -75,7 +75,7 @@ murcss variable=tas project1=miklip product1=initialized institute1=mpi-m model1
 
 ####Inside a Python Script:
 
-MurCSS consists of two types of metrics, accuracy and ensemble_spread. The first is located in metrics.msss and the second in metrics.crpss
+MurCSS consists of two types of metrics, accuracy and ensemble_spread. The first is located in `metrics.msss` and the second in `metrics.crpss`.
 Here is a simple script to calculate the accuracy part:
 ```
    from metrics.msss import Msss 
@@ -89,7 +89,7 @@ First we create an instance of Msss. Msss takes a bunch of keywords arguments, w
 * arguments to find the input data
 * specific options  for calculation
 
-For a complete list and description of the keyword arguments see `metrics.msss.Msss`. Then we search and prepare the input data for the final calculation. The prepared files will be stored in msss.input1Remapped, msss.input2Remapped and msss.observationRemapped for later use.
+For a complete list and description of the keyword arguments see `metrics.msss.Msss`. Then we search and prepare the input data for the final calculation. The prepared files will be stored in `msss.input1Remapped`, `msss.input2Remapped` and `msss.observationRemapped` for later use.
 The main calculation is done in `msss.analyze()` (see :`metrics.msss.Msss.analyze`). After the calculation is finished we delete the working direcory. 
 
 And here for the ensemble spread part:
@@ -100,11 +100,11 @@ And here for the ensemble spread part:
    crpss.analyze()                 #Calculates the actual skill scores
    crpss.deleteCache()             #Delete all temporary files
 ```
-crpss.prepareInput() stores the input files in crpss.inputRemapped and crpss.observationRemapped. As you can see the scripts looks almost the same. The major difference is that crpss expects only data information about one model (see `metrics.crpss.Crpss`). 
+`crpss.prepareInput()` stores the input files in `crpss.inputRemapped` and `crpss.observationRemapped`. As you can see the scripts looks almost the same. The major difference is that crpss expects only data information about one model (see `metrics.crpss.Crpss`).
 
 Unittests
 -
-Download the files in /integration/tests/ and navigate to the directory.
+Download the files in `/integration/tests/` and navigate to the directory.
 You should also download the sample_data and adapt the DRS_Structure to run the tests for the file input component. 
 Now run the tests using
 ```
@@ -114,7 +114,7 @@ Currently some of the tests are designed for the MiKlip file system. Therfore th
 
 Support, Issues, Bugs
 -
-Please open an issue on GitHub or write an email to sebastian.illing@met.fu-berlin.de
+Please open an issue on GitHub or write an email to `sebastian.illing@met.fu-berlin.de`.
 
 
 License
