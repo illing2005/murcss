@@ -61,7 +61,7 @@ DRS_STRUCTURE = {
 
 #### Generate Sample output:
 
-To generate the sample files in `/sample_output/` download the files in `/sample_data/`. Adjust the `DRS_STRUCTURE` in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
+To generate the provided [sample output][] download the [sample data][]. Adjust the `DRS_STRUCTURE` in `murcss_config.py` to your system. For the comparison with real observations you need to download e.g. a HadCRUT dataset from the Met Office Hadley Centre. [Webpage and user information][HadCRUT].
 Download and unzip e.g. the median of the HadCRUT4 dataset 
 ```
 cd /observations/path/
@@ -104,7 +104,7 @@ And here for the ensemble spread part:
 
 Unittests
 -
-Download the files in `/integration/tests/` and navigate to the directory.
+Download the [unittests][] and navigate to the directory.
 You should also download the sample_data and adapt the DRS_Structure to run the tests for the file input component. 
 Now run the tests using
 ```
@@ -125,7 +125,10 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/
 
-[local-docs]: ./doc/build/index.html
+[local-docs]: ./doc/build/html/index.html
+[sample data]: ./sample_data
+[sample output]: ./sample_output
+[unittests]: ./integration/tests
 [homepage]: https://www-miklip.dkrz.de/about/murcss
 [PyPI]: https://pypi.python.org/pypi/murcss
 [HadCRUT]: http://www.metoffice.gov.uk/hadobs/hadcrut4/data/current/download.html
