@@ -90,7 +90,7 @@ First we create an instance of Msss. Msss takes a bunch of keywords arguments, w
 * specific options  for calculation
 
 For a complete list and description of the keyword arguments see `metrics.msss.Msss`. Then we search and prepare the input data for the final calculation. The prepared files will be stored in `msss.input1Remapped`, `msss.input2Remapped` and `msss.observationRemapped` for later use.
-The main calculation is done in `msss.analyze()` (see :`metrics.msss.Msss.analyze`). After the calculation is finished we delete the working direcory. 
+The main calculation is done in `msss.analyze()` (see :`metrics.msss.Msss.analyze`). After the calculation is finished we delete the working directory. 
 
 And here for the ensemble spread part:
 ```
