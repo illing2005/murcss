@@ -112,6 +112,9 @@ class Plotter(object):
 
         mVarF = mVar[:,0:2]
         mVar = N.concatenate((mVar,mVarF),axis=1)
+        
+        mVarF = mVar[0:2,:]
+        mVar = N.concatenate((mVar,mVarF),axis=0)	
 
         def plus(lon):
             return lon-step
@@ -125,8 +128,16 @@ class Plotter(object):
         lat = N.array(map(plus,lat))
         
         lonlatbox = map(int,lonlatbox.split(','))
+        #check which lat is greater
+        #print lonlatbox
+        if lonlatbox[2] > lonlatbox[3]:
+            lonlatbox[2], lonlatbox[3] = lonlatbox[3], lonlatbox[2] #switch position on lat entries
+        
+        if lonlatbox[0] > lonlatbox[1]:
+            lonlatbox[1] += 360
+        
         step=0
-        m = Basemap(llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3],lon_0=0)
+        m = Basemap(llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3])#,lon_0=0)
 
         def divi(x):
             return float(x)/10
@@ -162,8 +173,9 @@ class Plotter(object):
         norm = mpl.colors.BoundaryNorm(colorSteps, my_cmap.N)
         #cs = m.imshow(maskedArray, interpolation="nearest", cmap=my_cmap, norm=norm)
         #x,y = m(lon, lat)
+        x,y = lon,lat
         x,y = N.meshgrid(lon, lat)
-        cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm)#, latlon=False)
+        cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm)#, latlon=True)
         cb = m.colorbar(cs,"right", size="5%", pad='5%' , ticks=colorTicks)
         m.drawcoastlines(ax=ax)  
         m.drawparallels(N.arange(-90.,120.,30.),labels=[1,0,0,0]) # draw parallels
@@ -172,6 +184,100 @@ class Plotter(object):
         plt.title(Plotter.__getTitle(fileName))
         plt.text(lonlatbox[0]+(lon[1]-lon[0])/2, lonlatbox[2]+(lat[1]-lat[0])/2, 'MurCSS')
         return m
+    
+    
+    @staticmethod
+    def plotVerticalProfile(fileName, vmin, vmax, colormap='goddard', lonlatbox=None):
+        '''
+        Plots vertical profile of zonal mean file
+        '''
+        
+        file_values = FileHandler.openNetCDFFile(fileName, 'plev')
+        data = N.flipud(file_values['variable'])
+        lat = file_values['lat']
+        plev = N.flipud(file_values['plev'])
+        
+        fig, ax1 = plt.subplots(figsize=(12,7),dpi=500)
+        #fig = plt.figure()
+        #ax1 = fig.add_subplot(111)
+        colorSteps = N.linspace(-1,1,21)
+        if vmax == 0.5:
+            colorSteps = [-0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, -0.15, -0.1, -0.05, 0, 
+                          0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]   
+        if vmax == 0. and vmin == -0.5:
+            colorSteps = [-0.5, -0.475, -0.45, -0.425, -0.4, -0.375, -0.35, -0.325, -0.3, -0.275, -0.25, -0.225, 
+                          -0.2, -0.175, -0.15, -0.125, -0.1, -0.075, -0.05, -0.025, 0]     
+        if vmax == 2. and vmin == 0:
+            colorSteps = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9,0.95, 
+                          1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+        if vmin == -0.6:
+            colorSteps = [-0.6,-0.55,-0.5,-0.45,-0.4,-0.35,-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,0,
+                          0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6]
+        if vmin == -0.1 and vmax == 0:
+            colorSteps = [-0.1,-0.09,-0.08,-0.07,-0.06,-0.05,-0.04,-0.03,-0.02,-0.01,0.0]   
+        if vmin == -0.2 and vmax == 0:
+            colorSteps = [-0.2,-0.18,-0.16,-0.14,-0.12,-0.1,-0.08,-0.06,-0.04,-0.02,0.0]
+        my_cmap = plt.cm.RdBu_r
+        my_cmap.set_bad("grey")                         #set missing value color
+        maskedArray = N.ma.masked_outside(data, -0.8e20, 0.8e20)
+        #discrete colormap
+        norm = mpl.colors.BoundaryNorm(colorSteps, my_cmap.N)
+        cs = ax1.imshow(maskedArray, interpolation="nearest", cmap=my_cmap, norm=norm)
+        cbar = fig.colorbar(cs, ax=ax1, orientation='vertical',ticks=colorSteps[0::2])#,shrink=0.7)
+        ax1.set_xlabel('Latitude [degrees]')
+        ax1.set_ylabel("Pressure [Pa]")
+        plt.xticks(range(1,len(lat),4),lat[1::4])
+        plt.yticks(range(0,len(plev),2),plev[0::2])
+        plt.title(Plotter.__getTitle(fileName))
+        #ax1.set_title(Plotter.__getTitle(fileName))
+        return ax1
+        
+    @staticmethod
+    def plotLeadtimeseries(resultList,flag_list,plot_list):
+        colors = ['green','blue','red']
+        def getFn(s):
+            return s.split('/')[-1]
+
+        fig = plt.figure(figsize=(17,13)) 
+        for i,needle in enumerate(plot_list):
+            plt.subplot(2,1,i+1) 
+            for j,flag in enumerate(flag_list):
+                files_to_plot = list()
+                for part in resultList:
+                    search_needle = flag+'_'+needle[0]
+                    files_to_plot.append([s for s in part if search_needle in getFn(s)][0])
+                labels = list()
+                plot_values = list()
+                for fn in sorted(files_to_plot,key=lambda x: int(getFn(x).split('_')[0]+getFn(x).split('_')[1])):
+                    tmp_label = getFn(fn).split('_')
+                    if(tmp_label[0]==tmp_label[1]):
+                        tmp_label = tmp_label[0]
+                    else:
+                        tmp_label = tmp_label[0]+'-'+tmp_label[1]
+                    labels.append(tmp_label)
+                    tmp_values = FileHandler.openNetCDFFile(fn,'var')
+                    plot_values.append(tmp_values)
+                x_val = range(1,len(files_to_plot)+1)
+                plt.scatter(x_val,plot_values, color=colors[j])
+                plt.plot(x_val,plot_values, color=colors[j])
+                
+                #get min and max plot values
+                try:
+                    min_val = min(min_val,min(plot_values))
+                    max_val = max(max_val,max(plot_values))
+                except:
+                    min_val = min(plot_values)
+                    max_val = max(plot_values)
+                
+            plt.axis([0, len(files_to_plot)+1, min(min_val,needle[2][0]), max(max_val,needle[2][1])]) #needle[2][0], needle[2][1]])
+            plt.ylabel(needle[1])
+            plt.xlabel('Leadtimes')
+            plt.xticks(x_val,labels)
+            #plt.legend(legend_strs,loc='lower right')
+            if(i==0):
+                plt.legend(flag_list,bbox_to_anchor=(0., 1.05, 1., .102), mode='expand',loc=3,ncol=1, borderaxespad=0.)   
+        #plt.legend(flag_list,bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+        #plt.show()
      
     @staticmethod    
     def saveFig(output_folder, fn):
@@ -180,8 +286,26 @@ class Plotter(object):
         
     @staticmethod
     def addCrosses(map, sig_mask_x, sig_mask_y, marker='x', color='k', size=9):
-        
+        #check for half crosses and append 
+        for i,x in enumerate(sig_mask_x):
+            if x == -180:
+                sig_mask_x.append(180)
+                sig_mask_y.append(sig_mask_y[i])
         map.scatter(sig_mask_x, sig_mask_y, size, marker=marker,color=color)
+        
+    @staticmethod
+    def addCrossesXY(map, fn, marker='x', color='k', size=9):
+        sign_mask = FileHandler.openNetCDFFile(fn,'var')
+        sign_mask = N.flipud(sign_mask)
+        sig_x = list()
+        sig_y = list()
+        for (x,y),value in N.ndenumerate(sign_mask):
+            if value == 1:
+                sig_x.append(y)
+                sig_y.append(x)
+
+        
+        map.scatter(sig_x,sig_y, size, marker=marker,color=color)
     
     @staticmethod
     def addCrossesFile(map, fn, marker='x', color='k', size=9):
@@ -221,8 +345,10 @@ class Plotter(object):
         
 if __name__ == '__main__':
     print 'test'
-    fn = '/home/illing/workspace/murcss/integration/metrics/1_1_tos_b324031_b1seasonal_mpi-esm-lr_seasonal_198204-201104_correlation.nc_masked'
-    Plotter.plotField(fn, -1, 1, 'RdBu')
+    #fn = '/home/illing/workspace/murcss/integration/metrics/tas_Amon_MPI-ESM-LR_decs4e2013_rEMi1p1_2014-historicalRCPMean_over1981-2010_5x5.nc'
+    fn = '/var/autofs/net/home/illing/workspace/murcss/integration/metrics/1_1_tos_baseline1_output_mpi-esm-lr_decs4e_1990-1992_correlation.nc_masked'
+    m=Plotter.plotField(fn, -1, 1, 'RdBu')
+    Plotter.addCrosses(m,[-180,150],[10,10])
     Plotter.saveFig('', 'test')
     plt.show()      
         

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
 
 #Max process number
-proc_count = 4
+proc_count = 16
 
 #Specify which filesystem you are using. If you are using MurCSS inside of MiKlip set filesystem to 'miklip'
 #Otherwise set it to 'custom'. Then the findFilesCustom instance will be used. 
@@ -28,7 +28,7 @@ file_system = 'custom' #miklip|custom
 
 #If you are working on your own filesystem specify the folder structure:
 DRS_STRUCTURE = {
-         "root_dir":"/home/illing/workspace/murcss/sample_data/",
+         "root_dir":"/home/PUTYOUTPATHHERE/murcss/sample_data/",
          "parts_dir":"project/product/institute/model/experiment/time_frequency/realm/variable/ensemble/file_name".split('/'),
          "defaults" : {}
         }

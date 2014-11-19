@@ -30,6 +30,7 @@ import shutil
 from evaluation_system.model.solr import SolrFindFiles
 
 from tool_abstract import ToolAbstract, unwrap_self_f
+from findFilesAbstract import FindFilesAbstract
 
 class FileError(Exception): pass
 class NoFilesFoundError(FileError): pass
@@ -39,23 +40,10 @@ class WrongDrsStruct(FileError): pass
 class LevelNotFound(FileError): pass
 
 
-class FindFiles(ToolAbstract):
+class FindFiles(FindFilesAbstract):
     '''
     Wrapper class to use solr_search with "python friendly" output --> lists or dicts
     '''
-    def __init__(self, tmpDir = '/', observation='', level=None, output='/'):
-        '''
-        Constructor
-        
-        :param tmpDir: cache folder
-        :param observation: folder of "special" observation data 
-        '''
-        self.tmpDir = self.checkPath(tmpDir)
-        self.output = self.checkPath(output)
-        self.observation = observation
-        self.level = level
-        
-        super(FindFiles,self).__init__(output_tmp=tmpDir, output_dir=output)
                
     def getFiles(self,year,fileType, model, variable, time_frequency='mon', product='*', ensemblemembers='*', institute='*', exp_prefix='d*', maxleadtime=10, minLeadtime=1):
         '''
@@ -86,7 +74,6 @@ class FindFiles(ToolAbstract):
             time.sleep(5) # delays for 5 seconds
             for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
-                print str(fn)
                 if(str(fn).split('.')[-1] == 'nc'):
                     tmpList.append(str(fn))
             try:
@@ -95,6 +82,7 @@ class FindFiles(ToolAbstract):
                 if exp_prefix.find('*') != -1:
                     raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)
                 #OK we can't find files, now try one last time using only the exp_prefix, i.e. "historical"
+                decStr = exp_prefix
                 for fn in SolrFindFiles.search(experiment=exp_prefix, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
                     if(str(fn).split('.')[-1] == 'nc'):
@@ -105,32 +93,38 @@ class FindFiles(ToolAbstract):
                     #OK, there are no Files...
                     raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)  
         
+
+              
+        #Check if we have time-splitted files
+        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product, institute=institute,
+                                           variable=variable, time_frequency=time_frequency, model=model, project=project)
+        if len(time_values['time'])>1:
+            tmpList = self.mergeSplittedFiles(tmpList)        
+              
         #select only wanted ensemblemembers
         if type(ensemblemembers) == list and ensemblemembers[0] != '*':
             ensList = list()
             for ens in ensemblemembers:
-                onlyfiles =  [f for f in tmpList if f.find(ens) != -1]
+                onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
                     ensList.append(onlyfiles[0])
 
             tmpList = ensList
-              
+        
         for fn in tmpList:
-            
             years = cdo.showyear(input=str(fn))[0]
             yearList = years.split(' ')
             #print years    
             #print fn       
             if str(year+minLeadtime) not in yearList or str(year+maxleadtime) not in yearList:
-                print year
                 raise NotEnoughYearsInFile, "1Not enough years in %s %s %s for starting year %s" % (fileType, model, product, year)
             
-            if(len(years.split(' ')) > maxleadtime):
-                selStr = ','.join(map(str,range(year+minLeadtime,year+1+maxleadtime)))
-                fileName = str(fn).split('/')[-1]
-                output.append(cdo.selyear(selStr, input=str(fn), output=self.tmpDir+fileName+'_'+str(year+minLeadtime)+'-'+str(year+maxleadtime)))
-            else:    
-                output.append(str(fn))
+            #if(len(years.split(' ')) > maxleadtime):
+            selStr = ','.join(map(str,range(year+minLeadtime,year+1+maxleadtime)))
+            fileName = str(fn).split('/')[-1]
+            output.append(cdo.selyear(selStr, input=str(fn), output=self.tmpDir+fileName+self.getRandomStr()+'_'+str(year+minLeadtime)+'-'+str(year+maxleadtime), options='-f nc'))
+            #else:    
+            #    output.append(str(fn))
                 
             if len(cdo.showyear(input=output[-1])[0].split(' ')) < maxleadtime-minLeadtime: 
                 raise NotEnoughYearsInFile, "2Not enough years in %s %s %s for starting year %s" % (fileType, model, product, year)
@@ -177,8 +171,8 @@ class FindFiles(ToolAbstract):
             #Observation or reanalysis?
             facet = SolrFindFiles.facets(facets='data_type', experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency)
-            try:
-                if facet['data_type'][0] == 'reanalysis':
+	    try:
+                if 'reanalysis' in facet['data_type']:
                     searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency, ensemble=observation_ensemble)
                 else:
@@ -186,9 +180,8 @@ class FindFiles(ToolAbstract):
                                          time_frequency=time_frequency, data_structure='grid')
             except IndexError:
                 raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
-            
-            for fn in searchList:
-                yearTmp = cdo.showyear(input=str(fn))[0]      
+	    for fn in searchList:
+		yearTmp = cdo.showyear(input=str(fn))[0]      
                 fname = str(fn).split('/')[-1]
                 #reanFiles.append(cdo.yearmean(input=str(fn), output=self.tmpDir+fname+'_YEARMEAN'))
                 reanFiles.append(str(fn))
@@ -197,7 +190,7 @@ class FindFiles(ToolAbstract):
                 if(len(yearTmp.split(' ')) > 1 ):
                     break
             if(len(reanFiles) == 0):
-                raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)    
+                raise NoFilesFoundError, "Couldn't find files for %s in %s " % (variable, experiment)    
             mergedFile = cdo.mergetime(input=' '.join(reanFiles), output=self.tmpDir+'mergedREAN_YEARMEAN')
             tmpMean = cdo.timmean(input=mergedFile)
             self.mergedReanFile = cdo.sub(input=' '.join([mergedFile, tmpMean]), output=self.tmpDir+'reananomalies.nc')
@@ -215,7 +208,7 @@ class FindFiles(ToolAbstract):
         if((years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1)):
             #create tmp decadal file
             fileStr = ','.join(map(str,range(year+minLeadtime,year+maxLeadtime+1)))
-            tmp= cdo.selyear(fileStr, input=self.mergedReanFile, output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc')
+            tmp= cdo.selyear(fileStr, input=self.mergedReanFile, output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc',options='-f nc')
             return tmp
         else:
             raise NotEnoughYearsInFile, "%s-%s are not part of %s reanalysis" % (year+minLeadtime, year+maxLeadtime, experiment)            
@@ -232,13 +225,18 @@ class FindFiles(ToolAbstract):
         if not os.path.isfile(self.observation):
             raise NoFilesFoundError, '%s does not exist.' % (self.observation)
         
+        variable_file = cdo.showname(input=self.observation)[0]
+        if variable != variable_file:
+            print 'WARNING: Variable in observation file is not %s. \n Variable %s will be renamed.' % (variable, variable_file)
+            self.observation = cdo.chvar(variable_file+','+variable, input=self.observation, output=self.tmpDir+self.getFilename(self.observation))
+        
         years = cdo.showyear(input=self.observation)[0]
         if(years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1):
             #create tmp decadal file
             fileStr = ','.join(map(str,range(year+minLeadtime,year+maxLeadtime+1)))
             tmpFile =  cdo.selyear(fileStr, input=self.observation, 
-                                   output=self.tmpDir+self.getFilename(self.observation)+'_'+str(year+minLeadtime)+'-'+str(year+maxLeadtime))
-            if self.level is not None:
+                                   output=self.tmpDir+self.getFilename(self.observation)+'_'+str(year+minLeadtime)+'-'+str(year+maxLeadtime),options='-f nc')
+	    if self.level is not None:
                 return self._selectLevel(tmpFile)
             else:
                 return tmpFile    
@@ -246,94 +244,4 @@ class FindFiles(ToolAbstract):
             if years.find(str(year+minLeadtime)) == -1:
                 raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+minLeadtime, self.observation)
             if years.find(str(year+maxLeadtime)) == -1:
-                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+maxLeadtime, self.observation)
-         
-    def checkGrid(self,fList,model):
-        '''
-        Checks if the file has a curvlinear grid. And remaps to lonlat grid after 
-        
-        '''
-        gridInfo = cdo.griddes(input=fList[0])
-        gridType = gridInfo[3]
-        if gridType.find('curvilinear') == -1:
-            self.curvilinearGrid = False
-            return fList
-        else:
-            self.curvilinearGrid = True
-            lon = self.__str2int(gridInfo[11])
-            lat = self.__str2int(gridInfo[12])
-        #single process, becaus multiproccessing caused memory problems
-        result = list()
-        for fn in fList:
-            result.append(self._ceckGrid(fn, model, lon, lat))
-        return result
-        
-    def _ceckGrid(self, f, model, lon, lat):
-        
-        if model.find('MPI-ESM') != -1:
-            lon=lon-1
-            sel_str = '2,%s,1,%s' % (lon,lat)
-            f = cdo.selindexbox(sel_str, input=f, output=self.tmpDir+self.getFilename(f)+'_sel_box')
-                
-        grid_str = 'r%sx%s' % (lon,lat)
-        return cdo.remapbil(grid_str, input=f, output=self.tmpDir+self.getFilename(f)+'_lonlat')
-        
-    
-    def getFilename(self, fn):
-        '''
-        Helper to extract a filename out of a path
-        :deprecated !!!
-        :param fn
-        :return filename
-        '''
-        return self.extractFilename(fn)
-    
-    def __str2int(self, str):
-        '''
-        Filter digits and convert str to int
-        
-        :param str:
-        :return int
-        '''
-        all = maketrans('', '')
-        nodigs = all.translate(all, string.digits)
-        return int(str.translate(all, nodigs))
-    
-    def getAllFilesInFolder(self, folder):
-        from os import listdir
-        from os.path import isfile, join
-        onlyfiles = [ join(folder,f) for f in listdir(folder) if isfile(join(folder,f)) ]
-        return onlyfiles
-    
-    def getAllFilesInSubfolders(self, folder):
-        
-        file_list = list()
-        for path, subdirs, files in os.walk(folder):
-            for name in files:
-                file_list.append(os.path.join(path, name))
-        return file_list        
-        
-    def _selectLevel(self, files):
-
-        try:
-            return cdo.sellevel(self.level, input=files, output=self.tmpDir+self.getFilename(files)+'_'+str(self.level)+'.nc')
-        except:
-            raise LevelNotFound, 'Level %s not found in %s' %(self.level, files)
-
-            
-    def selectLevel(self,fileList):
-        '''
-        Select a specific level from the files
-        '''        
-        #multi processing
-        num_proc = len(fileList)
-        pool = multiprocessing.Pool(processes=min([num_proc,24]))
-        poolArgs = zip([self]*num_proc, fileList, ['_selectLevel']*num_proc)
-        result =  pool.map(unwrap_self_f, poolArgs)
-        pool.terminate()
-        pool.close()
-        
-        return result
-
-    
-        
+                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+maxLeadtime, self.observation)   

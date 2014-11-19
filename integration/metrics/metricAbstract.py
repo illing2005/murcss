@@ -359,6 +359,10 @@ class MetricAbstract(ToolAbstract):
         '''
         if self.fieldmean:
             return cdo.const('1,r1x1', output=self.tmpDir+flag+'constantField.nc', options = '-f nc')
+        elif self.zonalmean:
+            tmp_const = cdo.setrtoc('-1e99,1e99,1',input=self.observationRemapped[self.decadals[0]],output=self.tmpDir+flag+'constantField_tmp.nc',
+                                    options = '-f nc')  
+            return cdo.timmean(input=tmp_const,output=self.tmpDir+flag+'constantField.nc')      
         else:
             const = cdo.const('1,'+gridFile, output=self.tmpDir+flag+'constantField.nc', options = '-f nc')
             if self.lonlatbox is not None:
@@ -556,7 +560,22 @@ class MetricAbstract(ToolAbstract):
         :return: fieldmean fn
         '''
         return cdo.fldmean(input=fn, output=self.tmpDir+self.extractFilename(fn)+'_fldmean')
-
+    
+    def multiProcessCdo(self, fileList, cdo_command, arguments=''):
+        '''
+        Multi Process Wrapper for "single" cdo commands like "fldmeam" with 1 input and 1 output file
+        '''
+        count = len(fileList)
+        poolArgs = self.getPoolArgs(count,self,fileList,cdo_command, arguments, '_singleProcessCdo')
+        return self.multiProcess(poolArgs)
+        
+    def _singleProcessCdo(self, fn, cdo_command, arguments=''):
+        '''
+        Single Process Wrapper for "single" cdo commands like "fldmeam" with 1 input and 1 output file
+        '''
+        cdo_command_method = getattr(cdo, cdo_command) 
+        return cdo_command_method(arguments, input=fn, output=self.tmpDir+self.extractFilename(fn)+'_'+cdo_command)
+        
     def _plotField(self, fileName, vmin, vmax):
         '''
         @deprecated: use the static Plotter class instead
@@ -597,34 +616,79 @@ class MetricAbstract(ToolAbstract):
         Subtracts trend of a timeseries. 
         If keepMean is True the mean is kept 
         '''
-        print fn
-        #split file in mothly files
-        tmp = cdo.copy(input=fn,output=fn+'copy',options='-f nc')
-        tmp = cdo.splitmon(input=tmp,output=fn+'monthly',options='-f nc')
-        #print tmp
-        
-        months = ['01','02','03','04','05','06','07','08','09','10','11','12']
-        
-        detrended_list = list()
-        for mon in months:
-            fn_mon = tmp+mon+'.nc'
-            trend_a = fn_mon + 'trend_a'
-            trend_b = fn_mon + 'trend_b'
-            cdo.trend(input=fn_mon, output=' '.join([trend_a,trend_b]))
-            
-            if keepMean:
-                trend_a = cdo.mulc('0.00',input=trend_a,output=trend_a+'_keepMean')
-                
-            detrended_tmp = cdo.subtrend(input=' '.join([fn_mon,trend_a,trend_b]), output=fn_mon+'_detrended')
-            detrended_list.append(detrended_tmp)
-    #        print fn
-    #        print detrended
-        detrended = cdo.mergetime(' '.join(detrended_list), output=fn+'_detrended')    
-        print detrended
+#        print fn
+#        #split file in mothly files
+#        tmp = cdo.copy(input=fn,output=fn+'copy',options='-f nc')
+#        tmp = cdo.splitmon(input=tmp,output=fn+'monthly',options='-f nc')
+#        
+#        months = ['01','02','03','04','05','06','07','08','09','10','11','12']
+#        
+#        detrended_list = list()
+#        for mon in months:
+#            fn_mon = tmp+mon+'.nc'
+#            trend_a = fn_mon + 'trend_a'
+#            trend_b = fn_mon + 'trend_b'
+#            cdo.trend(input=fn_mon, output=' '.join([trend_a,trend_b]))
+#            
+#            if keepMean:
+#                trend_a = cdo.mulc('0.00',input=trend_a,output=trend_a+'_keepMean')
+#                
+#            detrended_tmp = cdo.subtrend(input=' '.join([fn_mon,trend_a,trend_b]), output=fn_mon+'_detrended')
+#            detrended_list.append(detrended_tmp)
+#
+#        detrended = cdo.mergetime(' '.join(detrended_list), output=fn+'_detrended')    
+        detrended = cdo.detrend(input=fn,output=fn+'_detrended')
         return detrended
         
+    def getMissingMaskForFieldMean(self):
+        '''
+        If we calculate field mean we have to take the missing values of the observations into account.
+        In this method the missing field mask of all observations is calculated. 
+        DON'T mix it up with calcMissingValueMask
+        '''
+        yearly_obs = dict()
+        for year in self.decadals:
+            yearly_obs[year] = cdo.yearmean(input=self.observationRemapped[year], output=self.tmpDir+self.extractFilename(self.observationRemapped[year]+'_ymean'))
+        mismask = cdo.mergetime(input=' '.join(yearly_obs.values()), output=self.tmpDir+'mergedobs')
+        mismask = cdo.timavg(input=mismask, output=mismask+'_tim_avg')
+        mismask = cdo.setrtoc('-1e19,1e19,1', input=mismask, output=mismask+'_setrtoc'  )
+        return mismask
+    
+    def applyMissingMaskForFieldMean(self, fileList, missmask):
+        '''
+        Apply missing value mask to a list of files
+        '''
+        count = len(fileList)
+        poolArgs = self.getPoolArgs(count,self,fileList,missmask,'_applyMissingMaskForFieldMean')
+        resultList = self.multiProcess(poolArgs) 
+        return resultList
+    
+    def _applyMissingMaskForFieldMean(self, data, missmask):
+        '''
+        Apply missing value mask to a file
+        '''
+        return cdo.mul(input=' '.join([data,missmask]), output=data+'_masked' )
         
+    def getLevelIntersection(self,fn1,fn2,fn3=None):
+        '''
+        Takes 2 3d netcdf files and calculates common levels
         
+        :return: list of common levels
+        '''
+        def roundList(il):
+            t = il[0].split(' ')
+            t = map(float,t)
+            t = map(round,t)
+            t = map(int,t)
+            return map(str,t)
+        level_f1 = roundList(cdo.showlevel(input=fn1))
+        level_f2 = roundList(cdo.showlevel(input=fn2))
+        result = [val for val in level_f1 if val in level_f2]
+        
+        if fn3 is not None:
+            level_f3 = roundList(cdo.showlevel(input=fn3))
+            result = [val for val in result if val in level_f3]             
+        return result
         
         
         

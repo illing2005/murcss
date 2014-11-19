@@ -253,8 +253,8 @@ class TaylorPlotMurCSS(TaylorPlotAbstract):
         """
         self.generateGrid()
         self._addReferencePoint()
-        #self._computeValues(result)
-        #self._addSample()
+        self._computeValues(result)
+        self._addSample()
         
         self._addLegend()
         self._savePlot(outputFolder)

@@ -22,9 +22,9 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from findFiles import *
+from findFilesAbstract import FindFilesAbstract
 
-
-class FindFilesSeason(FindFiles):
+class FindFilesSeason(FindFilesAbstract):
     '''
     Collects files for "Seasonal" evaluation
     '''
@@ -56,7 +56,7 @@ class FindFilesSeason(FindFiles):
             time.sleep(5) # delays for 5 seconds
             for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
-                print str(fn)
+                #print str(fn)
                 if(str(fn).split('.')[-1] == 'nc'):
                     tmpList.append(str(fn))
             try:
@@ -79,22 +79,29 @@ class FindFilesSeason(FindFiles):
         if type(ensemblemembers) == list and ensemblemembers[0] != '*':
             ensList = list()
             for ens in ensemblemembers:
-                onlyfiles =  [f for f in tmpList if f.find(ens) != -1]
+                onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
                     ensList.append(onlyfiles[0])
 
             tmpList = ensList
               
-     
+        #Check if we have time-splitted files
+        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product, institute=institute,
+                                           variable=variable, time_frequency=time_frequency, model=model, project=project)
+        if len(time_values['time'])>1:
+            tmpList = self.mergeSplittedFiles(tmpList)
+                 
         for fn in tmpList:            
             #TODO: Throw exepvtion if date is not in file
             if len(str(year)) == 4:
                 year = int(str(year)+'12')
-            start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
+            
+	    start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
             end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxleadtime+1) - relativedelta(days=1),'%Y-%m-31')
-            fileName = str(fn).split('/')[-1]
+            #print start_month
+	    fileName = str(fn).split('/')[-1]
             output.append(cdo.seldate(','.join([start_month,end_month]), input=fn, 
-                              output=self.tmpDir+fileName+str(year+1)+'-'+str(year+maxleadtime)+'.nc'))
+                              output=self.tmpDir+fileName+self.getRandomStr()+str(year+1)+'-'+str(year+maxleadtime)+'.nc',options='-f nc'))
                 
         if(not output or not isinstance(output, list)):
             raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s for starting year %s" % (variable, fileType, model, product, year)
@@ -165,10 +172,37 @@ class FindFilesSeason(FindFiles):
         end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1),'%Y-%m-31')
         
         tmp = cdo.seldate(','.join([start_month,end_month]), input=self.mergedReanFile, 
-                          output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc')
+                          output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc',options='-f nc')
         return tmp
        
      
+    def getObsFiles(self, variable, year, maxLeadtime=10, minLeadtime=1):
+        '''
+        Get the observation files from an specified folder
+        
+        :param variable:
+        :param year: start year of decadal
+        :return tmp file with maxLeadtime years of observation 
+        '''
+        if not os.path.isfile(self.observation):
+            raise NoFilesFoundError, '%s does not exist.' % (self.observation)
+
+        variable_file = cdo.showname(input=self.observation)[0]
+        if variable != variable_file:
+            print 'WARNING: Variable in observation file is not %s. \n Variable %s will be renamed.' % (variable, variable_file)
+            self.observation = cdo.chvar(variable_file+','+variable, input=self.observation, output=self.tmpDir+self.getFilename(self.observation))
+
+        if len(str(year)) == 4:
+            year = int(str(year)+'12')
+
+	start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
+        end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1),'%Y-%m-31')
+	tmp = cdo.seldate(','.join([start_month,end_month]), input=self.observation,
+                          output=self.tmpDir+'reanalysis_'+str(year+1)+'-'+str(year+maxLeadtime)+'.nc')
+	if self.level is not None:
+            return self._selectLevel(tmp)
+        else:
+            return tmp
 
 
 

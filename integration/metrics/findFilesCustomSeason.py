@@ -30,8 +30,8 @@ import glob
 #from evaluation_system.model.solr import SolrFindFiles
 
 from tool_abstract import ToolAbstract, unwrap_self_f
-import murcss_config
 from findFilesAbstract import FindFilesAbstract
+import murcss_config
 
 class FileError(Exception): pass
 class NoFilesFoundError(FileError): pass
@@ -41,7 +41,7 @@ class WrongDrsStruct(FileError): pass
 class LevelNotFound(FileError): pass
 
 
-class FindFilesCustom(FindFilesAbstract):
+class FindFilesCustomSeason(FindFilesAbstract):
     '''
     Wrapper class to use solr_search with "python friendly" output --> lists or dicts
     '''
@@ -99,19 +99,14 @@ class FindFilesCustom(FindFilesAbstract):
        
         output = list() 
         for fn in files:
-            
-            years = cdo.showyear(input=str(fn))[0]
-            yearList = years.split(' ')    
-            #if str(year+minLeadtime) not in yearList or str(year+maxleadtime) not in yearList:
-            #    raise NotEnoughYearsInFile, "Not enough years in %s %s %s for starting year %s" % (fileType, model, product, year)
-            
-            if(len(years.split(' ')) > maxleadtime):
-                selStr = ','.join(map(str,range(year+minLeadtime,year+1+maxleadtime)))
-                fileName = str(fn).split('/')[-1]
-                output.append(cdo.selyear(selStr, input=str(fn), output=self.tmpDir+fileName+'_'+str(year+minLeadtime)+'-'+str(year+maxleadtime),options='-f nc'))
-            else:    
-                output.append(cdo.copy(input=fn,output=self.tmpDir+ str(fn).split('/')[-1],options='-f nc'))            
-        
+            if len(str(year)) == 4:
+                year = int(str(year)+'12')
+            start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
+            end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxleadtime+1) - relativedelta(days=1),'%Y-%m-31')
+            fileName = str(fn).split('/')[-1]
+            output.append(cdo.seldate(','.join([start_month,end_month]), input=fn, 
+                              output=self.tmpDir+fileName+str(year+1)+'-'+str(year+maxleadtime)+'.nc', options='-f nc'))       
+
         #check for curvilinear grid
         if(not hasattr(self,'curvilinearGrid') or self.curvilinearGrid == True):
             output = self.checkGrid(output, model)
@@ -151,18 +146,12 @@ class FindFilesCustom(FindFilesAbstract):
             print 'WARNING: Variable in observation file is not %s. \n Variable will be renamed.' % (variable)
             self.observation = cdo.chvar(variable_file+','+variable, input=self.observation, output=self.tmpDir+self.getFilename(self.observation))
         
-        years = cdo.showyear(input=self.observation)[0]
-        if(years.find(str(year+minLeadtime)) != -1) and (years.find(str(year+maxLeadtime)) != -1):
-            #create tmp decadal file
-            fileStr = ','.join(map(str,range(year+minLeadtime,year+maxLeadtime+1)))
-            tmpFile =  cdo.selyear(fileStr, input=self.observation, 
-                                   output=self.tmpDir+self.getFilename(self.observation)+'_'+str(year+minLeadtime)+'-'+str(year+maxLeadtime),options='-f nc')
-            if self.level is not None:
-                return self._selectLevel(tmpFile)
-            else:
-                return tmpFile    
-        else:
-            if years.find(str(year+minLeadtime)) == -1:
-                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+minLeadtime, self.observation)
-            if years.find(str(year+maxLeadtime)) == -1:
-                raise FileError, 'Can\'t find data for year %s in observational data! \n%s' % (year+maxLeadtime, self.observation)
+        if len(str(year)) == 4:
+            year = int(str(year)+'12')    
+        start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
+        end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1),'%Y-%m-31')
+        
+        tmp = cdo.seldate(','.join([start_month,end_month]), input=self.observation, 
+                          output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc', options='-f nc')
+        return tmp
+

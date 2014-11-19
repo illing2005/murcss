@@ -108,6 +108,34 @@ class MsssBootstrap(Msss):
             for year in self.decadals:
                 ensMeanProject1Dict[year] = self.sellonlatbox(ensMeanProject1Dict[year])
                 ensMeanProject2Dict[year] = self.sellonlatbox(ensMeanProject2Dict[year]) 
+
+        if self.fieldmean:
+            print 'Calculating field mean'
+            #Calculate missing value fields     
+            for year in self.decadals:
+                print ensMeanProject1Dict[year]
+                #Apply Missing value Mask to all fields                                          output=self.observationRemapped[year]+'_masked' )
+                #self.observationRemapped[year] = self._applyMissingMaskForFieldMean(self.observationRemapped[year], missmask)
+                ensMeanProject1Dict[year] = self._applyMissingMaskForFieldMean(ensMeanProject1Dict[year], self.obsmissmask)
+                ensMeanProject2Dict[year] = self._applyMissingMaskForFieldMean(ensMeanProject2Dict[year], self.obsmissmask)
+                
+                ensMeanProject1Dict[year] = self._fieldMean(ensMeanProject1Dict[year])
+                ensMeanProject2Dict[year] = self._fieldMean(ensMeanProject2Dict[year])
+        
+        if self.zonalmean:
+            print 'Calculating zonal mean'
+            level_intersection = self.getLevelIntersection(self.observationRemapped[self.decadals[0]], self.input1Remapped[self.decadals[0]][0])
+            for year in self.decadals:
+                tmpList = list()
+                #for fn in ensMeanProject1Dict[year]:
+                tmp_file = cdo.zonmean(input=ensMeanProject1Dict[year],output=ensMeanProject1Dict[year]+'_zonmean')
+                #tmpList.append()
+                ensMeanProject1Dict[year] = cdo.sellevel(','.join(level_intersection), input=tmp_file, output=tmp_file+'sellevel')
+                tmpList = list()
+                #for fn in ensMeanProject2Dict[year]:
+                tmp_file = cdo.zonmean(input=ensMeanProject2Dict[year],output=ensMeanProject2Dict[year]+'_zonmean')
+                #tmpList.append()
+                ensMeanProject2Dict[year] = cdo.sellevel(','.join(level_intersection), input=tmp_file, output=tmp_file+'sellevel')
         
         self.bootstrapPoolProject1 = ensMeanProject1Dict
         self.bootstrapPoolProject2 = ensMeanProject2Dict
@@ -190,8 +218,12 @@ class MsssBootstrap(Msss):
         significance = Significance(self.tmpDir, self.outputPlots)
         (sig_lon, sig_lat) = significance.checkSignificance(b_array_list, fn)
         
-        m = Plotter.plotField(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
-        Plotter.addCrosses(m, sig_lon, sig_lat)
+        if self.zonalmean:
+            m = Plotter.plotVerticalProfile(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
+            Plotter.addCrossesXY(m, fn+'_significance_mask')            
+        else:
+            m = Plotter.plotField(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
+            Plotter.addCrosses(m, sig_lon, sig_lat)
         Plotter.saveFig(plot_folder, fn.split(output_folder)[-1])
      
     def calcSignificance(self, bootstrap_folders, output_folder, plot_folder):

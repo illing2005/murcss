@@ -74,12 +74,17 @@ class Significance(object):
         from cdo import Cdo
         cdo = Cdo()  
         grid =cdo.griddes(input=ifile)
-        xinc = searchGriddes(grid,'xinc')
-        xsize = searchGriddes(grid,'xsize')
-        yinc = searchGriddes(grid,'yinc') 
-        xfirst = searchGriddes(grid,'xfirst') 
+        try:
+            xinc = searchGriddes(grid,'xinc')
+            xsize = searchGriddes(grid,'xsize')
+            xfirst = searchGriddes(grid,'xfirst') 
+        except:
+            xinc = searchGriddes(grid,'yinc')
+            xsize = searchGriddes(grid,'ysize')
+            xfirst = searchGriddes(grid,'yfirst') 
         yfirst = searchGriddes(grid,'yfirst')
         ysize = searchGriddes(grid,'ysize')
+        yinc = searchGriddes(grid,'yinc') 
         lon = np.arange(xfirst+xinc/2, xsize*xinc+xfirst+xinc/2, xinc, dtype=float)
         lat = np.arange(yfirst+yinc/2, ysize*yinc+yfirst+yinc/2, yinc, dtype=float)
         lon = np.arange(xfirst, xsize*xinc+xfirst, xinc, dtype=float)
@@ -113,7 +118,7 @@ class Significance(object):
             
         result = FileHandler.openNetCDFFile(result_file, mode='var')
         (imax,jmax) = np.shape(result)    
-        
+        #print np.shape(result)    
         lon,lat = self.__getLonLat(result_file)
         sig_lon,sig_lat,sig_x,sig_y = list(),list(),list(),list()
 

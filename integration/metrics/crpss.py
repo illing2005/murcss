@@ -50,22 +50,26 @@ class Crpss(MetricAbstract):
     :param model: CMOR-Name of the used model like MPI-ESM-LR
     :param experiment: Experiment name like decs4e or historical
     
-	 :param leadtimes: Leadtimes to analyze, ie. 1,2-9
-	 :param observation: Observation or Reanalysis Experiment, HadCrut or ERA-Int or path to observation file	    
+    :param leadtimes: Leadtimes to analyze, ie. 1,2-9
+    :param observation: Observation or Reanalysis Experiment, HadCrut or ERA-Int or path to observation file        
     
-	 :param ensemblemembers: Comma separated string of esemble members like 'r1i1p1,r2i1p1,...'
-	  
-	 :param maskMissingValues: Boolean value. Whether you want to mask missing values or not
-	 :param result_grid: Griddescription of resultgrid like r72x36
-	 :param cache: Path for cachedir during analysis    
-	 :param baseDir: Path of Class to find default files
-	 :param timeFreq: Timefrequency of the files, ie 'mon' or 'day'
+    :param ensemblemembers: Comma separated string of esemble members like 'r1i1p1,r2i1p1,...'
+      
+    :param maskMissingValues: Boolean value. Whether you want to mask missing values or not
+    :param result_grid: Griddescription of resultgrid like r72x36
+    :param cache: Path for cachedir during analysis    
+    :param baseDir: Path of Class to find default files
+    :param timeFreq: Timefrequency of the files, ie 'mon' or 'day'
+    :param basic_output: Boolean - If true only basic out is produced (CRPSS_ES and LESS).
     :param bootstrapSwitch: If you want calculating Significance using Bootstrap methods
-	 :param bootstrap_number: Number of Bootstrap runs    
+    :param bootstrap_number: Number of Bootstrap runs    
     :param leatimes_mode: 'monthly' or 'yearly' calculation
     :param level: For 3D-Files --> Select a single level
-	 :param lonlatbox: If you want to select a specific lonlat-Box   
-    :param fieldmean: Boolean - If you want to calculate field mean
+    :param lonlatbox: If you want to select a specific lonlat-Box   
+    :param fieldmean: Boolean - If you want to calculate field means
+    :param zonalmean: Boolean - If you want to calculate zonal means
+    
+    :param input_part: String - Will be added to output path and cache file
     
     :param colormap: Matplotlib Colormap used for ploting
     :param observation_type: NOT USED ANYMORE!!!
@@ -98,19 +102,21 @@ class Crpss(MetricAbstract):
                     ensemblemembers='*', 
                      
                     maskMissingValues = True,
-                    result_grid='r72x36', 
+                    result_grid=False, 
                     cache='/tmp/crpss/cache', 
                     baseDir = './', 
                     timeFreq = 'mon',  
                                         
-                    #for bootstrapping
-                    bootstrapSwitch=True,
+                    basic_output = True,
+		            #for bootstrapping
+                    bootstrapSwitch=False,
                     bootstrap_number = 2,
                     
                     leadtimes_mode = 'yearly',
                     level=None, 
                     lonlatbox='', 
                     fieldmean=False, 
+                    zonalmean=False,
                     
                     input_part = 'input1',
                     
@@ -126,9 +132,9 @@ class Crpss(MetricAbstract):
         #Add kwargs to attributes
         listOfAttributes = ['decadals','variable',
                             'project','product1','institute1','model','experiment', #input data
-                            'leadtimes','maskMissingValues','level','lonlatbox','fieldmean', 'observation_ensemble', 
+                            'leadtimes','maskMissingValues','level','lonlatbox','fieldmean', 'zonalmean', 'observation_ensemble', 
                             'bootstrapSwitch','bootstrap_number', #for bootstrapping
-                            'observation_type','colormap','timeFreq','input_part']  #not used 
+                            'observation_type','colormap','timeFreq','basic_output','input_part']  #not used 
         for attr in listOfAttributes:
             setattr(self, attr, locals()[attr])
 
@@ -145,7 +151,15 @@ class Crpss(MetricAbstract):
         
     def prepareInput(self):
         '''
+        This method is to search and prepare the input files. 
+        Integrated methods:
+        1. Searching files
+        2. Remapping
+        3. Selecting lonlatbox
+        4. Calculating fieldmean
+        5. Calculating zonalmean 
         
+        The prepared files are stored in "self.inputRemapped" and "self.observationRemapped"
         '''
         #TODO: find better way...
         self.findFiles.observation = self.observation  #WORKAROUND
@@ -163,41 +177,16 @@ class Crpss(MetricAbstract):
 
         self.inputRemapped = dict()
         self.observationRemapped = dict()
+        obslist_tmp = list()
         print "Remapping Files"
         for year in self.decadals:
             self.inputRemapped[year] = self._remapFiles(self.inputDict[year])
-            self.observationRemapped[year] = self.remapFile(self.observationDict[year])      
-
+            #self.observationRemapped[year] = self.remapFile(self.observationDict[year])  
+            obslist_tmp.append(self.observationDict[year])    
+        self.observationRemapped = self.listToYeardict(self._remapFiles(obslist_tmp))
+        
         #More than 1 ensemblemember found?
         self.checkEnsembleError(self.inputDict)  
-
-    def analyze(self):
-        '''
-        Main function to calculate the CRPSS after Goddard et al. (2012)
-        The following steps are performed:
-        
-        1. Searching Files
-        2. Remapping to coarser grid
-        3. Temporal Smoothing
-        4. Calculating ensemble means of hindcasts
-        5. Calculating cross-validated means of ensemblemembers
-        6. Calculating anomalies of hindcast and observations
-        7. Removing conditional bias
-        8. Calculating mean ensemble variance and reference STD
-        9. Calculating climatological standard deviation
-        10. Calculating CRPS for mean ensemble variance and for reference STD
-        11. Calculating CRPSS
-        12. Plotting        
-        '''
-        self.constant = self.createConstantFile(self.gridFile)
-        #check if prepare output was called or variables are set
-        try:
-            self.inputRemapped
-            self.observationRemapped
-        except AttributeError:
-            raise CrpssError, 'Please run "prepareIntput() first or provide input data'
-        
-        
 
         if self.lonlatbox is not None:
             print 'Selecting lon-lat-box %s' %(self.lonlatbox)
@@ -207,14 +196,67 @@ class Crpss(MetricAbstract):
         
         if self.fieldmean:
             print 'Calculating field mean'
+            missmask = self.getMissingMaskForFieldMean()
+            
             for year in self.decadals:
+                #Apply Missing value Mask to all fields
+                self.inputRemapped[year] = self.applyMissingMaskForFieldMean(self.inputRemapped[year], missmask)
+                self.observationRemapped[year] = self._applyMissingMaskForFieldMean(self.observationRemapped[year], missmask)
+                
                 self.inputRemapped[year] = self.fieldMean(self.inputRemapped[year])
                 self.observationRemapped[year] = self._fieldMean(self.observationRemapped[year]) 
+                
         
+        #self.zonalmean = True
+        if self.zonalmean:
+            print 'Calculating zonal mean'
+            level_intersection = self.getLevelIntersection(self.observationRemapped[self.decadals[0]], self.inputRemapped[self.decadals[0]][0])
+            print 'Common levels: %s' % (','.join(level_intersection))
+            for year in self.decadals:
+                self.observationRemapped[year] = cdo.zonmean(input=self.observationRemapped[year], output=self.observationRemapped[year]+'_zonmean')
+                self.observationRemapped[year] = cdo.sellevel(','.join(level_intersection), input=self.observationRemapped[year], output=self.observationRemapped[year]+'sellevel')
+                
+                self.inputRemapped = self.multiProcessCdo(self.inputRemapped[year], 'zonmean')
+                self.inputRemapped[year] = self.multiProcessCdo(self.inputRemapped[year], 'sellevel', ','.join(level_intersection))
+#                
+#                tmpList = list()
+#                for fn in self.inputRemapped[year]:
+#                    tmp_file = cdo.zonmean(input=fn,output=fn+'_zonmean')
+#                    tmpList.append(cdo.sellevel(','.join(level_intersection), input=tmp_file, output=tmp_file+'sellevel'))
+#                self.inputRemapped[year] = tmpList
+
+        
+    def analyze(self):
+        '''
+        Main function to calculate the CRPSS after Goddard et al. (2012)
+        It also calculates the ESS and LESS after Kadow et al. (2015)
+        The following steps are performed:
+        
+        1. Temporal Smoothing
+        2. Calculating ensemble means of hindcasts
+        3. Calculating cross-validated means of ensemblemembers
+        4. Calculating anomalies of hindcast and observations
+        5. Removing conditional bias
+        6. Calculating mean ensemble variance and reference STD
+        7. Calculating climatological standard deviation
+        8. Calculating CRPS for mean ensemble variance and for reference STD
+        9. Calculating CRPSS
+        10. Calculating Ensemble Spread Score (ESS) and Logarithmic ESS
+        11. Plotting        
+        '''
+        self.constant = self.createConstantFile(self.gridFile)
+        #check if prepare output was called or variables are set
+        try:
+            self.inputRemapped
+            self.observationRemapped
+        except AttributeError:
+            raise CrpssError, 'Please run "prepareIntput() first or provide input data'
+
         #get missing value mask
-        if self.maskMissingValues:
+        if not self.fieldmean and self.maskMissingValues:
             self.misvalMask = self.calcMissingValueMask(self.observationRemapped)
-        
+        else:
+            self.misvalMask = self.constant
         #escape attributes 
         self.escapeAttributes()
 
@@ -226,7 +268,11 @@ class Crpss(MetricAbstract):
         for yearRange in temporalSmoothing:
             startyear = yearRange[0]
             endyear = yearRange[1]
-            print '--------------\nAnalyzing year %s to %s\n--------------' % (startyear, endyear)
+            if startyear == endyear:
+                print '--------------\nAnalyzing leadtime %s\n--------------' %(startyear)
+            else:
+                print '--------------\nAnalyzing leadtime %s to %s\n--------------' %(startyear, endyear)
+            #print '--------------\nAnalyzing year %s to %s\n--------------' % (startyear, endyear)
             rangeStr = '%s-%s' % (startyear, endyear)  
             tempSmoothedEns = dict()
             tempSmoothedObs = dict()
@@ -235,8 +281,8 @@ class Crpss(MetricAbstract):
             tmp_outplot = self.outputPlots 
             flag1 = self.constructName(self.insideFolderNameFlag,exp='1',extra=self.input_part)
             fnFlag1 = self.constructName(self.fileNameFlag, exp='1', startYear=str(startyear), endYear=str(endyear))
-            self.outputDir = self.makeFolder(self.outputDir+'%s/%s/crpss'%(rangeStr,flag1))
-            self.outputPlots = self.makeFolder(self.outputPlots+'%s/%s/crpss'%(rangeStr,flag1))
+            self.outputDir = self.makeFolder(self.outputDir+'%s/%s/ensemble_spread'%(rangeStr,flag1))
+            self.outputPlots = self.makeFolder(self.outputPlots+'%s/%s/ensemble_spread'%(rangeStr,flag1))
             
             print "Temporal Smoothing"
             for year in self.decadals:
@@ -309,11 +355,14 @@ class Crpss(MetricAbstract):
             print 'Calculating CRPSS'
             #print ensvarSelYear
             #print ensvarRefSelYear
-            ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
-            ensemblespreadscore_ln = cdo.ln(input=ensemblespreadscore, output = self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc')
+            ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror_tmp.nc')
+            ensemblespreadscore_ln = cdo.ln(input=cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror.nc'), output = self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc',options='-b 64')
             crpss =  self.getCrpss(crpsEns, crpsRef, '_'.join([fnFlag1,'ens-vs-ref']))
-            crpssEC =  self.getCrpss(crpsEns, crpsClim, '_'.join([fnFlag1,'ens-vs-clim']))
-            crpssRC =  self.getCrpss(crpsRef, crpsClim, '_'.join([fnFlag1,'ref-vs-clim']))
+            
+            if not self.basic_output:
+                ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
+                crpssEC =  self.getCrpss(crpsEns, crpsClim, '_'.join([fnFlag1,'ens-vs-clim']))
+                crpssRC =  self.getCrpss(crpsRef, crpsClim, '_'.join([fnFlag1,'ref-vs-clim']))
             
             
             
@@ -321,35 +370,77 @@ class Crpss(MetricAbstract):
             filesToPlot = self.applyMissingValueMask(str(startyear), str(endyear), [self.outputDir])
             #print filesToPlot
             if self.maskMissingValues:
-                ensemblespreadscore = filesToPlot[0]
-                ensemblespreadscore_ln = filesToPlot[1]
-                crpss = filesToPlot[2]
-                crpssEC = filesToPlot[3]
-                crpssRC = filesToPlot[4]
+                if self.basic_output:
+                    ensemblespreadscore = cdo.mul(input=' '.join([ensemblespreadscore,self.misvalMask]),output=ensemblespreadscore+'miss_val')
+                    crpss = filesToPlot[1]
+                    ensemblespreadscore_ln = filesToPlot[0]
+                else:
+                    ensemblespreadscore = filesToPlot[0]
+                    ensemblespreadscore_ln = filesToPlot[1]
+                    crpss = filesToPlot[2]
+                    crpssEC = filesToPlot[3]
+                    crpssRC = filesToPlot[4]
             
-            if not self.fieldmean:
+            if self.fieldmean:
+                try:
+                    fieldmean_files.append(filesToPlot)
+                except:
+                    fieldmean_files = [filesToPlot]
+            elif self.zonalmean:
                 if self.bootstrapSwitch:
                     print 'Bootstrapping'
                     b_ens_ref = self.bootstrap(crpsEns, crpsRef, 'ens-vs-ref_'+rangeStr, crpss, self.bootstrap_number, plot_range=[-0.5,0.], colorbar='goddard')
-                    b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
-                    b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
+                    if not self.basic_output:
+                        b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
+                        b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
+                    self.bootstrapEnsembleSpreadscore(ensAnoms, anomalies, tempSmoothedObs, ensemblespreadscore, self.bootstrap_number, ensemblespreadscore_ln)
+                else:
+                    Plotter.plotVerticalProfile(crpss, -0.5, 0., 'goddard', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpss))
+                    Plotter.plotVerticalProfile(ensemblespreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore_ln))
+                    if not self.basic_output:
+                        Plotter.plotVerticalProfile(crpssEC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(crpssEC))
+                        Plotter.plotVerticalProfile(crpssRC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(crpssRC))
+                        Plotter.plotVerticalProfile(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
+            else:
+                if self.bootstrapSwitch:
+                    print 'Bootstrapping'
+                    b_ens_ref = self.bootstrap(crpsEns, crpsRef, 'ens-vs-ref_'+rangeStr, crpss, self.bootstrap_number, plot_range=[-0.5,0.], colorbar='goddard')
+                    if not self.basic_output:
+                        b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
+                        b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
                     self.bootstrapEnsembleSpreadscore(ensAnoms, anomalies, tempSmoothedObs, ensemblespreadscore, self.bootstrap_number, ensemblespreadscore_ln)
     #                Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
     #                Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
                 else:
                     Plotter.plotField(crpss, -0.5, 0., 'goddard', lonlatbox=self.lonlatbox)
                     Plotter.saveFig(self.outputPlots, self.extractFilename(crpss))
-                    Plotter.plotField(crpssEC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpssEC))
-                    Plotter.plotField(crpssRC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-                    Plotter.saveFig(self.outputPlots, self.extractFilename(crpssRC))
-                    Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
-                    Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
                     Plotter.plotField(ensemblespreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
                     Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore_ln))
+                    if not self.basic_output:
+                        Plotter.plotField(crpssEC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(crpssEC))
+                        Plotter.plotField(crpssRC, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(crpssRC))
+                        Plotter.plotField(ensemblespreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                        Plotter.saveFig(self.outputPlots, self.extractFilename(ensemblespreadscore))
+
                 
-            self.outputDir =tmp_outdir
+            self.outputDir = tmp_outdir
             self.outputPlots = tmp_outplot
+    
+        if self.fieldmean:
+            outputPlots = self.outputPlots+'ensemble_spread/'
+            self.makeFolder(outputPlots)
+            flag1 = self.constructName(self.fileNameFlag, exp='1', startYear='1', endYear='1')
+            flag1 = flag1[4:]
+            plot_list = [('ensspread_vs_referror','Logarithmic Ensemble Spread Score',[-1,1]),('ens-vs-ref_crpss','Continous Ranked Probabillity Score',[-0.5,0])]
+            Plotter.plotLeadtimeseries(fieldmean_files,[flag1],plot_list)
+            Plotter.saveFig(outputPlots, flag1+'ensemble_spread_leadtimeseries')
     
     def removeConditionalBiasNew(self, hindcast, observations, ensembleMembers):
         '''
@@ -393,6 +484,9 @@ class Crpss(MetricAbstract):
         return biasCorrected
     
     def _removeConditionalBias(self, hindcast, bias, ensembleMembers):
+        '''
+        This is the single process version of removeConditionalBias
+        '''
         shift = cdo.mul(input=' '.join([hindcast, cdo.subc('1', input=bias, output=hindcast+'_bias_shift')]),
                         output=hindcast+'_shift')
         newList = list()
@@ -404,8 +498,6 @@ class Crpss(MetricAbstract):
     def getCrps(self, hindcast, observation, variances, tag):
         '''
         Calculates crpss for dictionarys after Gneiting and Raferty (2007)
-        
-        :todo: Could be done in multiprocessing
         
         :param hindcast: dict of anomaly conditional bias corrected hindcast
         :param observation: dict of anomaly observation
@@ -444,21 +536,12 @@ class Crpss(MetricAbstract):
             
         xCopy = np.ma.masked_greater(x, 0.8e20)
         varVar = FileHandler.openNetCDFFile(variance, mode='var')
-        #Calculation of CRPS after Gneiting and Raferty  
-        #print x.shape
+        
         x = x.squeeze()
         xCopy = xCopy.squeeze()
-        #print xCopy.shape
-        #print x.shape
-        #print varVar.shape
         crps = - varVar * (1/np.sqrt(np.pi) - 2. * stats.norm.pdf(x) - x * (2. * stats.norm.cdf(x) - 1.))
-        #print '1'
         crps = np.ma.array(crps, mask=xCopy.mask, fill_value=1e20)
         crps = crps.filled(1e20)
-        #print '2'
-        #crps = np.expand_dims(crps,axis=1)
-        #crps = np.expand_dims(crps,axis=1)
-        #print crps.shape
         crpsFile = FileHandler.saveToNetCDF(crps, hindcast, 'crps'+tag) 
         return crpsFile
     
@@ -496,6 +579,10 @@ class Crpss(MetricAbstract):
    
    
     def bootstrap(self, crps, crpsRef, tag, crpss, bootstrap_number=500, plot_range=[-1,1], colorbar='RdBu_r'):
+        '''
+        Bootstrap function to calculate significance crosses for crpss and other metrics. 
+        It also plots the fields with significance crosses
+        '''
         tmpDir = self.outputDir
         self.outputDir = self.tmpDir + 'bootstrap_' + tag + '/'
         if not os.path.isdir(self.outputDir):
@@ -508,20 +595,21 @@ class Crpss(MetricAbstract):
         
         significance = Significance(self.tmpDir, self.outputPlots)
         (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, crpss)
-        
-#        if tag == 'ens-vs-ref_':
-#            m = Plotter.plotField(crpss, -0.5, 0.5, 'RdBu_r', lonlatbox=self.lonlatbox)
-#        else:
-#            m = Plotter.plotField(crpss, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-        m = Plotter.plotField(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
-        
-        Plotter.addCrosses(m, sig_lon, sig_lat)
+        if self.zonalmean:
+            m = Plotter.plotVerticalProfile(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
+            Plotter.addCrossesXY(m, crpss+'_significance_mask')
+
+        else:
+            m = Plotter.plotField(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
+            Plotter.addCrosses(m, sig_lon, sig_lat)
         Plotter.saveFig(self.outputPlots, crpss.split('/')[-1])
             
         return bootstrapList   
     
     def _multiBootstrap(self, crps, crpsRef, tag, crpss, i):
-        
+        '''
+        Single process version used in crpss.bootstrap
+        '''
         tmp_crps = dict()
         tmp_crps_ref = dict()
         for year in self.decadals:
@@ -553,6 +641,9 @@ class Crpss(MetricAbstract):
         return tmp_spreadscore 
     
     def bootstrapEnsembleSpreadscore(self, ensAnoms, anomalies, tempSmoothedObs, spreadscore, bootstrap_number, spreadscore_ln):
+        '''
+        Bootstrapping method for ESS and LESS
+        '''
         print 'Bootstrapping spreadscore'
         tmpDir = self.tmpDir + 'bootstrap_ensspread/'
         if not os.path.isdir(tmpDir):
@@ -577,15 +668,23 @@ class Crpss(MetricAbstract):
    
         significance = Significance(self.tmpDir, self.outputPlots)
         (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, spreadscore, check_value=1)
-        m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
-        Plotter.addCrosses(m, sig_lon, sig_lat)
-        Plotter.saveFig(self.outputPlots, spreadscore.split('/')[-1])
+        if not self.basic_output:
+            if self.zonalmean:
+                m = Plotter.plotVerticalProfile(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                Plotter.addCrossesXY(m, spreadscore+'_significance_mask')
+            else:
+                m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                Plotter.addCrosses(m, sig_lon, sig_lat)
+            Plotter.saveFig(self.outputPlots, spreadscore.split('/')[-1])
         
-        m = Plotter.plotField(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-        Plotter.addCrosses(m, sig_lon, sig_lat)
+        if self.zonalmean:
+            m = Plotter.plotVerticalProfile(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+            Plotter.addCrossesXY(m, spreadscore+'_significance_mask')
+        else:
+            m = Plotter.plotField(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
+            Plotter.addCrosses(m, sig_lon, sig_lat)
         Plotter.saveFig(self.outputPlots, spreadscore_ln.split('/')[-1])
-        
-            
+         
         return bootstrapList  
         
     
