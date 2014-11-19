@@ -42,7 +42,7 @@ class FileHandler(object):
         :param name: name of dimension
         :param var_type: type of dimenstion (double, float, ...)
         '''
-        f.createDimension(name,len(value))
+	f.createDimension(name,len(value))
         dim_var = f.createVariable(name,var_type,(name,))
         dim_var[:] = value
         return dim_var
@@ -60,11 +60,11 @@ class FileHandler(object):
         shutil.copyfile(fn, new_fn)
         f_org = netcdf.netcdf_file(fn,'r')
         try:
-            lat_org = f_org.variables['lat'].data
-            lon_org = f_org.variables['lon'].data
+            lat_org = FileHandler.getVariableValue(f_org.variables['lat'])#.data
+            lon_org = FileHandler.getVariableValue(f_org.variables['lon'])#.data
         except:
-            lat_org = f_org.variables['Y'].data
-            lon_org = f_org.variables['X'].data
+            lat_org = FileHandler.getVariableValue(f_org.variables['Y'])#.data
+            lon_org = FileHandler.getVariableValue(f_org.variables['X'])#.data
         #time_org = f_org.variables['time']
 
         varname = cdo.showname(input=fn)[0]

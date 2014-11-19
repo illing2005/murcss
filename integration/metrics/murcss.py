@@ -32,7 +32,7 @@ def getMurcssDict():
     '''Standard input of Murcss'''
     return dict(output='/tmp/murcss/output', output_plots='/tmp/murcss/plots', decadals='1960,1965,1970,1975,1980,1985', 
             variable='tas', cache='/tmp/murcss/cache', baseDir='..', maskMissingValues=True, model1='mpi-esm-lr', 
-            model2='mpi-esm-lr', project1='initialized', project2='uninitialized', observation='HadCrut', product1='initialized', product2='uninitialized', 
+            analysis_type='basic', output_type='map', model2='mpi-esm-lr', project1='miklip', project2='miklip', observation='HadCrut', product1='initialized', product2='uninitialized', 
             ensemblemembers1='*', ensemblemembers2='*', institute1='mpi-m', institute2='mpi-m', leadtimes='1,2-5', experiment1='initialized', experiment2='uninitialized',
             result_grid='r72x36', level=None, lonlatbox=None, fieldmean=None, significance=False, bootstrap_number=100, metrics='all')
 
@@ -54,6 +54,14 @@ metrics           (default: all) [mandatory]
                   Here you can specify which metrics you want to calculate.
                   "accuracy": MSESS, Correlation, Conditional Bias.
                   "ensemble_spread": CRPSS, ESS
+analysis_type     (default: 'map')
+		  You can choose the output type of the analysis. Valid
+                  options are "map", "fieldmean", and "zonalmean
+output_type       (default: 'basic')
+		  Basic only the basic plots like correlation, msess,
+                  conditional bias, less, and crpss are produced. If you
+                  choose additional, basic and additional plots will be
+                  produced. For more information see read the documentation
 decadals          Specify the experiments you want to use. I.e.
                   1960,1965,1970,..,1995.
 variable          (default: "tas") [mandatory]
@@ -105,7 +113,10 @@ maskMissingValues (default: True)
 cache             (default: "/tmp/murcss/cache/")
                   Workdir
 result_grid       (default: <undefined>)
-                  You can specify a gridfile or a grid description like r72x36""" % (__version__)
+                  You can specify a gridfile or a grid description like r72x36
+months            (default: <undefined>)
+                  If you analyze "seasonal" files and the experiment name
+                  contains a month""" % (__version__)
 
 def main(argv=None): # IGNORE:C0111
     '''Command line options.'''
@@ -129,6 +140,23 @@ def main(argv=None): # IGNORE:C0111
     murcss_dict['decadals'] = map(int,murcss_dict['decadals'].split(','))
     murcss_dict['bootstrap_number'] = int(murcss_dict['bootstrap_number'])
     
+    analysis_type = murcss_dict.pop('analysis_type')
+    if analysis_type == 'map':
+        murcss_dict['fieldmean'] = False
+        murcss_dict['zonalmean'] = False
+    elif analysis_type == 'fieldmean':
+        murcss_dict['fieldmean'] = True
+        murcss_dict['zonalmean'] = False
+    elif analysis_type == 'zonalmean':
+        murcss_dict['fieldmean'] = False
+        murcss_dict['zonalmean'] = True     
+
+    output_type = murcss_dict.pop('output_type')
+    if output_type == 'basic':
+        murcss_dict['basic_output'] = True
+    else:
+        murcss_dict['basic_output'] = False
+
     #Check for right metics value
     metrics = murcss_dict.pop('metrics')
     if metrics not in ['all','accuracy','ensemble_spread']:
@@ -158,7 +186,7 @@ def main(argv=None): # IGNORE:C0111
         print '#######################'
         crpss1 = Crpss(output=murcss_dict['output'], 
                            output_plots=murcss_dict['output_plots'], 
-                           
+                           basic_output=murcss_dict['basic_output'],
                            decadals=murcss_dict['decadals'],
                            variable=murcss_dict['variable'], 
                            
@@ -179,7 +207,7 @@ def main(argv=None): # IGNORE:C0111
                            level=murcss_dict['level'], 
                            lonlatbox=murcss_dict['lonlatbox'], 
                            fieldmean=murcss_dict['fieldmean'],
-                           
+                           zonalmean=murcss_dict['zonalmean'],
                            cache=murcss_dict['cache'], 
                            
                            baseDir = murcss_dict['baseDir'])
@@ -194,7 +222,7 @@ def main(argv=None): # IGNORE:C0111
         print '#######################'    
         crpss2 = Crpss(output=murcss_dict['output'], 
                            output_plots=murcss_dict['output_plots'], 
-                           
+                           basic_output=murcss_dict['basic_output'],
                            decadals=murcss_dict['decadals'],
                            variable=murcss_dict['variable'], 
                            
@@ -215,7 +243,7 @@ def main(argv=None): # IGNORE:C0111
                            level=murcss_dict['level'], 
                            lonlatbox=murcss_dict['lonlatbox'], 
                            fieldmean=murcss_dict['fieldmean'],
-                           
+                           zonalmean=murcss_dict['zonalmean'],
                            cache=murcss_dict['cache'], 
                            input_part='input2',
                            baseDir = murcss_dict['baseDir'])

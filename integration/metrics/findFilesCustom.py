@@ -74,7 +74,7 @@ class FindFilesCustom(FindFilesAbstract):
                        'ensemble':ensemblemembers,                     
                        })
         #search_dict.update(locals())
-
+	
         local_path = bl['root_dir']
         for key in bl['parts_dir']:
             if key in search_dict:
@@ -89,12 +89,13 @@ class FindFilesCustom(FindFilesAbstract):
             #which are not in the defaults. Those are "strange" to the selected structure.
             mesg = "Unknown parameter(s) %s " % (','.join(search_dict))
             raise WrongDrsStruct, mesg
-
+	
         files = list()
         for path in glob.iglob(local_path):
             files.append(path)
         #print local_path
-        if len(files)==0:
+        #print files
+	if len(files)==0:
             raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s for starting year %s" % (variable, fileType, model, product, year)
        
         output = list() 
