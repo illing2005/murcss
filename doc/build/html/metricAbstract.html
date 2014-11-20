@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>metrics.metricAbstract &mdash; MurCSS 1.5.0 documentation</title>
+    <title>metrics.metricAbstract &mdash; MurCSS 1.6.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.5.0',
+        VERSION:     '1.6.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" />
+    <link rel="top" title="MurCSS 1.6.1 documentation" href="index.html" />
     <link rel="up" title="MurCSS Tool" href="goddard.html" />
     <link rel="next" title="FindFiles" href="findfiles.html" />
     <link rel="prev" title="metrics.crpss" href="crpss.html" /> 
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="crpss.html" title="metrics.crpss"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>  
@@ -436,6 +436,18 @@ At the moment all gridpoints are masked at missing value where at least one valu
 </dd></dl>
 
 <dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.multiProcessCdo">
+<tt class="descname">multiProcessCdo</tt><big>(</big><em>fileList</em>, <em>cdo_command</em>, <em>arguments=''</em><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.multiProcessCdo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi Process Wrapper for &#8220;single&#8221; cdo commands like &#8220;fldmeam&#8221; with 1 input and 1 output file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._singleProcessCdo">
+<tt class="descname">_singleProcessCdo</tt><big>(</big><em>fn</em>, <em>cdo_command</em>, <em>arguments=''</em><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._singleProcessCdo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single Process Wrapper for &#8220;single&#8221; cdo commands like &#8220;fldmeam&#8221; with 1 input and 1 output file</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="metrics.metricAbstract.MetricAbstract._plotField">
 <tt class="descname">_plotField</tt><big>(</big><em>fileName</em>, <em>vmin</em>, <em>vmax</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract._plotField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._plotField" title="Permalink to this definition">¶</a></dt>
 <dd><p>&#64;deprecated: use the static Plotter class instead
@@ -484,6 +496,40 @@ Plot any field variable</p>
 <tt class="descname">detrendTimeSeries</tt><big>(</big><em>fn</em>, <em>keepMean=True</em><big>)</big><a class="reference internal" href="_modules/metrics/metricAbstract.html#MetricAbstract.detrendTimeSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.detrendTimeSeries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subtracts trend of a timeseries. 
 If keepMean is True the mean is kept</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getMissingMaskForFieldMean">
+<tt class="descname">getMissingMaskForFieldMean</tt><big>(</big><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getMissingMaskForFieldMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>If we calculate field mean we have to take the missing values of the observations into account.
+In this method the missing field mask of all observations is calculated. 
+DON&#8217;T mix it up with calcMissingValueMask</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.applyMissingMaskForFieldMean">
+<tt class="descname">applyMissingMaskForFieldMean</tt><big>(</big><em>fileList</em>, <em>missmask</em><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.applyMissingMaskForFieldMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply missing value mask to a list of files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract._applyMissingMaskForFieldMean">
+<tt class="descname">_applyMissingMaskForFieldMean</tt><big>(</big><em>data</em>, <em>missmask</em><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract._applyMissingMaskForFieldMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply missing value mask to a file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.metricAbstract.MetricAbstract.getLevelIntersection">
+<tt class="descname">getLevelIntersection</tt><big>(</big><em>fn1</em>, <em>fn2</em>, <em>fn3=None</em><big>)</big><a class="headerlink" href="#metrics.metricAbstract.MetricAbstract.getLevelIntersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes 2 3d netcdf files and calculates common levels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of common levels</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -545,7 +591,7 @@ If keepMean is True the mean is kept</p>
         <li class="right" >
           <a href="crpss.html" title="metrics.crpss"
              >previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>

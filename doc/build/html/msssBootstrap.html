@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>metrics.msssBootstrap &mdash; MurCSS 1.5.0 documentation</title>
+    <title>metrics.msssBootstrap &mdash; MurCSS 1.6.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.5.0',
+        VERSION:     '1.6.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" /> 
+    <link rel="top" title="MurCSS 1.6.1 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -33,7 +33,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -49,7 +49,7 @@
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">msssBootstrap</span></tt> Module<a class="headerlink" href="#msssbootstrap-module" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="metrics.msssBootstrap.MsssBootstrap">
-<em class="property">class </em><tt class="descclassname">metrics.msssBootstrap.</tt><tt class="descname">MsssBootstrap</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">metrics.msssBootstrap.</tt><tt class="descname">MsssBootstrap</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>basic_output=True</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>zonalmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msssBootstrap.html#MsssBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msssBootstrap.MsssBootstrap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class with special method for bootstrapping</p>
 <dl class="method">
 <dt id="metrics.msssBootstrap.MsssBootstrap._prepareBootstrap">
@@ -178,7 +178,7 @@ The field is also plotted with significance crosses</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

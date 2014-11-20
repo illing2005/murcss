@@ -23,7 +23,7 @@ MurCSS needs some additional python packages. If you install MurCSS using pypi, 
    *  Basemap
    *  NumPy >= 1.5.0
    *  SciPy >= 0.8.0
-   *  CDOpy
+   *  CDOpy (is now included in MurCSS sources)
    *  scientificpython
 
 Additionally MurCSS requires a working binary of the Climate Data Operators ( `CDO >= 1.5.4 <https://code.zmaw.de/projects/cdo>`_ ).

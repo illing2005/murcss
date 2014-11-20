@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>metrics.crpss &mdash; MurCSS 1.5.0 documentation</title>
+    <title>metrics.crpss &mdash; MurCSS 1.6.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.5.0',
+        VERSION:     '1.6.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MurCSS 1.5.0 documentation" href="../../index.html" />
+    <link rel="top" title="MurCSS 1.6.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -34,7 +34,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -421,7 +421,7 @@
         <span class="n">biasCorrected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listToYeardict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">multiProcess</span><span class="p">(</span><span class="n">poolArgs</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">biasCorrected</span>
     </div>
-    <span class="k">def</span> <span class="nf">_removeConditionalBias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hindcast</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">ensembleMembers</span><span class="p">):</span>
+<div class="viewcode-block" id="Crpss._removeConditionalBias"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss._removeConditionalBias">[docs]</a>    <span class="k">def</span> <span class="nf">_removeConditionalBias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hindcast</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">ensembleMembers</span><span class="p">):</span>
         <span class="n">shift</span> <span class="o">=</span> <span class="n">cdo</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">hindcast</span><span class="p">,</span> <span class="n">cdo</span><span class="o">.</span><span class="n">subc</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="o">+</span><span class="s">&#39;_bias_shift&#39;</span><span class="p">)]),</span>
                         <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="o">+</span><span class="s">&#39;_shift&#39;</span><span class="p">)</span>
         <span class="n">newList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -429,7 +429,7 @@
             <span class="n">newList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdo</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">shift</span><span class="p">]),</span> <span class="n">output</span><span class="o">=</span><span class="n">f</span><span class="o">+</span><span class="s">&#39;_BIASCORRECTED2&#39;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">newList</span>  
         
-            
+            </div>
 <div class="viewcode-block" id="Crpss.getCrps"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss.getCrps">[docs]</a>    <span class="k">def</span> <span class="nf">getCrps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hindcast</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Calculates crpss for dictionarys after Gneiting and Raferty (2007)</span>
@@ -524,7 +524,7 @@
         <span class="k">return</span> <span class="n">cdo</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">cdo</span><span class="o">.</span><span class="n">divc</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">varSum</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="nb">input</span><span class="o">=</span><span class="n">rms</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;divc&#39;</span><span class="p">),</span> <span class="n">output</span><span class="o">=</span><span class="n">hindcast</span><span class="p">[</span><span class="n">year</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">getRandomStr</span><span class="p">()</span><span class="o">+</span><span class="s">&#39;refStd&#39;</span><span class="p">)</span>
    
    </div>
-    <span class="k">def</span> <span class="nf">bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crps</span><span class="p">,</span> <span class="n">crpsRef</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">crpss</span><span class="p">,</span> <span class="n">bootstrap_number</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">plot_range</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">colorbar</span><span class="o">=</span><span class="s">&#39;RdBu_r&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="Crpss.bootstrap"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss.bootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">bootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crps</span><span class="p">,</span> <span class="n">crpsRef</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">crpss</span><span class="p">,</span> <span class="n">bootstrap_number</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">plot_range</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">colorbar</span><span class="o">=</span><span class="s">&#39;RdBu_r&#39;</span><span class="p">):</span>
         <span class="n">tmpDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">+</span> <span class="s">&#39;bootstrap_&#39;</span> <span class="o">+</span> <span class="n">tag</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span><span class="p">):</span>
@@ -548,8 +548,8 @@
         <span class="n">Plotter</span><span class="o">.</span><span class="n">saveFig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPlots</span><span class="p">,</span> <span class="n">crpss</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
             
         <span class="k">return</span> <span class="n">bootstrapList</span>   
-    
-    <span class="k">def</span> <span class="nf">_multiBootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crps</span><span class="p">,</span> <span class="n">crpsRef</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">crpss</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    </div>
+<div class="viewcode-block" id="Crpss._multiBootstrap"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss._multiBootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">_multiBootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crps</span><span class="p">,</span> <span class="n">crpsRef</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">crpss</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         
         <span class="n">tmp_crps</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="n">tmp_crps_ref</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -559,7 +559,7 @@
             <span class="n">tmp_crps_ref</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">crpsRef</span><span class="p">[</span><span class="n">choice_year</span><span class="p">]</span>
                 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCrpss</span><span class="p">(</span><span class="n">tmp_crps</span><span class="p">,</span> <span class="n">tmp_crps_ref</span><span class="p">,</span> <span class="n">tag</span><span class="o">+</span><span class="s">&#39;bootstrap_number_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> 
-    
+    </div>
 <div class="viewcode-block" id="Crpss._multiEnsspreadBootstrap"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss._multiEnsspreadBootstrap">[docs]</a>    <span class="k">def</span> <span class="nf">_multiEnsspreadBootstrap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensAnoms</span><span class="p">,</span> <span class="n">anomalies</span><span class="p">,</span> <span class="n">tempSmoothedObs</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        TODO: Not working!!!</span>
@@ -581,7 +581,7 @@
         
         <span class="k">return</span> <span class="n">tmp_spreadscore</span> 
     </div>
-    <span class="k">def</span> <span class="nf">bootstrapEnsembleSpreadscore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensAnoms</span><span class="p">,</span> <span class="n">anomalies</span><span class="p">,</span> <span class="n">tempSmoothedObs</span><span class="p">,</span> <span class="n">spreadscore</span><span class="p">,</span> <span class="n">bootstrap_number</span><span class="p">,</span> <span class="n">spreadscore_ln</span><span class="p">):</span>
+<div class="viewcode-block" id="Crpss.bootstrapEnsembleSpreadscore"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss.bootstrapEnsembleSpreadscore">[docs]</a>    <span class="k">def</span> <span class="nf">bootstrapEnsembleSpreadscore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensAnoms</span><span class="p">,</span> <span class="n">anomalies</span><span class="p">,</span> <span class="n">tempSmoothedObs</span><span class="p">,</span> <span class="n">spreadscore</span><span class="p">,</span> <span class="n">bootstrap_number</span><span class="p">,</span> <span class="n">spreadscore_ln</span><span class="p">):</span>
         <span class="k">print</span> <span class="s">&#39;Bootstrapping spreadscore&#39;</span>
         <span class="n">tmpDir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmpDir</span> <span class="o">+</span> <span class="s">&#39;bootstrap_ensspread/&#39;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">tmpDir</span><span class="p">):</span>
@@ -617,7 +617,7 @@
             
         <span class="k">return</span> <span class="n">bootstrapList</span>  
         
-    
+    </div>
 <div class="viewcode-block" id="Crpss.checkEnsembleError"><a class="viewcode-back" href="../../crpss.html#metrics.crpss.Crpss.checkEnsembleError">[docs]</a>    <span class="k">def</span> <span class="nf">checkEnsembleError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensList</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Checks if enough ensemblemembers are selected for analysis</span>
@@ -660,7 +660,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../../index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>

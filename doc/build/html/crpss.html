@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>metrics.crpss &mdash; MurCSS 1.5.0 documentation</title>
+    <title>metrics.crpss &mdash; MurCSS 1.6.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.5.0',
+        VERSION:     '1.6.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" />
+    <link rel="top" title="MurCSS 1.6.1 documentation" href="index.html" />
     <link rel="up" title="MurCSS Tool" href="goddard.html" />
     <link rel="next" title="metrics.metricAbstract" href="metricAbstract.html" />
     <link rel="prev" title="metrics.msss" href="msss.html" /> 
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="msss.html" title="metrics.msss"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>  
@@ -70,7 +70,7 @@ of <a class="reference external" href="http://link.springer.com/article/10.1007%
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">CRPSS</span></tt> Module<a class="headerlink" href="#crpss-module" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="metrics.crpss.Crpss">
-<em class="property">class </em><tt class="descclassname">metrics.crpss.</tt><tt class="descname">Crpss</tt><big>(</big><em>output='/tmp/crpss/output'</em>, <em>output_plots='/tmp/crpss/plots'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project='baseline0'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model='mpi-esm-lr'</em>, <em>experiment='decadal'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>ensemblemembers='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid='r72x36'</em>, <em>cache='/tmp/crpss/cache'</em>, <em>baseDir='./'</em>, <em>timeFreq='mon'</em>, <em>bootstrapSwitch=True</em>, <em>bootstrap_number=2</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=''</em>, <em>fieldmean=False</em>, <em>input_part='input1'</em>, <em>colormap='goddard'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">metrics.crpss.</tt><tt class="descname">Crpss</tt><big>(</big><em>output='/tmp/crpss/output'</em>, <em>output_plots='/tmp/crpss/plots'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project='baseline0'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model='mpi-esm-lr'</em>, <em>experiment='decadal'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>ensemblemembers='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=False</em>, <em>cache='/tmp/crpss/cache'</em>, <em>baseDir='./'</em>, <em>timeFreq='mon'</em>, <em>basic_output=True</em>, <em>bootstrapSwitch=False</em>, <em>bootstrap_number=2</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=''</em>, <em>fieldmean=False</em>, <em>zonalmean=False</em>, <em>input_part='input1'</em>, <em>colormap='goddard'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to calculate the CRPSS. Call method &#8220;analyze&#8221; to get results</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -85,41 +85,24 @@ of <a class="reference external" href="http://link.springer.com/article/10.1007%
 <li><strong>product1</strong> &#8211; CMOR-Parameter</li>
 <li><strong>institute1</strong> &#8211; CMOR-Name of the institute like MPI-M</li>
 <li><strong>model</strong> &#8211; CMOR-Name of the used model like MPI-ESM-LR</li>
-<li><strong>experiment</strong> &#8211; <p>Experiment name like decs4e or historical</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name" colspan="2">param leadtimes:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Leadtimes to analyze, ie. 1,2-9</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">param observation:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body">Observation or Reanalysis Experiment, HadCrut or ERA-Int or path to observation file</td>
-</tr>
-<tr class="field-odd field"><th class="field-name" colspan="2">param ensemblemembers:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Comma separated string of esemble members like &#8216;r1i1p1,r2i1p1,...&#8217;</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">param maskMissingValues:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body">Boolean value. Whether you want to mask missing values or not</td>
-</tr>
-<tr class="field-odd field"><th class="field-name" colspan="2">param result_grid:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Griddescription of resultgrid like r72x36</td>
-</tr>
-<tr class="field-even field"><th class="field-name">param cache:</th><td class="field-body">Path for cachedir during analysis</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">param baseDir:</th><td class="field-body">Path of Class to find default files</td>
-</tr>
-<tr class="field-even field"><th class="field-name">param timeFreq:</th><td class="field-body">Timefrequency of the files, ie &#8216;mon&#8217; or &#8216;day&#8217;</td>
-</tr>
-</tbody>
-</table>
-</li>
-<li><strong>bootstrapSwitch</strong> &#8211; If you want calculating Significance using Bootstrap methods
-:param bootstrap_number: Number of Bootstrap runs</li>
+<li><strong>experiment</strong> &#8211; Experiment name like decs4e or historical</li>
+<li><strong>leadtimes</strong> &#8211; Leadtimes to analyze, ie. 1,2-9</li>
+<li><strong>observation</strong> &#8211; Observation or Reanalysis Experiment, HadCrut or ERA-Int or path to observation file</li>
+<li><strong>ensemblemembers</strong> &#8211; Comma separated string of esemble members like &#8216;r1i1p1,r2i1p1,...&#8217;</li>
+<li><strong>maskMissingValues</strong> &#8211; Boolean value. Whether you want to mask missing values or not</li>
+<li><strong>result_grid</strong> &#8211; Griddescription of resultgrid like r72x36</li>
+<li><strong>cache</strong> &#8211; Path for cachedir during analysis</li>
+<li><strong>baseDir</strong> &#8211; Path of Class to find default files</li>
+<li><strong>timeFreq</strong> &#8211; Timefrequency of the files, ie &#8216;mon&#8217; or &#8216;day&#8217;</li>
+<li><strong>basic_output</strong> &#8211; Boolean - If true only basic out is produced (CRPSS_ES and LESS).</li>
+<li><strong>bootstrapSwitch</strong> &#8211; If you want calculating Significance using Bootstrap methods</li>
+<li><strong>bootstrap_number</strong> &#8211; Number of Bootstrap runs</li>
 <li><strong>leatimes_mode</strong> &#8211; &#8216;monthly&#8217; or &#8216;yearly&#8217; calculation</li>
-<li><strong>level</strong> &#8211; For 3D-Files &#8211;&gt; Select a single level
-:param lonlatbox: If you want to select a specific lonlat-Box</li>
-<li><strong>fieldmean</strong> &#8211; Boolean - If you want to calculate field mean</li>
+<li><strong>level</strong> &#8211; For 3D-Files &#8211;&gt; Select a single level</li>
+<li><strong>lonlatbox</strong> &#8211; If you want to select a specific lonlat-Box</li>
+<li><strong>fieldmean</strong> &#8211; Boolean - If you want to calculate field means</li>
+<li><strong>zonalmean</strong> &#8211; Boolean - If you want to calculate zonal means</li>
+<li><strong>input_part</strong> &#8211; String - Will be added to output path and cache file</li>
 <li><strong>colormap</strong> &#8211; Matplotlib Colormap used for ploting</li>
 <li><strong>observation_type</strong> &#8211; NOT USED ANYMORE!!!</li>
 <li><strong>reanpath</strong> &#8211; NOT USED ANYMORE!!!</li>
@@ -132,16 +115,23 @@ of <a class="reference external" href="http://link.springer.com/article/10.1007%
 <dl class="method">
 <dt id="metrics.crpss.Crpss.prepareInput">
 <tt class="descname">prepareInput</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss.prepareInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss.prepareInput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>This method is to search and prepare the input files. 
+Integrated methods:
+1. Searching files
+2. Remapping
+3. Selecting lonlatbox
+4. Calculating fieldmean
+5. Calculating zonalmean</p>
+<p>The prepared files are stored in &#8220;self.inputRemapped&#8221; and &#8220;self.observationRemapped&#8221;</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="metrics.crpss.Crpss.analyze">
 <tt class="descname">analyze</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss.analyze" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main function to calculate the CRPSS after Goddard et al. (2012)
+It also calculates the ESS and LESS after Kadow et al. (2015)
 The following steps are performed:</p>
 <ol class="arabic simple">
-<li>Searching Files</li>
-<li>Remapping to coarser grid</li>
 <li>Temporal Smoothing</li>
 <li>Calculating ensemble means of hindcasts</li>
 <li>Calculating cross-validated means of ensemblemembers</li>
@@ -151,6 +141,7 @@ The following steps are performed:</p>
 <li>Calculating climatological standard deviation</li>
 <li>Calculating CRPS for mean ensemble variance and for reference STD</li>
 <li>Calculating CRPSS</li>
+<li>Calculating Ensemble Spread Score (ESS) and Logarithmic ESS</li>
 <li>Plotting</li>
 </ol>
 </dd></dl>
@@ -178,6 +169,12 @@ The following steps are performed:</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="metrics.crpss.Crpss._removeConditionalBias">
+<tt class="descname">_removeConditionalBias</tt><big>(</big><em>hindcast</em>, <em>bias</em>, <em>ensembleMembers</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss._removeConditionalBias"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss._removeConditionalBias" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the single process version of removeConditionalBias</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="metrics.crpss.Crpss.getCrps">
 <tt class="descname">getCrps</tt><big>(</big><em>hindcast</em>, <em>observation</em>, <em>variances</em>, <em>tag</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss.getCrps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss.getCrps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates crpss for dictionarys after Gneiting and Raferty (2007)</p>
@@ -185,10 +182,7 @@ The following steps are performed:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Todo :</th><td class="field-body"><p class="first">Could be done in multiprocessing</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>hindcast</strong> &#8211; dict of anomaly conditional bias corrected hindcast</li>
 <li><strong>observation</strong> &#8211; dict of anomaly observation</li>
 <li><strong>variances</strong> &#8211; dict of Variances you want to test</li>
@@ -196,7 +190,7 @@ The following steps are performed:</p>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of crps</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict of crps</p>
 </td>
 </tr>
 </tbody>
@@ -271,9 +265,28 @@ and standardizes by n-2</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="metrics.crpss.Crpss.bootstrap">
+<tt class="descname">bootstrap</tt><big>(</big><em>crps, crpsRef, tag, crpss, bootstrap_number=500, plot_range=[-1, 1], colorbar='RdBu_r'</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss.bootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss.bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bootstrap function to calculate significance crosses for crpss and other metrics. 
+It also plots the fields with significance crosses</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.crpss.Crpss._multiBootstrap">
+<tt class="descname">_multiBootstrap</tt><big>(</big><em>crps</em>, <em>crpsRef</em>, <em>tag</em>, <em>crpss</em>, <em>i</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss._multiBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss._multiBootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single process version used in crpss.bootstrap</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="metrics.crpss.Crpss._multiEnsspreadBootstrap">
 <tt class="descname">_multiEnsspreadBootstrap</tt><big>(</big><em>ensAnoms</em>, <em>anomalies</em>, <em>tempSmoothedObs</em>, <em>i</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss._multiEnsspreadBootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss._multiEnsspreadBootstrap" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: Not working!!!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metrics.crpss.Crpss.bootstrapEnsembleSpreadscore">
+<tt class="descname">bootstrapEnsembleSpreadscore</tt><big>(</big><em>ensAnoms</em>, <em>anomalies</em>, <em>tempSmoothedObs</em>, <em>spreadscore</em>, <em>bootstrap_number</em>, <em>spreadscore_ln</em><big>)</big><a class="reference internal" href="_modules/metrics/crpss.html#Crpss.bootstrapEnsembleSpreadscore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.crpss.Crpss.bootstrapEnsembleSpreadscore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bootstrapping method for ESS and LESS</p>
 </dd></dl>
 
 <dl class="method">
@@ -342,7 +355,7 @@ Crpss needs at least 2 ensemblemembers. And is only reasonable for more</p>
         <li class="right" >
           <a href="msss.html" title="metrics.msss"
              >previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>metrics.msss &mdash; MurCSS 1.5.0 documentation</title>
+    <title>metrics.msss &mdash; MurCSS 1.6.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.5.0',
+        VERSION:     '1.6.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MurCSS 1.5.0 documentation" href="index.html" />
+    <link rel="top" title="MurCSS 1.6.1 documentation" href="index.html" />
     <link rel="up" title="MurCSS Tool" href="goddard.html" />
     <link rel="next" title="metrics.crpss" href="crpss.html" />
     <link rel="prev" title="MurCSS Tool" href="goddard.html" /> 
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="goddard.html" title="MurCSS Tool"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" accesskey="U">MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>  
@@ -70,7 +70,7 @@ of <a class="reference external" href="http://link.springer.com/article/10.1007%
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">MSSS</span></tt> Module<a class="headerlink" href="#msss-module" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="metrics.msss.Msss">
-<em class="property">class </em><tt class="descclassname">metrics.msss.</tt><tt class="descname">Msss</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">metrics.msss.</tt><tt class="descname">Msss</tt><big>(</big><em>output='/tmp/msss/output/'</em>, <em>output_plots='/tmp/msss/output/'</em>, <em>decadals='1960</em>, <em>1965</em>, <em>1970</em>, <em>1975</em>, <em>1980</em>, <em>1985</em>, <em>1990</em>, <em>1995</em>, <em>2000'</em>, <em>variable='tas'</em>, <em>project1='baseline1'</em>, <em>product1='output'</em>, <em>institute1='mpi-m'</em>, <em>model1='mpi-esm-lr'</em>, <em>experiment1='decs4e'</em>, <em>ensemblemembers1='*'</em>, <em>project2='baseline0'</em>, <em>product2='output1'</em>, <em>institute2='mpi-m'</em>, <em>model2='mpi-esm-lr'</em>, <em>experiment2='decadal'</em>, <em>ensemblemembers2='*'</em>, <em>leadtimes='1</em>, <em>2-9'</em>, <em>observation='HadCrut'</em>, <em>observation_ensemble='*'</em>, <em>maskMissingValues=True</em>, <em>result_grid=None</em>, <em>cache='/tmp/msss/cache/'</em>, <em>baseDir='..'</em>, <em>timeFreq='mon'</em>, <em>basic_output=True</em>, <em>bootstrap=None</em>, <em>bootstrap2=None</em>, <em>obsRemapped=None</em>, <em>leadtimes_mode='yearly'</em>, <em>level=None</em>, <em>lonlatbox=None</em>, <em>fieldmean=False</em>, <em>zonalmean=False</em>, <em>colormap='RedBlu'</em>, <em>observation_type='REANALYSIS'</em>, <em>reanpath=''</em>, <em>months=None</em><big>)</big><a class="reference internal" href="_modules/metrics/msss.html#Msss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metrics.msss.Msss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to calculate the MSSS. Call method &#8220;analyze&#8221; to get results</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -94,22 +94,25 @@ of <a class="reference external" href="http://link.springer.com/article/10.1007%
 <li><strong>experiment2</strong> &#8211; Experiment name like decs4e or historical</li>
 <li><strong>ensemblemembers2</strong> &#8211; Comma separated string of esemble members like &#8216;r1i1p1,r2i1p1,...&#8217;</li>
 <li><strong>leadtimes</strong> &#8211; Leadtimes to analyze, ie. 1,2-9</li>
-<li><strong>observation</strong> &#8211; Observation or Reanalysis Experiment, HadCrut or ERA-Int
-:param observation_ensemble: If your observation has multiple ensemble members. Not necesary if you use an observation file</li>
+<li><strong>observation</strong> &#8211; Observation or Reanalysis Experiment, HadCrut or ERA-Int</li>
+<li><strong>observation_ensemble</strong> &#8211; If your observation has multiple ensemble members. Not necesary if you use an observation file</li>
 <li><strong>maskMissingValues</strong> &#8211; Boolean</li>
 <li><strong>result_grid</strong> &#8211; Griddescription of resultgrid like r72x36</li>
 <li><strong>cache</strong> &#8211; Path for cachedir during analysis</li>
 <li><strong>baseDir</strong> &#8211; Path of Class to find default files</li>
 <li><strong>timeFreq</strong> &#8211; Timefrequency of the files, ie &#8216;mon&#8217; or &#8216;day&#8217;</li>
+<li><strong>basic_output</strong> &#8211; Boolean - If true only basic out is produced (Correlation, MSESS, and Conditional Bias).</li>
 <li><strong>bootstrap</strong> &#8211; </li>
 <li><strong>bootstrap2</strong> &#8211; </li>
 <li><strong>obsRemapped</strong> &#8211; </li>
 <li><strong>level</strong> &#8211; For 3D-Files &#8211;&gt; Select a single level</li>
 <li><strong>lonlatbox</strong> &#8211; If you want to select a specific lonlat-Box</li>
-<li><strong>fieldmean</strong> &#8211; Boolean - If you want to calculate global mean</li>
+<li><strong>fieldmean</strong> &#8211; Boolean - If you want to calculate field means</li>
+<li><strong>zonalmean</strong> &#8211; Boolean - If you want to calculate zonal means</li>
 <li><strong>colormap</strong> &#8211; Matplotlib Colormap used for ploting</li>
 <li><strong>observation_type</strong> &#8211; NOT USED ANYMORE!!!</li>
 <li><strong>reanpath</strong> &#8211; NOT USED ANYMORE!!!</li>
+<li><strong>months</strong> &#8211; Usefull if your analysing monthly and your experiment name has a month included</li>
 </ul>
 </td>
 </tr>
@@ -323,7 +326,7 @@ Following variables are computed:</p>
         <li class="right" >
           <a href="goddard.html" title="MurCSS Tool"
              >previous</a> |</li>
-        <li><a href="index.html">MurCSS 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="index.html">MurCSS 1.6.1 documentation</a> &raquo;</li>
           <li><a href="goddard.html" >MurCSS Tool</a> &raquo;</li> 
       </ul>
     </div>
