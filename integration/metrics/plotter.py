@@ -81,7 +81,7 @@ class Plotter(object):
     
     
     @staticmethod
-    def plotField(fileName, vmin, vmax, colormap='goddard', output_folder='/', lonlatbox=None):
+    def plotField(fileName, vmin, vmax, colormap='goddard', output_folder='/', lonlatbox=None, region='global'):
         '''
         Plot any field variable
         
@@ -137,7 +137,19 @@ class Plotter(object):
             lonlatbox[1] += 360
         
         step=0
-        m = Basemap(llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3])#,lon_0=0)
+        
+        if region == 'Arctic':
+            m = Basemap( projection='npstere',boundinglat=lonlatbox[2],lon_0=0)
+            parallels = N.arange(0.,90.,10.)
+            meridians = N.arange(0.,360.,10.)
+        elif region == 'Antarctica':
+            m = Basemap( projection='spstere',boundinglat=lonlatbox[3],lon_0=0)
+            parallels = N.arange(-90.,0.,10.)
+            meridians = N.arange(0.,360.,10.)
+        else:
+            m = Basemap( llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3])
+            parallels = N.arange(-90.,90.,5.)
+            meridians = N.arange(0.,360.,5.)    
 
         def divi(x):
             return float(x)/10
@@ -178,8 +190,8 @@ class Plotter(object):
         cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm)#, latlon=True)
         cb = m.colorbar(cs,"right", size="5%", pad='5%' , ticks=colorTicks)
         m.drawcoastlines(ax=ax)  
-        m.drawparallels(N.arange(-90.,120.,30.),labels=[1,0,0,0]) # draw parallels
-        m.drawmeridians(N.arange(0.,420.,60.),labels=[0,0,0,1]) # draw meridians
+        m.drawparallels(parallels,labels=[1,0,0,0]) # draw parallels
+        m.drawmeridians(meridians,labels=[0,0,0,1]) # draw meridians
         
         plt.title(Plotter.__getTitle(fileName))
         plt.text(lonlatbox[0]+(lon[1]-lon[0])/2, lonlatbox[2]+(lat[1]-lat[0])/2, 'MurCSS')
