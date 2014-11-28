@@ -148,8 +148,10 @@ class Plotter(object):
             meridians = N.arange(0.,360.,10.)
         else:
             m = Basemap( llcrnrlon=lonlatbox[0],llcrnrlat=lonlatbox[2],urcrnrlon=lonlatbox[1],urcrnrlat=lonlatbox[3])
-            parallels = N.arange(-90.,90.,5.)
-            meridians = N.arange(0.,360.,5.)    
+            #parallels = N.arange(-90.,90.,5.)
+            #meridians = N.arange(0.,360.,5.)    
+            parallels = N.arange(-90.,120.,30.)
+            meridians = N.arange(0.,420.,60.)
 
         def divi(x):
             return float(x)/10

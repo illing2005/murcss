@@ -530,7 +530,8 @@ class Crpss(MetricAbstract):
         np.seterr('ignore')
         try:
             x = cdo.div(input=' '.join([cdo.sub(input=' '.join([observation, hindcast]), output=hindcast+'_min_hindcast' + tag, options = '-f nc'), variance]),
-                        output=hindcast+tag+'_div_', returnMaArray=cdo.showname(input=hindcast)[0])
+                        output=hindcast+tag+'_div_')#, returnMaArray=cdo.showname(input=hindcast)[0])
+	    x = FileHandler.openNetCDFFile(x,mode='var')
         except KeyError:
             raise VariableName, 'Could not find variablename "%s" in observation files.' % (cdo.showname(input=hindcast)[0])
             

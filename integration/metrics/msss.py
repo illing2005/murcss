@@ -26,6 +26,7 @@ from time import time
 from metricAbstract import MetricAbstract
 from taylorplot import TaylorPlotMurCSS
 from plotter import Plotter
+import murcss_config
 
 class MsssError(Exception): pass
     
@@ -305,10 +306,16 @@ class Msss(MetricAbstract):
         #escape attributes 
         self.escapeAttributes()
 
-        poolArgs = self.getPoolArgs(rangeCount, self, input1Anomalies,self.observationRemappedAnom,input2Anomalies,
+	if murcss_config.subsub_procs:
+
+            poolArgs = self.getPoolArgs(rangeCount, self, input1Anomalies,self.observationRemappedAnom,input2Anomalies,
                                     firstYearList,lastYearList,'analyzeYearRange')
-        resultList = self.multiProcess(poolArgs)
-        
+            resultList = self.multiProcess(poolArgs)
+        else:
+            resultList=list()
+            for i in range(0,rangeCount):
+                resultList.append(self.analyzeYearRange(input1Anomalies, self.observationRemappedAnom, input2Anomalies, firstYearList[i], lastYearList[i]))
+ 
         if self.fieldmean:
             #construct a taylor plot
             outputPlots = self.outputPlots+'accuracy/'
