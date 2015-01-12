@@ -511,9 +511,8 @@ class Msss(MetricAbstract):
         for year in self.decadals:
             hindcastStr += ' ' + hindcast[year]
             observationStr += ' ' + observation[year]
-        
-        mergeHindcast = cdo.mergetime(input=hindcastStr, output=hindcast[self.decadals[0]]+flag+self.getRandomStr()+'_merged.nc')
-        mergeObservations = cdo.mergetime(input=observationStr, output=observation[self.decadals[0]]+flag+self.getRandomStr()+'_merged.nc')
+        mergeHindcast = cdo.mergetime(input=hindcastStr, output=hindcast[self.decadals[0]]+self.getRandomStr()+'_merged.nc')
+        mergeObservations = cdo.mergetime(input=observationStr, output=observation[self.decadals[0]]+self.getRandomStr()+'_merged.nc')
         #print mergeHindcast
         #remove seasonal cycle
         #mergeHindcast = self.removeSeasonalCycle(mergeHindcast)
