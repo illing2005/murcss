@@ -82,7 +82,6 @@ class Cdo(object):
       print '# DEBUG ====================================================================='
       print 'CALL:'+' '.join(cmd)
       print '# DEBUG ====================================================================='
-
     proc = subprocess.Popen(' '.join(cmd),
         shell  = True,
         stderr = subprocess.PIPE,
@@ -104,7 +103,7 @@ class Cdo(object):
       return False
 
   def __getattr__(self, method_name):
-    @auto_doc(method_name, self)
+    #@auto_doc(method_name, self)
 
     def get(self, *args,**kwargs):
       operator          = [method_name]
@@ -318,9 +317,10 @@ class MyTempfile(object):
 
   def __del__(self):
     # remove temporary files
-    for filename in self.__class__.__tempfiles:
-      if os.path.isfile(filename):
-        os.remove(filename)
+    pass
+#    for filename in self.__class__.__tempfiles:
+#      if os.path.isfile(filename):
+#        os.remove(filename)
 
   def setPersist(self,value):
     self.persistent_tempfiles = value
