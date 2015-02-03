@@ -292,6 +292,59 @@ class Plotter(object):
                 plt.legend(flag_list,bbox_to_anchor=(0., 1.05, 1., .102), mode='expand',loc=3,ncol=1, borderaxespad=0.)   
         #plt.legend(flag_list,bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
         #plt.show()
+
+    @staticmethod
+    def plotLeadtimeseriesSign(resultList,flag_list,plot_list):
+        colors = ['green','blue','red']
+        def getFn(s):
+            return s.split('/')[-1]
+        fig = plt.figure(figsize=(17,13)) 
+        for i,needle in enumerate(plot_list):
+            plt.subplot(2,1,i+1) 
+            for j,flag in enumerate(flag_list):
+                files_to_plot = list()
+#                for part in resultList:
+                search_needle = flag+'_'+needle[0]
+                files_to_plot += [s for s in resultList if search_needle in getFn(s)]
+                labels = list()
+                plot_values = list()
+                min_plot_values = list()
+                max_plot_values = list()
+                for fn in sorted(files_to_plot,key=lambda x: int(getFn(x).split('_')[0]+getFn(x).split('_')[1])):
+                    tmp_label = getFn(fn).split('_')
+                    if(tmp_label[0]==tmp_label[1]):
+                        tmp_label = tmp_label[0]
+                    else:
+                        tmp_label = tmp_label[0]+'-'+tmp_label[1]
+                    labels.append(tmp_label)
+                    tmp_values = FileHandler.openNetCDFFile(fn,'var')
+                    plot_values.append(tmp_values)
+                    tmp_min_value = FileHandler.openNetCDFFile(fn+'_bootstrap_min_val','var')
+                    min_plot_values.append(N.abs(tmp_values-tmp_min_value))
+                    tmp_max_value = FileHandler.openNetCDFFile(fn+'_bootstrap_max_val','var')
+                    max_plot_values.append(N.abs(tmp_values-tmp_max_value))
+                x_val = range(1,len(files_to_plot)+1)
+                plt.errorbar(x_val,plot_values, yerr=[min_plot_values,max_plot_values], color=colors[j])
+                plt.scatter(x_val,plot_values, color=colors[j])
+                #plt.plot(x_val,plot_values, color=colors[j])
+                
+                #get min and max plot values
+                try:
+                    min_val = min(min_val,min(plot_values))
+                    max_val = max(max_val,max(plot_values))
+                except:
+                    min_val = min(plot_values)
+                    max_val = max(plot_values)
+                
+            plt.axis([0, len(files_to_plot)+1, min(min_val,needle[2][0]), max(max_val,needle[2][1])]) #needle[2][0], needle[2][1]])
+            plt.ylabel(needle[1])
+            plt.xlabel('Leadtimes')
+            plt.xticks(x_val,labels)
+            #plt.legend(legend_strs,loc='lower right')
+            if(i==0):
+                plt.legend(flag_list,bbox_to_anchor=(0., 1.05, 1., .102), mode='expand',loc=3,ncol=1, borderaxespad=0.)   
+        #plt.legend(flag_list,bbox_to_anchor=(1, 1),bbox_transform=plt.gcf().transFigure)
+        #plt.show()
      
     @staticmethod    
     def saveFig(output_folder, fn):

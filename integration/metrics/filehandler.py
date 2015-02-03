@@ -98,7 +98,7 @@ class FileHandler(object):
                 plev.units = plev_org.units
                 dimensions.append('plev')
         except:
-            pass
+            time_org = False
 
         if len(lat_org) > 1:
             FileHandler.createDimension(f, lat_org, 'lat', 'double')   
@@ -110,10 +110,11 @@ class FileHandler(object):
         
         if dimensions == [] and field.shape == ():
             #THIS IS A HACK FOR FIELDMEAN 
-            time = FileHandler.createDimension(f, time_org.data, 'time', 'double')
-            time.units = time_org.units
-            time.calendar = time_org.calendar
-            dimensions.append('time') 
+            if time_org:
+                time = FileHandler.createDimension(f, time_org.data, 'time', 'double')
+                time.units = time_org.units
+                time.calendar = time_org.calendar
+                dimensions.append('time') 
             FileHandler.createDimension(f, lat_org, 'lat', 'double')   
             dimensions.append('lat')
             FileHandler.createDimension(f, lon_org, 'lon', 'double')

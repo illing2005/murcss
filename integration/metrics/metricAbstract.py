@@ -271,11 +271,8 @@ class MetricAbstract(ToolAbstract):
         '''
         Subtracts the seasonal cycle of monthly data
         '''
-        print fn
         seasonalCycle = cdo.ymonavg(input=fn, output=fn+'_meanCycle')
-        print seasonalCycle
         tmp = cdo.ymonsub(input=' '.join([fn,seasonalCycle]),output=fn+'_noseason')
-        print tmp
         return tmp
     
     

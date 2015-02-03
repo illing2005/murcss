@@ -318,31 +318,35 @@ class Msss(MetricAbstract):
  
         if self.fieldmean:
             #construct a taylor plot
-            outputPlots = self.outputPlots+'accuracy/'
-            self.makeFolder(outputPlots)
-            #taylor = TaylorPlotMurCSS(negativeCorr=False)
-            #taylor.constructPlot(resultList, outputPlots)
-            flag1 = self.constructName(self.fileNameFlag, exp='1', startYear='1', endYear='1')
-            flag1 = flag1[4:]
-            flag2 = self.constructName(self.fileNameFlag, exp='2', startYear='1', endYear='1')
-            flag2= flag2[4:]
-            fnFlagVs = self.constructName(self.fileNameFlagVs, exp='', startYear='1', endYear='1')
-            fnFlagVs = fnFlagVs[4:]
-            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
-            Plotter.plotLeadtimeseries(resultList,[flag1,flag2,fnFlagVs],plot_list)
-            Plotter.saveFig(outputPlots, 'accuracy_leadtimeseries_all')
-            
-            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
-            Plotter.plotLeadtimeseries(resultList,[flag1],plot_list)
-            Plotter.saveFig(outputPlots, flag1+'accuracy_leadtimeseries_input1')
-            
-            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
-            Plotter.plotLeadtimeseries(resultList,[flag2],plot_list)
-            Plotter.saveFig(outputPlots, flag2+'accuracy_leadtimeseries_input1')
-            
-            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
-            Plotter.plotLeadtimeseries(resultList,[fnFlagVs],plot_list)
-            Plotter.saveFig(outputPlots, fnFlagVs+'accuracy_leadtimeseries_versus')
+            if self.bootstrap is None:
+                print self.bootstrap
+                outputPlots = self.outputPlots+'accuracy/'
+                self.makeFolder(outputPlots)
+                #taylor = TaylorPlotMurCSS(negativeCorr=False)
+                #taylor.constructPlot(resultList, outputPlots)
+                print 'Plotting fldmean'
+                
+                flag1 = self.constructName(self.fileNameFlag, exp='1', startYear='1', endYear='1')
+                flag1 = flag1[4:]
+                flag2 = self.constructName(self.fileNameFlag, exp='2', startYear='1', endYear='1')
+                flag2= flag2[4:]
+                fnFlagVs = self.constructName(self.fileNameFlagVs, exp='', startYear='1', endYear='1')
+                fnFlagVs = fnFlagVs[4:]
+                plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+                Plotter.plotLeadtimeseries(resultList,[flag1,flag2,fnFlagVs],plot_list)
+                Plotter.saveFig(outputPlots, 'accuracy_leadtimeseries_all')
+                
+                plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+                Plotter.plotLeadtimeseries(resultList,[flag1],plot_list)
+                Plotter.saveFig(outputPlots, flag1+'accuracy_leadtimeseries_input1')
+                
+                plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+                Plotter.plotLeadtimeseries(resultList,[flag2],plot_list)
+                Plotter.saveFig(outputPlots, flag2+'accuracy_leadtimeseries_input2')
+                
+                plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+                Plotter.plotLeadtimeseries(resultList,[fnFlagVs],plot_list)
+                Plotter.saveFig(outputPlots, fnFlagVs+'accuracy_leadtimeseries_versus')
         
         elif self.zonalmean:
             fileList = list()
@@ -523,8 +527,8 @@ class Msss(MetricAbstract):
         #mergeHindcast = self.detrendTimeSeries(mergeHindcast,keepMean=False)
         #mergeObservations = self.detrendTimeSeries(mergeObservations,keepMean=False)
         
-        varianceHindcast = cdo.timstd(input=mergeHindcast, output=hindcast[self.decadals[0]]+flag+'_variance')
-        varianceObservation = cdo.timstd(input=mergeObservations, output=observation[self.decadals[0]]+flag+'_variance')
+        varianceHindcast = cdo.timstd(input=mergeHindcast, output=hindcast[self.decadals[0]]+self.getRandomStr()+'_variance')
+        varianceObservation = cdo.timstd(input=mergeObservations, output=observation[self.decadals[0]]+self.getRandomStr()+'_variance')
         corr = cdo.timcor(input=' '.join([mergeHindcast, mergeObservations]), output=outputDir+flag+'_correlation.nc')
         
         bias = cdo.sub(input=corr+' '+ '-div ' + varianceHindcast + ' ' + varianceObservation,    

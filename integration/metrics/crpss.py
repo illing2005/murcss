@@ -356,6 +356,7 @@ class Crpss(MetricAbstract):
             #print ensvarSelYear
             #print ensvarRefSelYear
             ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror_tmp.nc')
+            ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
             ensemblespreadscore_ln = cdo.ln(input=cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror.nc'), output = self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc',options='-b 64')
             crpss =  self.getCrpss(crpsEns, crpsRef, '_'.join([fnFlag1,'ens-vs-ref']))
             
@@ -372,8 +373,8 @@ class Crpss(MetricAbstract):
             if self.maskMissingValues:
                 if self.basic_output:
                     ensemblespreadscore = cdo.mul(input=' '.join([ensemblespreadscore,self.misvalMask]),output=ensemblespreadscore+'miss_val')
-                    crpss = filesToPlot[1]
-                    ensemblespreadscore_ln = filesToPlot[0]
+                    crpss = filesToPlot[2]
+                    ensemblespreadscore_ln = filesToPlot[1]
                 else:
                     ensemblespreadscore = filesToPlot[0]
                     ensemblespreadscore_ln = filesToPlot[1]
@@ -386,6 +387,11 @@ class Crpss(MetricAbstract):
                     fieldmean_files.append(filesToPlot)
                 except:
                     fieldmean_files = [filesToPlot]
+                b_ens_ref = self.bootstrap(crpsEns, crpsRef, 'ens-vs-ref_'+rangeStr, crpss, self.bootstrap_number, plot_range=[-0.5,0.], colorbar='goddard')
+                if not self.basic_output:
+                    b_ens_clim = self.bootstrap(crpsEns, crpsClim, 'ens-vs-clim_'+rangeStr, crpssEC, self.bootstrap_number)
+                    b_ref_clim = self.bootstrap(crpsRef, crpsClim, 'ref-vs-clim_'+rangeStr, crpssRC, self.bootstrap_number)
+                self.bootstrapEnsembleSpreadscore(ensAnoms, anomalies, tempSmoothedObs, ensemblespreadscore, self.bootstrap_number, ensemblespreadscore_ln)
             elif self.zonalmean:
                 if self.bootstrapSwitch:
                     print 'Bootstrapping'
@@ -438,8 +444,14 @@ class Crpss(MetricAbstract):
             self.makeFolder(outputPlots)
             flag1 = self.constructName(self.fileNameFlag, exp='1', startYear='1', endYear='1')
             flag1 = flag1[4:]
-            plot_list = [('ensspread_vs_referror','Logarithmic Ensemble Spread Score',[-1,1]),('ens-vs-ref_crpss','Continous Ranked Probabillity Score',[-0.5,0])]
-            Plotter.plotLeadtimeseries(fieldmean_files,[flag1],plot_list)
+            plot_list = [('ensspread_vs_referror_ln','Logarithmic Ensemble Spread Score',[-1,1]),('ens-vs-ref_crpss','Continous Ranked Probabillity Score',[-0.5,0])]
+            if self.bootstrapSwitch:
+                new_list = list()
+                for item in fieldmean_files:
+                    new_list += item
+                Plotter.plotLeadtimeseriesSign(new_list,[flag1],plot_list)
+            else:
+                Plotter.plotLeadtimeseries(fieldmean_files,[flag1],plot_list)
             Plotter.saveFig(outputPlots, flag1+'ensemble_spread_leadtimeseries')
     
     def removeConditionalBiasNew(self, hindcast, observations, ensembleMembers):
@@ -595,15 +607,18 @@ class Crpss(MetricAbstract):
         self.outputDir = tmpDir      
         
         significance = Significance(self.tmpDir, self.outputPlots)
-        (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, crpss)
-        if self.zonalmean:
-            m = Plotter.plotVerticalProfile(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
-            Plotter.addCrossesXY(m, crpss+'_significance_mask')
-
+        if self.fieldmean:
+            (sig_lon, sig_lat) = significance.checkSignificanceFldmean(bootstrapList, crpss)
         else:
-            m = Plotter.plotField(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
-            Plotter.addCrosses(m, sig_lon, sig_lat)
-        Plotter.saveFig(self.outputPlots, crpss.split('/')[-1])
+            (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, crpss)
+            if self.zonalmean:
+                m = Plotter.plotVerticalProfile(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
+                Plotter.addCrossesXY(m, crpss+'_significance_mask')
+    
+            else:
+                m = Plotter.plotField(crpss, plot_range[0], plot_range[1], colorbar, lonlatbox=self.lonlatbox)
+                Plotter.addCrosses(m, sig_lon, sig_lat)
+            Plotter.saveFig(self.outputPlots, crpss.split('/')[-1])
             
         return bootstrapList   
     
@@ -668,23 +683,28 @@ class Crpss(MetricAbstract):
             bootstrapList.append(tmp_spreadscore)
    
         significance = Significance(self.tmpDir, self.outputPlots)
-        (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, spreadscore, check_value=1)
-        if not self.basic_output:
+        if self.fieldmean:
+            (sig_lon, sig_lat) = significance.checkSignificanceFldmean(bootstrapList, spreadscore, check_value=1)
+            cdo.ln(input=spreadscore+'_bootstrap_max_val', output=spreadscore_ln+'_bootstrap_max_val')
+            cdo.ln(input=spreadscore+'_bootstrap_min_val', output=spreadscore_ln+'_bootstrap_min_val')
+        else:
+            (sig_lon, sig_lat) = significance.checkSignificance(bootstrapList, spreadscore, check_value=1)
+            if not self.basic_output:
+                if self.zonalmean:
+                    m = Plotter.plotVerticalProfile(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.addCrossesXY(m, spreadscore+'_significance_mask')
+                else:
+                    m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                    Plotter.addCrosses(m, sig_lon, sig_lat)
+                Plotter.saveFig(self.outputPlots, spreadscore.split('/')[-1])
+            
             if self.zonalmean:
-                m = Plotter.plotVerticalProfile(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                m = Plotter.plotVerticalProfile(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
                 Plotter.addCrossesXY(m, spreadscore+'_significance_mask')
             else:
-                m = Plotter.plotField(spreadscore, 0, 2, 'RdBu_r', lonlatbox=self.lonlatbox)
+                m = Plotter.plotField(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
                 Plotter.addCrosses(m, sig_lon, sig_lat)
-            Plotter.saveFig(self.outputPlots, spreadscore.split('/')[-1])
-        
-        if self.zonalmean:
-            m = Plotter.plotVerticalProfile(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-            Plotter.addCrossesXY(m, spreadscore+'_significance_mask')
-        else:
-            m = Plotter.plotField(spreadscore_ln, -1, 1, 'RdBu_r', lonlatbox=self.lonlatbox)
-            Plotter.addCrosses(m, sig_lon, sig_lat)
-        Plotter.saveFig(self.outputPlots, spreadscore_ln.split('/')[-1])
+            Plotter.saveFig(self.outputPlots, spreadscore_ln.split('/')[-1])
          
         return bootstrapList  
         

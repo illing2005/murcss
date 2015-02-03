@@ -92,6 +92,45 @@ class Significance(object):
 #        lon = np.arange(xfirst, xsize*xinc+xfirst, xinc, dtype=float)
 #        lat = np.arange(yfirst, ysize*yinc+yfirst, yinc, dtype=float)
         return (lon,lat)
+    
+    def checkSignificanceFldmean(self, input, result_file, q1=0.05, q2=0.95, check_value=0):
+        '''
+        
+        '''
+        if type(input) == list:
+            bootstrap_files = input
+        elif os.path.isdir(input):
+            bootstrap_files = self.find_files.getAllFilesInFolder(input)
+        else:
+            raise WrongArgument, 'Input has to be a list of files or a folder'
+            
+        bootstrap_arrays = list()
+        
+        #load all files to arrays
+        for b_file in bootstrap_files:
+            tmp_var = FileHandler.openNetCDFFile(b_file)
+            bootstrap_arrays.append(tmp_var['variable'])
+            
+        result = FileHandler.openNetCDFFile(result_file, mode='var')
+
+        test_sample = np.zeros(len(bootstrap_files))
+        k=0
+        for item in bootstrap_arrays:
+            #if item[i,j] < 1e10 and item[i,j] > -1e10: #don't test missing values
+            if item < 1e10 and item > -1e10:
+                test_sample[k] = item  #construct testsample
+                k+=1
+        test_mean = np.mean(test_sample)
+            
+        quant = self.__getQuantile(test_sample, q1, q2)
+        #mark significant values
+        FileHandler.saveToNetCDF(quant[0], result_file, '_bootstrap_min_val')
+        FileHandler.saveToNetCDF(quant[1], result_file, '_bootstrap_max_val')
+        
+        
+        return (quant[0], quant[1])
+        #self.save_significance_mask(sig_y, sig_x, result_file)
+        #return (sig_lon, sig_lat)
         
     def checkSignificance(self, input, result_file, q1=0.05, q2=0.95, check_value=0):
         '''

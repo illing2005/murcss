@@ -113,7 +113,6 @@ class MsssBootstrap(Msss):
             print 'Calculating field mean'
             #Calculate missing value fields     
             for year in self.decadals:
-                print ensMeanProject1Dict[year]
                 #Apply Missing value Mask to all fields                                          output=self.observationRemapped[year]+'_masked' )
                 #self.observationRemapped[year] = self._applyMissingMaskForFieldMean(self.observationRemapped[year], missmask)
                 ensMeanProject1Dict[year] = self._applyMissingMaskForFieldMean(ensMeanProject1Dict[year], self.obsmissmask)
@@ -216,15 +215,18 @@ class MsssBootstrap(Msss):
             
         
         significance = Significance(self.tmpDir, self.outputPlots)
-        (sig_lon, sig_lat) = significance.checkSignificance(b_array_list, fn)
-        
-        if self.zonalmean:
-            m = Plotter.plotVerticalProfile(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
-            Plotter.addCrossesXY(m, fn+'_significance_mask')            
+        if self.fieldmean:
+            (min_val, max_val) = significance.checkSignificanceFldmean(b_array_list, fn)
         else:
-            m = Plotter.plotField(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
-            Plotter.addCrosses(m, sig_lon, sig_lat)
-        Plotter.saveFig(plot_folder, fn.split(output_folder)[-1])
+            (sig_lon, sig_lat) = significance.checkSignificance(b_array_list, fn)
+        
+            if self.zonalmean:
+                m = Plotter.plotVerticalProfile(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
+                Plotter.addCrossesXY(m, fn+'_significance_mask')            
+            else:
+                m = Plotter.plotField(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
+                Plotter.addCrosses(m, sig_lon, sig_lat)
+            Plotter.saveFig(plot_folder, fn.split(output_folder)[-1])
      
     def calcSignificance(self, bootstrap_folders, output_folder, plot_folder):
         '''
@@ -241,8 +243,41 @@ class MsssBootstrap(Msss):
         procs = len(files_to_check)
         poolArgs =  zip([self]*procs, [bootstrap_folders]*procs, [output_folder]*procs, 
                         [plot_folder]*procs, files_to_check, ['_calcSignificance'] * procs)
-        self.multiProcess(poolArgs)
+        #self.multiProcess(poolArgs)
         
+        #SINGLE PROCESS FOR DEBUGGING
+        for fn in files_to_check:
+            self._calcSignificance(bootstrap_folders, output_folder, plot_folder, fn)
+        
+        
+        if self.fieldmean:
+            outputPlots = plot_folder+'accuracy/'
+            self.makeFolder(outputPlots)
+            #taylor = TaylorPlotMurCSS(negativeCorr=False)
+            #taylor.constructPlot(resultList, outputPlots)
+            print 'Plotting fldmean'
+            
+            flag1 = self.constructName(self.fileNameFlag, exp='1', startYear='1', endYear='1')
+            flag1 = flag1[4:]
+            flag2 = self.constructName(self.fileNameFlag, exp='2', startYear='1', endYear='1')
+            flag2= flag2[4:]
+            fnFlagVs = self.constructName(self.fileNameFlagVs, exp='', startYear='1', endYear='1')
+            fnFlagVs = fnFlagVs[4:]
+            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+            Plotter.plotLeadtimeseriesSign(files_to_check,[flag1,flag2,fnFlagVs],plot_list)
+            Plotter.saveFig(outputPlots, 'accuracy_leadtimeseries_all')
+            
+            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+            Plotter.plotLeadtimeseriesSign(files_to_check,[flag1],plot_list)
+            Plotter.saveFig(outputPlots, flag1+'accuracy_leadtimeseries_input1')
+            
+            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+            Plotter.plotLeadtimeseriesSign(files_to_check,[flag2],plot_list)
+            Plotter.saveFig(outputPlots, flag2+'accuracy_leadtimeseries_input2')
+            
+            plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
+            Plotter.plotLeadtimeseriesSign(files_to_check,[fnFlagVs],plot_list)
+            Plotter.saveFig(outputPlots, fnFlagVs+'accuracy_leadtimeseries_versus')
          
     
 def main(config_dict, baseDir):
