@@ -124,8 +124,8 @@ class Significance(object):
             
         quant = self.__getQuantile(test_sample, q1, q2)
         #mark significant values
-        FileHandler.saveToNetCDF(quant[0], result_file, '_bootstrap_min_val')
-        FileHandler.saveToNetCDF(quant[1], result_file, '_bootstrap_max_val')
+        FileHandler.saveToNetCDF(quant[0], result_file, '_bootstrap_max_val')
+        FileHandler.saveToNetCDF(quant[1], result_file, '_bootstrap_min_val')
         
         
         return (quant[0], quant[1])

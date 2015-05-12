@@ -38,7 +38,7 @@ class UnexpectedFileFormat(FileError): pass
 class NotEnoughYearsInFile(FileError): pass
 class WrongDrsStruct(FileError): pass
 class LevelNotFound(FileError): pass
-
+class EnsembleMemberError(FileError): pass
 
 class FindFiles(FindFilesAbstract):
     '''
@@ -108,7 +108,8 @@ class FindFiles(FindFilesAbstract):
                 onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
                     ensList.append(onlyfiles[0])
-
+		else:
+		    raise EnsembleMemberError, "Ensemble member %s not found for  %s %s %s for starting year %s" % (ens,fileType, model, product, year)
             tmpList = ensList
         
         for fn in tmpList:

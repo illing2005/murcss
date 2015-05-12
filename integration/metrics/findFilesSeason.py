@@ -74,7 +74,13 @@ class FindFilesSeason(FindFilesAbstract):
                 except:
                     #OK, there are no Files...
                     raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)  
-        
+       
+	#Check if we have time-splitted files
+        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product, institute=institute,
+                                           variable=variable, time_frequency=time_frequency, model=model, project=project)
+        if len(time_values['time'])>1:
+            tmpList = self.mergeSplittedFiles(tmpList)
+ 
         #select only wanted ensemblemembers
         if type(ensemblemembers) == list and ensemblemembers[0] != '*':
             ensList = list()
@@ -82,14 +88,10 @@ class FindFilesSeason(FindFilesAbstract):
                 onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
                     ensList.append(onlyfiles[0])
-
+		else:
+                    raise EnsembleMemberError, "Ensemble member %s not found for  %s %s %s for starting year %s" % (ens,fileType, model, product, year)	
             tmpList = ensList
               
-        #Check if we have time-splitted files
-        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product, institute=institute,
-                                           variable=variable, time_frequency=time_frequency, model=model, project=project)
-        if len(time_values['time'])>1:
-            tmpList = self.mergeSplittedFiles(tmpList)
                  
         for fn in tmpList:            
             #TODO: Throw exepvtion if date is not in file
@@ -138,7 +140,7 @@ class FindFilesSeason(FindFilesAbstract):
             facet = SolrFindFiles.facets(facets='data_type', experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency)
             try:
-                if facet['data_type'][0] == 'reanalysis':
+                if 'reanalysis' in facet['data_type']:
                     searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency)
                 else:
@@ -186,7 +188,10 @@ class FindFilesSeason(FindFilesAbstract):
         '''
         if not os.path.isfile(self.observation):
             raise NoFilesFoundError, '%s does not exist.' % (self.observation)
-
+	
+	#copy to netcdf3 file
+        self.observation = cdo.copy(input=self.observation,output=self.tmpDir+self.getFilename(self.observation)+'nc3',options='-f nc')
+	
         variable_file = cdo.showname(input=self.observation)[0]
         if variable != variable_file:
             print 'WARNING: Variable in observation file is not %s. \n Variable %s will be renamed.' % (variable, variable_file)

@@ -357,8 +357,11 @@ class Crpss(MetricAbstract):
             #print ensvarRefSelYear
             ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror_tmp.nc')
             ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
-            ensemblespreadscore_ln = cdo.ln(input=cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror.nc'), output = self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc',options='-b 64')
-            crpss =  self.getCrpss(crpsEns, crpsRef, '_'.join([fnFlag1,'ens-vs-ref']))
+            ensemblespreadscore_ln_tmp = cdo.ln(input=cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.tmpDir+fnFlag1+'_ensspread_vs_referror.nc'), output = self.tmpDir+fnFlag1+'_ensspread_vs_referror_ln.nc',options='-b 64')
+            #We do this because ncview can't handly (-)Infinity values
+	    ensemblespreadscore_ln = cdo.setvals('-Infinity,1e20',input=ensemblespreadscore_ln_tmp, output=self.outputDir+fnFlag1+'_ensspread_vs_referror_ln.nc')
+
+	    crpss =  self.getCrpss(crpsEns, crpsRef, '_'.join([fnFlag1,'ens-vs-ref']))
             
             if not self.basic_output:
                 ensemblespreadscore = cdo.div(input=' '.join([ensembleVariance,ensembleVarianceRef]), output=self.outputDir+fnFlag1+'_ensspread_vs_referror.nc')
@@ -569,8 +572,11 @@ class Crpss(MetricAbstract):
         '''
         crpsSum1 = cdo.enssum(input=' '.join(crps1.values()), output=self.tmpDir+'crpsSum1'+tag)
         crpsSum2 = cdo.enssum(input=' '.join(crps2.values()), output=self.tmpDir+'crpsSum2'+tag)
-        crpss = cdo.sub(input=' '.join([self.constant, cdo.div(input=' '.join([crpsSum1, crpsSum2]), output=crpsSum1+'div')]),
-                        output = self.outputDir + tag + '_crpss.nc')
+        crpsQuot = cdo.div(input=' '.join([crpsSum1, crpsSum2]), output=crpsSum1+'div')
+        crpsQuotMinus = cdo.mulc('-1',input=crpsQuot,output=crpsQuot+'minus')
+        crpss = cdo.addc('1',input=crpsQuotMinus,output=self.outputDir + tag + '_crpss.nc')
+#        crpss = cdo.sub(input=' '.join([self.constant, cdo.div(input=' '.join([crpsSum1, crpsSum2]), output=crpsSum1+'div')]),
+#                        output = self.outputDir + tag + '_crpss.nc')
         return crpss
               
     def getReferenceStd(self, hindcast, observation):
