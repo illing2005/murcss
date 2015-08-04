@@ -218,13 +218,19 @@ class MsssBootstrap(Msss):
         if self.fieldmean:
             (min_val, max_val) = significance.checkSignificanceFldmean(b_array_list, fn)
         else:
-            (sig_lon, sig_lat) = significance.checkSignificance(b_array_list, fn)
+            check_value = 1 if 'std_ratio' in fn else 0
+            (sig_lon, sig_lat) = significance.checkSignificance(b_array_list, fn, check_value=check_value)
         
             if self.zonalmean:
                 m = Plotter.plotVerticalProfile(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
                 Plotter.addCrossesXY(m, fn+'_significance_mask')            
             else:
-                m = Plotter.plotField(fn, -1, 1, colormap='RedBlu', lonlatbox=self.lonlatbox)
+                min_val = -1
+                max_val = 1
+                if 'std_ratio' in fn:
+                    min_val = 0.5
+                    max_val = 2.
+                m = Plotter.plotField(fn, min_val, max_val, colormap='RedBlu', lonlatbox=self.lonlatbox)
                 Plotter.addCrosses(m, sig_lon, sig_lat)
             Plotter.saveFig(plot_folder, fn.split(output_folder)[-1])
      
