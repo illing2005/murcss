@@ -167,8 +167,8 @@ class MsssBootstrap(Msss):
             new_f = self.tmpDir + self.extractFilename(f)
             shutil.copyfile(f, new_f)
             newPoolList2[year] = new_f
-        self.bootstrapPoolProject1 = newPoolList1
-        self.bootstrapPoolProject2 = newPoolList2        
+        # self.bootstrapPoolProject1 = newPoolList1
+        # self.bootstrapPoolProject2 = newPoolList2        
         
         bootstrapResultM1 = dict()
         bootstrapResultM2 = dict()
@@ -181,16 +181,16 @@ class MsssBootstrap(Msss):
                 yearToSelect = choice(self.decadals)
 
                 
-                bootstrapResultM1[year] = self.bootstrapPoolProject1[yearToSelect]
-                bootstrapResultM2[year] = self.bootstrapPoolProject2[yearToSelect]
+                bootstrapResultM1[year] = newPoolList1[yearToSelect] #self.bootstrapPoolProject1[yearToSelect]
+                bootstrapResultM2[year] = newPoolList2[yearToSelect] # self.bootstrapPoolProject2[yearToSelect]
                 bootstrapObservations[year] = self.obsRemapped[yearToSelect]
                 
                 for i in range(1,6):
                     if yearToSelect+i < max(self.decadals) and year+i <= max(self.decadals):
                         
                         if yearToSelect+i in self.decadals: 
-                            bootstrapResultM1[year+i] = self.bootstrapPoolProject1[yearToSelect+i]
-                            bootstrapResultM2[year+i] = self.bootstrapPoolProject2[yearToSelect+i]
+                            bootstrapResultM1[year+i] = newPoolList1[yearToSelect] #self.bootstrapPoolProject1[yearToSelect+i]
+                            bootstrapResultM2[year+i] = newPoolList2[yearToSelect] #self.bootstrapPoolProject2[yearToSelect+i]
                             bootstrapObservations[year+i] = self.obsRemapped[yearToSelect+i]
                             
 
@@ -330,6 +330,7 @@ def main(config_dict, baseDir):
             (bootstrap.input1Remapped, bootstrap.input2Remapped, bootstrap.observationRemapped) = Msss.bootstrapGoddard(cacheFolder)
             
             bootstrap.analyze()
+            bootstrap.deleteCache()
             bootstrap_folders.append(bootstrap.outputDir)
     
         print '###############################################'
