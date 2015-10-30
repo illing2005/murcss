@@ -189,8 +189,8 @@ class MsssBootstrap(Msss):
                     if yearToSelect+i < max(self.decadals) and year+i <= max(self.decadals):
                         
                         if yearToSelect+i in self.decadals: 
-                            bootstrapResultM1[year+i] = newPoolList1[yearToSelect] #self.bootstrapPoolProject1[yearToSelect+i]
-                            bootstrapResultM2[year+i] = newPoolList2[yearToSelect] #self.bootstrapPoolProject2[yearToSelect+i]
+                            bootstrapResultM1[year+i] = newPoolList1[yearToSelect+i] #self.bootstrapPoolProject1[yearToSelect+i]
+                            bootstrapResultM2[year+i] = newPoolList2[yearToSelect+i] #self.bootstrapPoolProject2[yearToSelect+i]
                             bootstrapObservations[year+i] = self.obsRemapped[yearToSelect+i]
                             
 

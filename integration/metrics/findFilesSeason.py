@@ -87,7 +87,7 @@ class FindFilesSeason(FindFilesAbstract):
             for ens in ensemblemembers:
                 onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
-                    ensList.append(onlyfiles[0])
+                    ensList = ensList + onlyfiles  # ensList.append(onlyfiles[0])
 		else:
                     raise EnsembleMemberError, "Ensemble member %s not found for  %s %s %s for starting year %s" % (ens,fileType, model, product, year)	
             tmpList = ensList
@@ -141,11 +141,11 @@ class FindFilesSeason(FindFilesAbstract):
                                          time_frequency=time_frequency)
             try:
                 if 'reanalysis' in facet['data_type']:
-                    searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
-                                         time_frequency=time_frequency)
+                    searchList = SolrFindFiles.search(project=['reanalysis','observations'], experiment=experiment, variable=variable, 
+                                         time_frequency=time_frequency, ensemble=observation_ensemble)
                 else:
-                    searchList = SolrFindFiles.search(data_type=['reanalysis','observations'], experiment=experiment, variable=variable, 
-                                         time_frequency=time_frequency, data_structure='grid')
+                    searchList = SolrFindFiles.search(project=['reanalysis','observations'], experiment=experiment, variable=variable, 
+                                         time_frequency=time_frequency, product='grid', ensemble=observation_ensemble)
             except IndexError:
                 raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
             
