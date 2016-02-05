@@ -53,10 +53,12 @@ class Significance(object):
             :return: q'th percentile 
             """
             data = np.reshape(mVar, np.size(mVar))
-            
-            k, bins = np.histogram(data, bins=precision*np.sqrt(len(data)))
-            norm_cumul = 1.0*k.cumsum() / len(data)
-            return [bins[norm_cumul > q2][0], bins[norm_cumul > q1][0]]
+            if getattr(np, 'percentile', None):
+                return [np.percentile(data, q2*100), np.percentile(data, q1*100)]
+            else:
+                k, bins = np.histogram(data, bins=np.round(precision*np.sqrt(len(data))))
+                norm_cumul = 1.0*k.cumsum() / len(data)
+                return [bins[norm_cumul > q2][0], bins[norm_cumul > q1][0]]
     
     def __getLonLat(self, ifile):
         '''
