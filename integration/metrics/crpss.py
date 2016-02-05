@@ -376,15 +376,14 @@ class Crpss(MetricAbstract):
             if self.maskMissingValues:
                 if self.basic_output:
                     ensemblespreadscore = cdo.mul(input=' '.join([ensemblespreadscore,self.misvalMask]),output=ensemblespreadscore+'miss_val')
-                    crpss = filesToPlot[2]
-                    ensemblespreadscore_ln = filesToPlot[1]
+                    crpss = [s for s in filesToPlot if 'ens-vs-ref_crpss.nc' in s][0]  #filesToPlot[2]
+                    ensemblespreadscore_ln = [s for s in filesToPlot if 'ensspread_vs_referror_ln' in s][0] #filesToPlot[1]
                 else:
                     ensemblespreadscore = filesToPlot[0]
-                    ensemblespreadscore_ln = filesToPlot[1]
-                    crpss = filesToPlot[2]
+                    ensemblespreadscore_ln = [s for s in filesToPlot if 'ensspread_vs_referror_ln' in s][0] #filesToPlot[1]
+                    crpss = [s for s in filesToPlot if 'ens-vs-ref_crpss.nc' in s][0] #filesToPlot[2]
                     crpssEC = filesToPlot[3]
                     crpssRC = filesToPlot[4]
-            
             if self.fieldmean:
                 try:
                     fieldmean_files.append(filesToPlot)
