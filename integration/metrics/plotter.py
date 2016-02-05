@@ -189,7 +189,8 @@ class Plotter(object):
         #x,y = m(lon, lat)
         x,y = lon,lat
         x,y = N.meshgrid(lon, lat)
-        cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm)#, latlon=True)
+        cs = m.pcolormesh(x, y, maskedArray, cmap=my_cmap, norm=norm, linewidth=0, rasterized=True)#, latlon=True)
+        cs.set_edgecolor('face')
         cb = m.colorbar(cs,"right", size="5%", pad='5%' , ticks=colorTicks)
         m.drawcoastlines(ax=ax)  
         m.drawparallels(parallels,labels=[1,0,0,0]) # draw parallels
@@ -247,11 +248,13 @@ class Plotter(object):
         return ax1
         
     @staticmethod
-    def plotLeadtimeseries(resultList,flag_list,plot_list):
+    def plotLeadtimeseries(resultList,flag_list,plot_list,input_flags=None):
         colors = ['green','blue','red']
         def getFn(s):
             return s.split('/')[-1]
 
+        if input_flags is None:
+            input_flags = ['']*len(flag_list)
         fig = plt.figure(figsize=(17,13)) 
         for i,needle in enumerate(plot_list):
             plt.subplot(2,1,i+1) 
@@ -259,7 +262,8 @@ class Plotter(object):
                 files_to_plot = list()
                 for part in resultList:
                     search_needle = flag+'_'+needle[0]
-                    files_to_plot.append([s for s in part if search_needle in getFn(s)][0])
+                    tmpfiles = [s for s in part if input_flags[j] in s]
+                    files_to_plot.append([s for s in tmpfiles if search_needle in getFn(s)][0])
                 labels = list()
                 plot_values = list()
                 for fn in sorted(files_to_plot,key=lambda x: int(getFn(x).split('_')[0]+getFn(x).split('_')[1])):
