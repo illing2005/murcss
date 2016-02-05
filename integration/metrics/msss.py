@@ -319,7 +319,6 @@ class Msss(MetricAbstract):
         if self.fieldmean:
             #construct a taylor plot
             if self.bootstrap is None:
-                print self.bootstrap
                 outputPlots = self.outputPlots+'accuracy/'
                 self.makeFolder(outputPlots)
                 #taylor = TaylorPlotMurCSS(negativeCorr=False)
@@ -333,7 +332,7 @@ class Msss(MetricAbstract):
                 fnFlagVs = self.constructName(self.fileNameFlagVs, exp='', startYear='1', endYear='1')
                 fnFlagVs = fnFlagVs[4:]
                 plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
-                Plotter.plotLeadtimeseries(resultList,[flag1,flag2,fnFlagVs],plot_list)
+                Plotter.plotLeadtimeseries(resultList,[flag1,flag2,fnFlagVs],plot_list,['input1', 'input2', ''])
                 Plotter.saveFig(outputPlots, 'accuracy_leadtimeseries_all')
                 
                 plot_list = [('correlation','Anomaly Correlation',[0,1]),('msss','Mean Squared Error Skill Score',[-1,1])]
