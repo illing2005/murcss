@@ -379,11 +379,11 @@ class Crpss(MetricAbstract):
                     crpss = [s for s in filesToPlot if 'ens-vs-ref_crpss.nc' in s][0]  #filesToPlot[2]
                     ensemblespreadscore_ln = [s for s in filesToPlot if 'ensspread_vs_referror_ln' in s][0] #filesToPlot[1]
                 else:
-                    ensemblespreadscore = filesToPlot[0]
+                    ensemblespreadscore = [s for s in filesToPlot if 'ensspread_vs_referror.nc' in s][0] #filesToPlot[0]
                     ensemblespreadscore_ln = [s for s in filesToPlot if 'ensspread_vs_referror_ln' in s][0] #filesToPlot[1]
                     crpss = [s for s in filesToPlot if 'ens-vs-ref_crpss.nc' in s][0] #filesToPlot[2]
-                    crpssEC = filesToPlot[3]
-                    crpssRC = filesToPlot[4]
+                    crpssEC = [s for s in filesToPlot if 'ens-vs-clim_crpss.nc' in s][0] #filesToPlot[3]
+                    crpssRC = [s for s in filesToPlot if 'ref-vs-clim_crpss.nc' in s][0] #filesToPlot[4]
             if self.fieldmean:
                 try:
                     fieldmean_files.append(filesToPlot)
