@@ -1,4 +1,4 @@
-'''
+"""
 Created on 16.03.2014
 
 :author: Sebastian Illing
@@ -17,20 +17,22 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
-'''
+"""
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from findFiles import *
 from findFilesAbstract import FindFilesAbstract
 
+
 class FindFilesSeason(FindFilesAbstract):
-    '''
+    """
     Collects files for "Seasonal" evaluation
-    '''
+    """
                
-    def getFiles(self,year,fileType, model, variable, time_frequency='mon', product='*', ensemblemembers='*', institute='*', exp_prefix='d*', maxleadtime=10, minLeadtime=1):
-        '''
+    def getFiles(self, year, fileType, model, variable, time_frequency='mon', product='*', ensemblemembers='*',
+                 institute='*', exp_prefix='d*', maxleadtime=10, minLeadtime=1):
+        """
         Method to get model files with solr_search.
         
         :param year: decadal starting year
@@ -40,86 +42,96 @@ class FindFilesSeason(FindFilesAbstract):
         :param time_frequency: monthly, yearly, daily and so on
         
         :return: list with all ensemblemembers members found
-        '''                
+        """
         output = list() 
-        decStr = exp_prefix+str(year)
+        decStr = exp_prefix + str(year)
         project = fileType.lower()    
         tmpList = list()
         for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
-                                      variable=variable, time_frequency=time_frequency, model=model, project=project):
-            if(str(fn).split('.')[-1] == 'nc'):
+                                       variable=variable, time_frequency=time_frequency, model=model, project=project):
+            if str(fn).split('.')[-1] == 'nc':
                 tmpList.append(str(fn))
         try:
             test = tmpList[0]
         except:
             import time
-            time.sleep(5) # delays for 5 seconds
+            time.sleep(5)  # delays for 5 seconds
             for fn in SolrFindFiles.search(experiment=decStr, latest_version=True, product=product, institute=institute,
-                                      variable=variable, time_frequency=time_frequency, model=model, project=project):
-                #print str(fn)
-                if(str(fn).split('.')[-1] == 'nc'):
+                                           variable=variable, time_frequency=time_frequency, model=model, project=project):
+
+                if str(fn).split('.')[-1] == 'nc':
                     tmpList.append(str(fn))
             try:
                 test = tmpList[0]
             except:
                 if exp_prefix.find('*') != -1:
-                    raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)
-                #OK we can't find files, now try one last time using only the exp_prefix, i.e. "historical"
-                for fn in SolrFindFiles.search(experiment=exp_prefix, latest_version=True, product=product, institute=institute,
-                                      variable=variable, time_frequency=time_frequency, model=model, project=project):
-                    if(str(fn).split('.')[-1] == 'nc'):
+                    raise NoFilesFoundError, \
+                        "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model,
+                                                                                   product, year)
+                # OK we can't find files, now try one last time using only the exp_prefix, i.e. "historical"
+                for fn in SolrFindFiles.search(experiment=exp_prefix, latest_version=True, product=product,
+                                               institute=institute, variable=variable, time_frequency=time_frequency,
+                                               model=model, project=project):
+                    if str(fn).split('.')[-1] == 'nc':
                         tmpList.append(str(fn))
                 try:
                     test = tmpList[0]
                 except:
-                    #OK, there are no Files...
-                    raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model, product, year)  
+                    # OK, there are no Files...
+                    raise NoFilesFoundError,\
+                        "Couldn't find files for %s in %s %s %s experiment: %s" % (variable, fileType, model,
+                                                                                   product, year)
        
-	#Check if we have time-splitted files
-        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product, institute=institute,
-                                           variable=variable, time_frequency=time_frequency, model=model, project=project)
-        if len(time_values['time'])>1:
+        #Check if we have time-splitted files
+        time_values = SolrFindFiles.facets(facets='time', experiment=decStr, latest_version=True, product=product,
+                                           institute=institute, variable=variable, time_frequency=time_frequency,
+                                           model=model, project=project)
+        if len(time_values['time']) > 1:
             tmpList = self.mergeSplittedFiles(tmpList)
  
-        #select only wanted ensemblemembers
+        # select only wanted ensemblemembers
         if type(ensemblemembers) == list and ensemblemembers[0] != '*':
             ensList = list()
             for ens in ensemblemembers:
-                onlyfiles =  [f for f in tmpList if f.lower().find(ens) != -1]
+                onlyfiles = [f for f in tmpList if f.lower().find(ens) != -1]
                 if len(onlyfiles) > 0:
-                    ensList = ensList + onlyfiles  # ensList.append(onlyfiles[0])
-		else:
-                    raise EnsembleMemberError, "Ensemble member %s not found for  %s %s %s for starting year %s" % (ens,fileType, model, product, year)	
+                    ensList = ensList + onlyfiles
+                else:
+                    raise EnsembleMemberError,\
+                        "Ensemble member %s not found for  %s %s %s for starting year %s" % (ens,fileType, model,
+                                                                                             product, year)
             tmpList = ensList
-              
-                 
+
         for fn in tmpList:            
-            #TODO: Throw exepvtion if date is not in file
+            # TODO: Throw exception if date is not in file
             if len(str(year)) == 4:
                 year = int(str(year)+'12')
             
-	    start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
-            end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxleadtime+1) - relativedelta(days=1),'%Y-%m-31')
-            #print start_month
-	    fileName = str(fn).split('/')[-1]
-            output.append(cdo.seldate(','.join([start_month,end_month]), input=fn, 
-                              output=self.tmpDir+fileName+self.getRandomStr()+str(year+1)+'-'+str(year+maxleadtime)+'.nc',options='-f nc'))
+            start_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=1), '%Y-%m-01')
+            end_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=maxleadtime+1) - relativedelta(days=1), '%Y-%m-31')
+            fileName = str(fn).split('/')[-1]
+            output.append(cdo.seldate(','.join([start_month, end_month]), input=fn,
+                                      output=self.tmpDir+fileName+self.getRandomStr()+str(year+1)+'-'+str(year+maxleadtime)+'.nc',
+                                      options='-f nc'))
                 
-        if(not output or not isinstance(output, list)):
-            raise NoFilesFoundError, "Couldn't find files for %s in %s %s %s for starting year %s" % (variable, fileType, model, product, year)
+        if not output or not isinstance(output, list):
+            raise NoFilesFoundError,\
+                "Couldn't find files for %s in %s %s %s for starting year %s" % (variable, fileType, model,
+                                                                                 product, year)
 
-        #check for curvilinear grid
-        if(not hasattr(self,'curvilinearGrid') or self.curvilinearGrid == True):
+        # check for curvilinear grid
+        if not hasattr(self, 'curvilinearGrid') or self.curvilinearGrid == True:
             output = self.checkGrid(output, model)
 
-        #user wants to select levels
+        # user wants to select levels
         if self.level is not None:
             return self.selectLevel(output)
         else:
             return output
     
-    def getReanalysis(self,year,fileType, experiment, variable, filePath='', time_frequency='mon', maxLeadtime=10, observation_ensemble='*', minLeadtime=1):
-        '''
+    def getReanalysis(self, year, fileType, experiment, variable, filePath='', time_frequency='mon', maxLeadtime=10,
+                      observation_ensemble='*', minLeadtime=1):
+        """
         Wrapper method to find reanalysis file with solr_search.
         
         :param year: startyear
@@ -128,36 +140,37 @@ class FindFilesSeason(FindFilesAbstract):
         :param variable: CMOR Variable
         :param time_frequency: monthly, yearly, daily and so on
         :return: "decadal" file with observations  
-        '''
+        """
         reanFiles = list()
 
-        #to use your own reanalysis data
+        # to use your own reanalysis data
         if os.path.isfile(self.observation):
             return self.getObsFiles(variable, year, maxLeadtime=maxLeadtime)
 
-        if(not hasattr(self,'mergedReanFile')):
-            #Observation or reanalysis?
+        if not hasattr(self, 'mergedReanFile'):
+            # Observation or reanalysis?
             facet = SolrFindFiles.facets(facets='data_type', experiment=experiment, variable=variable, 
                                          time_frequency=time_frequency)
             try:
                 if 'reanalysis' in facet['data_type']:
-                    searchList = SolrFindFiles.search(project=['reanalysis','observations'], experiment=experiment, variable=variable, 
-                                         time_frequency=time_frequency, ensemble=observation_ensemble)
+                    searchList = SolrFindFiles.search(project=['reanalysis', 'observations'], experiment=experiment,
+                                                      variable=variable, time_frequency=time_frequency,
+                                                      ensemble=observation_ensemble)
                 else:
-                    searchList = SolrFindFiles.search(project=['reanalysis','observations'], experiment=experiment, variable=variable, 
-                                         time_frequency=time_frequency, product='grid', ensemble=observation_ensemble)
+                    searchList = SolrFindFiles.search(project=['reanalysis', 'observations'], experiment=experiment,
+                                                      variable=variable, time_frequency=time_frequency, product='grid',
+                                                      ensemble=observation_ensemble)
             except IndexError:
                 raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
             
             for fn in searchList:
                 yearTmp = cdo.showyear(input=str(fn))[0]      
                 fname = str(fn).split('/')[-1]
-                #reanFiles.append(cdo.yearmean(input=str(fn), output=self.tmpDir+fname+'_YEARMEAN'))
                 reanFiles.append(str(fn))
-                #if more than one year in File we break the loop and expect it to be a observationsfile
+                # if more than one year in File we break the loop and expect it to be a observationsfile
                 if(len(yearTmp.split(' ')) > 1 ):
                     break
-            if(len(reanFiles) == 0):
+            if len(reanFiles) == 0:
                 raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)    
             mergedFile = cdo.mergetime(input=' '.join(reanFiles), output=self.tmpDir+'mergedREAN_YEARMEAN')
             tmpMean = cdo.timmean(input=mergedFile)
@@ -165,51 +178,48 @@ class FindFilesSeason(FindFilesAbstract):
             if self.level is not None:
                 self.mergedReanFile = self._selectLevel(self.mergedReanFile)
         
-        if(not hasattr(self,'mergedReanFile')):
+        if not hasattr(self,'mergedReanFile'):
             raise NoFilesFoundError, "Couldn't find files for %s in %s" % (variable, experiment)
         
         if len(str(year)) == 4:
             year = int(str(year)+'12')    
-        start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
-        end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1),'%Y-%m-31')
+        start_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=1), '%Y-%m-01')
+        end_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1), '%Y-%m-31')
         
-        tmp = cdo.seldate(','.join([start_month,end_month]), input=self.mergedReanFile, 
-                          output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc',options='-f nc')
+        tmp = cdo.seldate(','.join([start_month, end_month]), input=self.mergedReanFile,
+                          output=self.tmpDir+'reanalysis_'+experiment+str(year+1)+'-'+str(year+maxLeadtime)+'.nc',
+                          options='-f nc')
         return tmp
-       
-     
+
     def getObsFiles(self, variable, year, maxLeadtime=10, minLeadtime=1):
-        '''
+        """
         Get the observation files from an specified folder
         
         :param variable:
         :param year: start year of decadal
         :return tmp file with maxLeadtime years of observation 
-        '''
+        """
         if not os.path.isfile(self.observation):
-            raise NoFilesFoundError, '%s does not exist.' % (self.observation)
-	
-	#copy to netcdf3 file
-        self.observation = cdo.copy(input=self.observation,output=self.tmpDir+self.getFilename(self.observation)+'nc3',options='-f nc')
-	
+            raise NoFilesFoundError, '%s does not exist.' % self.observation
+
+        # copy to netcdf3 file
+        self.observation = cdo.copy(input=self.observation,
+                                    output=self.tmpDir+self.getFilename(self.observation)+'nc3', options='-f nc')
+
         variable_file = cdo.showname(input=self.observation)[0]
         if variable != variable_file:
             print 'WARNING: Variable in observation file is not %s. \n Variable %s will be renamed.' % (variable, variable_file)
-            self.observation = cdo.chvar(variable_file+','+variable, input=self.observation, output=self.tmpDir+self.getFilename(self.observation))
+            self.observation = cdo.chvar(variable_file+','+variable, input=self.observation,
+                                         output=self.tmpDir+self.getFilename(self.observation))
 
         if len(str(year)) == 4:
             year = int(str(year)+'12')
 
-	start_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=1),'%Y-%m-01')
-        end_month = datetime.strftime(datetime.strptime(str(year),"%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1),'%Y-%m-31')
-	tmp = cdo.seldate(','.join([start_month,end_month]), input=self.observation,
+        start_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=1), '%Y-%m-01')
+        end_month = datetime.strftime(datetime.strptime(str(year), "%Y%m") + relativedelta(months=maxLeadtime+1) - relativedelta(days=1), '%Y-%m-31')
+        tmp = cdo.seldate(','.join([start_month, end_month]), input=self.observation,
                           output=self.tmpDir+'reanalysis_'+str(year+1)+'-'+str(year+maxLeadtime)+'.nc')
-	if self.level is not None:
+        if self.level is not None:
             return self._selectLevel(tmp)
         else:
             return tmp
-
-
-
-    
-        
