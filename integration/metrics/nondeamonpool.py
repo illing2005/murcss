@@ -1,4 +1,4 @@
-'''
+"""
 Created on 15.12.2013
 
 :author: Sebastian Illing
@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
-'''
+"""
 import multiprocessing
 # We must import this explicitly, it is not imported by the top-level
 # multiprocessing module.
@@ -31,26 +31,29 @@ class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
     def _get_daemon(self):
         return False
+
     def _set_daemon(self, value):
         pass
     daemon = property(_get_daemon, _set_daemon)
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
+
+
 class MyPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
 
 
-
-#The rest is just a example how it works
+# The rest is just a example how it works
 def sleepawhile(t):
     print("Sleeping %i seconds..." % t)
     time.sleep(t)
     return t
 
+
 def work(num_procs):
     print("Creating %i (daemon) workers and jobs in child." % num_procs)
-    pool = MyPool(num_procs)#multiprocessing.Pool(num_procs)
+    pool = MyPool(num_procs)
 
     result = pool.map(sleepawhile,
         [randint(1, 5) for x in range(num_procs)])
@@ -61,6 +64,7 @@ def work(num_procs):
     pool.close()
     pool.join()
     return result
+
 
 def test():
     print("Creating 5 (non-daemon) workers and jobs in main process.")
